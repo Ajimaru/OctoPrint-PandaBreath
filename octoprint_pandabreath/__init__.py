@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # This file contains no material derived from third-party projects.
 # Derived material — and the corresponding MIT attribution headers —
@@ -11,15 +10,14 @@
 # Full upstream LICENSE texts are reproduced under licenses/ in the
 # repository root (BIQU-Panda-Breath-Mod-LICENSE, chamber_control-LICENSE).
 """OctoPrint plugin: direct control of the BIQU Panda Breath chamber heater."""
-from __future__ import absolute_import
 
 import logging
 import os
 import re
 import threading
 from typing import TYPE_CHECKING
-from urllib.request import urlopen
 from urllib.error import URLError
+from urllib.request import urlopen
 
 import flask
 import octoprint.plugin
@@ -30,7 +28,7 @@ from octoprint.events import Events
 from octoprint.util import RepeatedTimer
 
 from ._version import VERSION as PLUGIN_VERSION
-from .controller import ChamberController, MODE_AUTO
+from .controller import MODE_AUTO, ChamberController
 from .frame_log import FrameLog
 from .mqtt_bridge import MqttBridge, paho_available
 from .protocol import PandaProtocolAdapter
@@ -127,8 +125,8 @@ class PandabreathPlugin(
         # cannot starve other plugins.
         self._frame_push_lock = threading.Lock()
         self._frame_push_last = 0.0
-        self._latest_fw_version = None   # e.g. "V1.0.4"
-        self._latest_fw_url = None       # link to firmware docs on GitHub
+        self._latest_fw_version = None  # e.g. "V1.0.4"
+        self._latest_fw_url = None  # link to firmware docs on GitHub
 
     # ---- SettingsPlugin ---------------------------------------------
 
@@ -227,9 +225,7 @@ class PandabreathPlugin(
     def on_settings_save(self, data):
         """Persist the new settings and bounce the adapter/controller stack."""
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        self._logger.info(
-            "PandaBreath: settings changed — restarting adapter"
-        )
+        self._logger.info("PandaBreath: settings changed — restarting adapter")
         # Do not block the HTTP worker on adapter teardown (websocket close
         # + thread join can take seconds).
         threading.Thread(
@@ -280,11 +276,13 @@ class PandabreathPlugin(
                 self._latest_fw_url,
             )
             # Push the now-known latest version to any connected frontend.
-            self._send_plugin_message({
-                "kind": "latest_fw",
-                "latest_fw_version": self._latest_fw_version,
-                "latest_fw_url": self._latest_fw_url,
-            })
+            self._send_plugin_message(
+                {
+                    "kind": "latest_fw",
+                    "latest_fw_version": self._latest_fw_version,
+                    "latest_fw_url": self._latest_fw_url,
+                }
+            )
         else:
             self._logger.warning(
                 "PandaBreath: could not parse latest firmware from docs"
@@ -356,9 +354,7 @@ class PandabreathPlugin(
             {
                 "key": PERMISSION_STATUS,
                 "name": gettext("View chamber status"),
-                "description": gettext(
-                    "Allows reading Panda Breath chamber state."
-                ),
+                "description": gettext("Allows reading Panda Breath chamber state."),
                 "default_groups": [ADMIN_GROUP],
                 "roles": ["status"],
                 "dangerous": False,
@@ -431,8 +427,7 @@ class PandabreathPlugin(
         # ?debug=1 attaches the frame ring buffer for the debug panel.
         if request.values.get("debug") in ("1", "true", "yes"):
             snapshot["frames"] = (
-                self._adapter.get_frame_history()
-                if self._adapter is not None else []
+                self._adapter.get_frame_history() if self._adapter is not None else []
             )
             snapshot["frame_log"] = self._frame_log_status()
         return flask.jsonify(snapshot)
@@ -458,9 +453,7 @@ class PandabreathPlugin(
         """All blueprint routes require an authenticated user."""
         return True
 
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/frame_logs", methods=["GET"]
-    )
+    @octoprint.plugin.BlueprintPlugin.route("/frame_logs", methods=["GET"])
     def blueprint_list_frame_logs(self):
         """Return the current frame-log file list as JSON."""
         perm = _plugin_permission(PERMISSION_STATUS)
@@ -485,7 +478,9 @@ class PandabreathPlugin(
         # ``send_from_directory`` re-checks the path stays inside the
         # directory, defence-in-depth on top of ``path_for``.
         return flask.send_from_directory(
-            log.directory(), filename, as_attachment=True,
+            log.directory(),
+            filename,
+            as_attachment=True,
             mimetype="application/x-ndjson",
         )
 
@@ -507,13 +502,12 @@ class PandabreathPlugin(
             os.remove(path)
         except OSError as exc:
             return flask.make_response(
-                flask.jsonify({"error": str(exc)}), 500,
+                flask.jsonify({"error": str(exc)}),
+                500,
             )
         return flask.jsonify(self._frame_log_status())
 
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/frame_logs", methods=["DELETE"]
-    )
+    @octoprint.plugin.BlueprintPlugin.route("/frame_logs", methods=["DELETE"])
     def blueprint_delete_all_frame_logs(self):
         """Delete every frame-log file in the data directory."""
         perm = _plugin_permission(PERMISSION_ADMIN)
@@ -543,11 +537,13 @@ class PandabreathPlugin(
                 deleted += 1
             except OSError as exc:
                 errors.append({"name": name, "error": str(exc)})
-        return flask.jsonify({
-            "deleted": deleted,
-            "errors": errors,
-            "status": self._frame_log_status(),
-        })
+        return flask.jsonify(
+            {
+                "deleted": deleted,
+                "errors": errors,
+                "status": self._frame_log_status(),
+            }
+        )
 
     def on_api_command(self, command, data):
         """Dispatch a SimpleApiPlugin command to the chamber controller."""
@@ -575,12 +571,14 @@ class PandabreathPlugin(
         ):
             if self._printer_is_busy():
                 return flask.make_response(
-                    flask.jsonify({
-                        "error": (
-                            "Cannot start drying while the printer is "
-                            "running a job."
-                        )
-                    }),
+                    flask.jsonify(
+                        {
+                            "error": (
+                                "Cannot start drying while the printer is "
+                                "running a job."
+                            )
+                        }
+                    ),
                     409,
                 )
         try:
@@ -592,13 +590,9 @@ class PandabreathPlugin(
             # 409 for observe-only (configuration conflict), 423 for safety
             # lock (resource is locked). Both are HTTP-semantic correct.
             status = 409 if "observe-only" in str(exc) else 423
-            return flask.make_response(
-                flask.jsonify({"error": str(exc)}), status
-            )
+            return flask.make_response(flask.jsonify({"error": str(exc)}), status)
         except (ValueError, TypeError) as exc:
-            return flask.make_response(
-                flask.jsonify({"error": str(exc)}), 400
-            )
+            return flask.make_response(flask.jsonify({"error": str(exc)}), 400)
         return flask.jsonify(self._controller.snapshot())
 
     def _apply_control_command(self, command, data, source="api"):
@@ -648,9 +642,7 @@ class PandabreathPlugin(
         elif command == "unlock":
             c.unlock()
         elif command == "emergency_stop":
-            self._logger.warning(
-                "PandaBreath: EMERGENCY STOP triggered via %s", source
-            )
+            self._logger.warning("PandaBreath: EMERGENCY STOP triggered via %s", source)
             c.emergency_stop(reason="navbar_estop")
         else:
             return False
@@ -681,9 +673,7 @@ class PandabreathPlugin(
                 )
                 return
         if not self._apply_control_command(action, data, source="mqtt"):
-            self._logger.warning(
-                "PandaBreath: unknown MQTT command '%s'", action
-            )
+            self._logger.warning("PandaBreath: unknown MQTT command '%s'", action)
 
     # ---- EventHandlerPlugin -----------------------------------------
 
@@ -753,9 +743,7 @@ class PandabreathPlugin(
             self._controller.set_mode(MODE_AUTO)
             self._controller.set_target(target)
         except (ValueError, PermissionError):
-            self._logger.exception(
-                "PandaBreath: failed to apply %s", gcode
-            )
+            self._logger.exception("PandaBreath: failed to apply %s", gcode)
         # Swallow the command — OctoPrint would otherwise forward it to
         # the printer firmware, which usually does not handle M141/M191.
         return (None,)
@@ -818,9 +806,7 @@ class PandabreathPlugin(
             # missing/older method must not break command dispatch — treat
             # an unknown state as not-busy so we fail open on availability
             # (the frontend gate and the operator remain the backstop).
-            self._logger.debug(
-                "PandaBreath: printer-busy probe failed", exc_info=True
-            )
+            self._logger.debug("PandaBreath: printer-busy probe failed", exc_info=True)
             return False
 
     @staticmethod
@@ -837,7 +823,7 @@ class PandabreathPlugin(
         # we can re-attach the scheme that matches the current TLS toggle.
         for prefix in ("wss://", "ws://", "https://", "http://"):
             if host.lower().startswith(prefix):
-                host = host[len(prefix):]
+                host = host[len(prefix) :]
                 break
         # Separate path so we don't double the suffix.
         path = "/ws"
@@ -937,8 +923,7 @@ class PandabreathPlugin(
         host = (s.get(["mqtt_host"]) or "").strip()
         if not host:
             self._logger.warning(
-                "PandaBreath: mqtt_enabled but no broker host set — "
-                "bridge inactive"
+                "PandaBreath: mqtt_enabled but no broker host set — " "bridge inactive"
             )
             return
         fw = None
@@ -964,8 +949,7 @@ class PandabreathPlugin(
                 port=int(s.get(["mqtt_port"]) or 1883),
                 username=s.get(["mqtt_username"]) or None,
                 password=s.get(["mqtt_password"]) or None,
-                base_topic=s.get(["mqtt_base_topic"])
-                or "octoprint/pandabreath",
+                base_topic=s.get(["mqtt_base_topic"]) or "octoprint/pandabreath",
                 command_handler=self._on_mqtt_command,
                 allow_control=s.get_boolean(["mqtt_allow_control"]),
                 logger=self._logger,
@@ -978,13 +962,9 @@ class PandabreathPlugin(
                 # controller never sends those through the sink.
                 self._controller.set_control_sink(bridge.control_sink)
             self._mqtt_bridge = bridge
-            self._logger.info(
-                "PandaBreath: MQTT bridge started (control over MQTT)"
-            )
+            self._logger.info("PandaBreath: MQTT bridge started (control over MQTT)")
         except Exception:  # pylint: disable=broad-exception-caught
-            self._logger.exception(
-                "PandaBreath: failed to start MQTT bridge"
-            )
+            self._logger.exception("PandaBreath: failed to start MQTT bridge")
             self._mqtt_bridge = None
 
     def _stop_mqtt_bridge(self):
@@ -998,9 +978,7 @@ class PandabreathPlugin(
             try:
                 bridge.stop()
             except Exception:  # pylint: disable=broad-exception-caught
-                self._logger.exception(
-                    "PandaBreath: MQTT bridge stop failed"
-                )
+                self._logger.exception("PandaBreath: MQTT bridge stop failed")
 
     def _stop_stack(self):
         # Bridge first: it holds a controller-listener reference and its own
@@ -1017,9 +995,7 @@ class PandabreathPlugin(
                 # Teardown must not propagate: adapter.stop() drives socket
                 # close + thread join, both of which can raise from a wide
                 # set of backend libraries (websockets, ssl, OS errors).
-                self._logger.exception(
-                    "PandaBreath: adapter stop failed"
-                )
+                self._logger.exception("PandaBreath: adapter stop failed")
 
     def _restart_stack(self):
         self._refresh_frame_log()
@@ -1037,18 +1013,15 @@ class PandabreathPlugin(
         dedicated ``frame_log_enabled`` toggle is on. With the panel off,
         no frames are persisted regardless of that toggle.
         """
-        enabled = (
-            self._settings.get_boolean(["debug_panel_enabled"])
-            and self._settings.get_boolean(["frame_log_enabled"])
-        )
+        enabled = self._settings.get_boolean(
+            ["debug_panel_enabled"]
+        ) and self._settings.get_boolean(["frame_log_enabled"])
         if not enabled:
             if self._frame_log is not None:
                 self._frame_log.close()
                 self._frame_log = None
             return
-        retention = int(
-            self._settings.get(["frame_log_retention_days"]) or 7
-        )
+        retention = int(self._settings.get(["frame_log_retention_days"]) or 7)
         data_dir = self.get_plugin_data_folder()
         # Recreate only when first enabling — the writer handles its own
         # daily rotation and the retention cleanup runs on each rollover.
@@ -1081,9 +1054,7 @@ class PandabreathPlugin(
         """Attach MQTT gate/state fields to a snapshot. Shared by GET+push."""
         snapshot["mqtt_enabled"] = self._settings.get_boolean(["mqtt_enabled"])
         snapshot["mqtt_active"] = self._mqtt_bridge is not None
-        snapshot["mqtt_supported"] = fw_supports_mqtt(
-            snapshot.get("fw_version")
-        )
+        snapshot["mqtt_supported"] = fw_supports_mqtt(snapshot.get("fw_version"))
 
     def _push_status(self, snapshot):
         snapshot["latest_fw_version"] = self._latest_fw_version
@@ -1093,9 +1064,11 @@ class PandabreathPlugin(
         # Deferred bridge start: the firmware version only becomes known
         # once the WebSocket delivers a snapshot, which may be after
         # _start_stack ran. Retry here when the device now qualifies.
-        if (self._mqtt_bridge is None
-                and self._settings.get_boolean(["mqtt_enabled"])
-                and fw_supports_mqtt(snapshot.get("fw_version"))):
+        if (
+            self._mqtt_bridge is None
+            and self._settings.get_boolean(["mqtt_enabled"])
+            and fw_supports_mqtt(snapshot.get("fw_version"))
+        ):
             self._start_mqtt_bridge()
 
     def _on_frame_persist(self, direction, frame):
@@ -1112,17 +1085,20 @@ class PandabreathPlugin(
         # Rate-limit to ~5 broadcasts/s. UI catches up via the debug API
         # on next refresh if we drop a burst.
         import time as _time
+
         now = _time.monotonic()
         with self._frame_push_lock:
             if now - self._frame_push_last < 0.2:
                 return
             self._frame_push_last = now
-        self._send_plugin_message({
-            "kind": "frame",
-            "ts": _time.time(),
-            "dir": direction,
-            "frame": frame,
-        })
+        self._send_plugin_message(
+            {
+                "kind": "frame",
+                "ts": _time.time(),
+                "dir": direction,
+                "frame": frame,
+            }
+        )
 
     def _send_plugin_message(self, payload):
         perm = _plugin_permission(PERMISSION_STATUS)
@@ -1132,15 +1108,11 @@ class PandabreathPlugin(
                     self._identifier, payload, permissions=[perm]
                 )
             else:
-                self._plugin_manager.send_plugin_message(
-                    self._identifier, payload
-                )
+                self._plugin_manager.send_plugin_message(self._identifier, payload)
         except Exception:  # pylint: disable=broad-exception-caught
             # OctoPrint's plugin_manager dispatches into the SockJS layer;
             # surfacing any failure there must not break controller updates.
-            self._logger.exception(
-                "PandaBreath: failed to broadcast plugin message"
-            )
+            self._logger.exception("PandaBreath: failed to broadcast plugin message")
 
     # ---- watchdog ---------------------------------------------------
 
@@ -1167,9 +1139,7 @@ class PandabreathPlugin(
                 # RepeatedTimer.cancel() touches threading internals; a
                 # failure here must not block shutdown of the rest of the
                 # stack.
-                self._logger.exception(
-                    "PandaBreath: watchdog cancel failed"
-                )
+                self._logger.exception("PandaBreath: watchdog cancel failed")
 
     def _watchdog_tick(self):
         controller = self._controller
@@ -1180,9 +1150,7 @@ class PandabreathPlugin(
         except Exception:  # pylint: disable=broad-exception-caught
             # The watchdog is a safety-critical timer: a single exception
             # must never silence subsequent ticks.
-            self._logger.exception(
-                "PandaBreath: watchdog tick failed"
-            )
+            self._logger.exception("PandaBreath: watchdog tick failed")
 
 
 __plugin_name__ = "PandaBreath"
@@ -1210,11 +1178,12 @@ def __plugin_load__():
     impl = PandabreathPlugin()
     module = sys.modules[__name__]
     setattr(module, "__plugin_implementation__", impl)
-    setattr(module, "__plugin_hooks__", {
-        "octoprint.plugin.softwareupdate.check_config":
-            impl.get_update_information,
-        "octoprint.comm.protocol.gcode.queuing":
-            impl.hook_gcode_queuing,
-        "octoprint.access.permissions":
-            impl.get_additional_permissions,
-    })
+    setattr(
+        module,
+        "__plugin_hooks__",
+        {
+            "octoprint.plugin.softwareupdate.check_config": impl.get_update_information,
+            "octoprint.comm.protocol.gcode.queuing": impl.hook_gcode_queuing,
+            "octoprint.access.permissions": impl.get_additional_permissions,
+        },
+    )

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Persistent WebSocket frame logger with daily rotation.
 
 The protocol adapter already keeps a small in-memory ring buffer for the
@@ -8,7 +7,6 @@ day, named ``frames_YYYY-MM-DD.jsonl``, rotated lazily on the next write
 that crosses the day boundary. Files older than ``retention_days`` are
 removed on start and on each rollover.
 """
-from __future__ import absolute_import
 
 import datetime
 import json
@@ -16,12 +14,11 @@ import logging
 import os
 import threading
 
-
 LOG_FILENAME_PREFIX = "frames_"
 LOG_FILENAME_SUFFIX = ".jsonl"
 
 
-class FrameLog(object):
+class FrameLog:
     """Daily-rotated JSONL writer for raw protocol frames.
 
     Safe to call ``write()`` from any thread. ``close()`` releases the
@@ -72,8 +69,10 @@ class FrameLog(object):
         try:
             entries = []
             for name in os.listdir(self._dir):
-                if not (name.startswith(LOG_FILENAME_PREFIX)
-                        and name.endswith(LOG_FILENAME_SUFFIX)):
+                if not (
+                    name.startswith(LOG_FILENAME_PREFIX)
+                    and name.endswith(LOG_FILENAME_SUFFIX)
+                ):
                     continue
                 path = os.path.join(self._dir, name)
                 try:
@@ -107,17 +106,21 @@ class FrameLog(object):
           symlink dropped into the log dir cannot be used to delete or
           download an arbitrary file.
         """
-        if (not filename
-                or "/" in filename
-                or "\\" in filename
-                or os.sep in filename
-                or filename in (".", "..")
-                or filename.startswith(".")):
+        if (
+            not filename
+            or "/" in filename
+            or "\\" in filename
+            or os.sep in filename
+            or filename in (".", "..")
+            or filename.startswith(".")
+        ):
             return None
-        if not (filename.startswith(LOG_FILENAME_PREFIX)
-                and filename.endswith(LOG_FILENAME_SUFFIX)):
+        if not (
+            filename.startswith(LOG_FILENAME_PREFIX)
+            and filename.endswith(LOG_FILENAME_SUFFIX)
+        ):
             return None
-        stem = filename[len(LOG_FILENAME_PREFIX):-len(LOG_FILENAME_SUFFIX)]
+        stem = filename[len(LOG_FILENAME_PREFIX) : -len(LOG_FILENAME_SUFFIX)]
         try:
             datetime.date.fromisoformat(stem)
         except ValueError:
@@ -152,9 +155,7 @@ class FrameLog(object):
         # check catches the case where the operator deleted the file via
         # the UI — on Unix the open handle would still write but the data
         # ends up in an unlinked inode, invisible in the directory.
-        if (self._fp is not None
-                and self._current_day == today
-                and os.path.isfile(path)):
+        if self._fp is not None and self._current_day == today and os.path.isfile(path):
             return
         # Day rolled over, first write, or file was deleted out from
         # under us — close any stale handle and reopen.
@@ -180,16 +181,15 @@ class FrameLog(object):
     def _cleanup_old_files(self):
         if self._retention_days <= 0:
             return
-        cutoff = (
-            datetime.date.today()
-            - datetime.timedelta(days=self._retention_days)
-        )
+        cutoff = datetime.date.today() - datetime.timedelta(days=self._retention_days)
         try:
             for name in os.listdir(self._dir):
-                if not (name.startswith(LOG_FILENAME_PREFIX)
-                        and name.endswith(LOG_FILENAME_SUFFIX)):
+                if not (
+                    name.startswith(LOG_FILENAME_PREFIX)
+                    and name.endswith(LOG_FILENAME_SUFFIX)
+                ):
                     continue
-                stem = name[len(LOG_FILENAME_PREFIX):-len(LOG_FILENAME_SUFFIX)]
+                stem = name[len(LOG_FILENAME_PREFIX) : -len(LOG_FILENAME_SUFFIX)]
                 try:
                     day = datetime.date.fromisoformat(stem)
                 except ValueError:
@@ -199,7 +199,8 @@ class FrameLog(object):
                         os.remove(os.path.join(self._dir, name))
                     except OSError:
                         self._log.debug(
-                            "FrameLog: could not remove %s", name,
+                            "FrameLog: could not remove %s",
+                            name,
                             exc_info=True,
                         )
         except OSError:

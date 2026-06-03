@@ -1,4 +1,3 @@
-# coding=utf-8
 """MQTT control/telemetry bridge for Panda Breath firmware V1.0.4+.
 
 Background and the full reverse-engineered protocol live in
@@ -28,7 +27,6 @@ telemetry only.
 paho-mqtt is a required runtime dependency and pinned to v2 because v1 is
 unmaintained and uses an incompatible callback API.
 """
-from __future__ import absolute_import
 
 import json
 import logging
@@ -36,6 +34,7 @@ import threading
 
 try:
     import paho.mqtt.client as mqtt  # type: ignore[import-not-found]
+
     # We pin paho v2 (see pyproject) which changed the callback API; guard
     # the version too so a stray v1 install fails loudly rather than at the
     # first callback.
@@ -61,7 +60,7 @@ def paho_available():
     return _HAVE_PAHO
 
 
-class MqttBridge(object):
+class MqttBridge:
     """Bridges a ChamberController to an MQTT broker.
 
     Lifecycle mirrors the protocol adapter: construct, :meth:`start`,
@@ -95,9 +94,7 @@ class MqttBridge(object):
         client_factory=None,
     ):
         if not paho_available() and client_factory is None:
-            raise RuntimeError(
-                "paho-mqtt v2 not installed"
-            )
+            raise RuntimeError("paho-mqtt v2 not installed")
         self._host = host
         self._port = int(port)
         self._username = username or None
@@ -144,7 +141,9 @@ class MqttBridge(object):
         self._client.loop_start()
         self._log.info(
             "MqttBridge: connecting to %s:%s (control=%s)",
-            self._host, self._port, self._allow_control,
+            self._host,
+            self._port,
+            self._allow_control,
         )
 
     def stop(self):
@@ -294,9 +293,7 @@ class MqttBridge(object):
                 with self._lock:
                     if self._device_id != parts[1]:
                         self._device_id = parts[1]
-                        self._log.info(
-                            "MqttBridge: discovered device id %s", parts[1]
-                        )
+                        self._log.info("MqttBridge: discovered device id %s", parts[1])
             return
         if topic == self._base_topic + "/command":
             self._handle_inbound_command(msg.payload)

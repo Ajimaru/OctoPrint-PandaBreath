@@ -1,4 +1,3 @@
-# coding=utf-8
 """Unit tests for the MQTT control bridge and the firmware gate.
 
 The bridge is exercised against a ``FakeMqttClient`` injected via
@@ -6,7 +5,6 @@ The bridge is exercised against a ``FakeMqttClient`` injected via
 gate helpers live in the plugin package ``__init__`` (imported through the
 conftest OctoPrint stubs).
 """
-from __future__ import absolute_import
 
 import json
 from typing import Callable, Optional
@@ -20,8 +18,8 @@ class FakeMqttClient:
     """Records publishes/subscribes and lets tests drive callbacks."""
 
     def __init__(self):
-        self.published = []      # (topic, payload, qos, retain)
-        self.subscribed = []     # (topic, qos)
+        self.published = []  # (topic, payload, qos, retain)
+        self.subscribed = []  # (topic, qos)
         self.username = None
         self.connected_async = None
         self.loop_started = False
@@ -91,6 +89,7 @@ def make_bridge(**kwargs):
 
 # ---- lifecycle ----------------------------------------------------------
 
+
 def test_start_connects_and_subscribes():
     """Starting bridge connects and subscribes expected topics."""
     bridge, client = make_bridge()
@@ -132,6 +131,7 @@ def test_telemetry_only_does_not_subscribe_command():
 
 # ---- device id discovery + outbound -------------------------------------
 
+
 def test_device_id_learned_from_state_topic():
     """Device id is learned from incoming native state topic."""
     bridge, client = make_bridge()
@@ -149,8 +149,7 @@ def test_send_device_command_uses_native_topic():
     client.fire_connect()
     client.fire_message("panda_breath/ABC123/state", {"chamber_temp": 30})
     assert bridge.send_device_command({"target_temp": 45}) is True
-    cmd = [p for p in client.published
-           if p[0] == "panda_breath/ABC123/command"]
+    cmd = [p for p in client.published if p[0] == "panda_breath/ABC123/command"]
     assert cmd and json.loads(cmd[0][1]) == {"target_temp": 45}
 
 
@@ -167,14 +166,14 @@ def test_publish_state_goes_to_plugin_topic():
     bridge, client = make_bridge()
     bridge.start()
     bridge.publish_state({"mode": "auto", "target_temp": 40})
-    pub = [p for p in client.published
-           if p[0] == "octoprint/pandabreath/state"]
+    pub = [p for p in client.published if p[0] == "octoprint/pandabreath/state"]
     assert pub
     assert json.loads(pub[0][1])["mode"] == "auto"
     assert pub[0][3] is True  # retained
 
 
 # ---- inbound command routing --------------------------------------------
+
 
 def test_inbound_command_routes_to_handler():
     """Inbound plugin command messages are forwarded to command_handler."""
@@ -209,9 +208,7 @@ def test_inbound_command_ignored_when_control_disabled():
 def test_inbound_malformed_payload_is_swallowed():
     """Malformed command payloads are ignored without crashing."""
     seen = []
-    bridge, client = make_bridge(
-        command_handler=lambda a, d: seen.append((a, d))
-    )
+    bridge, client = make_bridge(command_handler=lambda a, d: seen.append((a, d)))
     bridge.start()
     client.fire_connect()
     client.fire_message("octoprint/pandabreath/command", b"not json")
@@ -221,8 +218,10 @@ def test_inbound_malformed_payload_is_swallowed():
 
 def test_inbound_handler_exception_does_not_propagate():
     """Exceptions in command handler are swallowed by bridge callback."""
+
     def boom(action, data):
         raise ValueError("bad value")
+
     bridge, client = make_bridge(command_handler=boom)
     bridge.start()
     client.fire_connect()
@@ -234,11 +233,15 @@ def test_inbound_handler_exception_does_not_propagate():
 
 # ---- mode mapping -------------------------------------------------------
 
-@pytest.mark.parametrize("ws,mqtt", [
-    ("auto", "auto mode"),
-    ("manual", "power on"),
-    ("dry", "filament drying"),
-])
+
+@pytest.mark.parametrize(
+    "ws,mqtt",
+    [
+        ("auto", "auto mode"),
+        ("manual", "power on"),
+        ("dry", "filament drying"),
+    ],
+)
 def test_mode_mapping_roundtrip(ws, mqtt):
     """Mode mapping helpers convert both directions for known values."""
     assert MqttBridge.ws_mode_to_mqtt(ws) == mqtt
@@ -253,6 +256,7 @@ def test_mode_mapping_unknown_returns_none():
 
 # ---- control sink: WS verb -> device MQTT command -----------------------
 
+
 def _bridge_with_device():
     """Create and prime a bridge with a learned test device id."""
     bridge, client = make_bridge()
@@ -264,27 +268,31 @@ def _bridge_with_device():
 
 def _last_device_cmd(client):
     """Return last native device command payload or None if none published."""
-    cmds = [json.loads(p[1]) for p in client.published
-            if p[0] == "panda_breath/DEV/command"]
+    cmds = [
+        json.loads(p[1]) for p in client.published if p[0] == "panda_breath/DEV/command"
+    ]
     return cmds[-1] if cmds else None
 
 
-@pytest.mark.parametrize("verb,params,expected", [
-    ("set_target", {"value": 45}, {"target_temp": 45}),
-    ("set_mode", {"mode": "auto"}, {"mode": "auto mode"}),
-    ("set_mode", {"mode": "manual"}, {"mode": "power on"}),
-    ("set_mode", {"mode": "dry"}, {"mode": "filament drying"}),
-    ("set_filter_threshold", {"value": 40}, {"filter_temp": 40}),
-    ("set_heater_threshold", {"value": 55}, {"heater_temp": 55}),
-    ("set_dry_target", {"value": 50}, {"custom_temp": 50}),
-    ("set_dry_timer", {"hours": 8}, {"custom_timer": 8}),
-    ("heater_on", {}, {"work_on": "ON"}),
-    ("heater_off", {}, {"work_on": "OFF"}),
-    ("start_drying", {}, {"drying_running": "ON"}),
-    ("stop_drying", {}, {"drying_running": "OFF"}),
-    ("preset_pla", {}, {"filament_drying_mode": "pla"}),
-    ("preset_petg", {}, {"filament_drying_mode": "petg"}),
-])
+@pytest.mark.parametrize(
+    "verb,params,expected",
+    [
+        ("set_target", {"value": 45}, {"target_temp": 45}),
+        ("set_mode", {"mode": "auto"}, {"mode": "auto mode"}),
+        ("set_mode", {"mode": "manual"}, {"mode": "power on"}),
+        ("set_mode", {"mode": "dry"}, {"mode": "filament drying"}),
+        ("set_filter_threshold", {"value": 40}, {"filter_temp": 40}),
+        ("set_heater_threshold", {"value": 55}, {"heater_temp": 55}),
+        ("set_dry_target", {"value": 50}, {"custom_temp": 50}),
+        ("set_dry_timer", {"hours": 8}, {"custom_timer": 8}),
+        ("heater_on", {}, {"work_on": "ON"}),
+        ("heater_off", {}, {"work_on": "OFF"}),
+        ("start_drying", {}, {"drying_running": "ON"}),
+        ("stop_drying", {}, {"drying_running": "OFF"}),
+        ("preset_pla", {}, {"filament_drying_mode": "pla"}),
+        ("preset_petg", {}, {"filament_drying_mode": "petg"}),
+    ],
+)
 def test_control_sink_maps_verb_to_device_command(verb, params, expected):
     """Supported control verbs are translated to expected device payloads."""
     bridge, client = _bridge_with_device()
@@ -320,21 +328,26 @@ def test_control_sink_declines_before_device_known():
 
 # ---- firmware gate ------------------------------------------------------
 
-@pytest.mark.parametrize("raw,expected", [
-    ("V1.0.4", True),
-    ("1.0.4", True),
-    ("V1.0.5", True),
-    ("V1.1.0", True),
-    ("V2.0.0", True),
-    ("V1.0.10", True),   # the string-compare trap: 1.0.10 >= 1.0.4
-    ("V1.0.3", False),
-    ("1.0.0", False),
-    ("V0.9.9", False),
-    ("", False),
-    (None, False),
-    ("garbage", False),
-])
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("V1.0.4", True),
+        ("1.0.4", True),
+        ("V1.0.5", True),
+        ("V1.1.0", True),
+        ("V2.0.0", True),
+        ("V1.0.10", True),  # the string-compare trap: 1.0.10 >= 1.0.4
+        ("V1.0.3", False),
+        ("1.0.0", False),
+        ("V0.9.9", False),
+        ("", False),
+        (None, False),
+        ("garbage", False),
+    ],
+)
 def test_fw_supports_mqtt(raw, expected):
     """Firmware capability helper enforces minimum supported version."""
     from octoprint_pandabreath import fw_supports_mqtt
+
     assert fw_supports_mqtt(raw) is expected

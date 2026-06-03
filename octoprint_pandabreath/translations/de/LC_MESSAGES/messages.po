@@ -1404,4 +1404,3 @@ msgstr "Warten auf Gerätestatus"
 #, fuzzy
 msgid "yes"
 msgstr "Ja."
-

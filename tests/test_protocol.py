@@ -1,4 +1,3 @@
-# coding=utf-8
 """Tests for the Panda Breath protocol adapter's pure framing logic.
 
 The adapter owns a background thread and a WebSocket transport, but the
@@ -6,13 +5,6 @@ framing, decoding, normalisation, redaction and error-classification
 helpers are all reachable without ever opening a socket. Those are what
 we exercise here.
 """
-from __future__ import absolute_import
-
-# Pylint strictness is relaxed in this test module because it validates
-# internal helper methods and intentionally uses many concise test functions.
-# pylint: disable=protected-access,missing-function-docstring
-# pylint: disable=missing-class-docstring,redefined-outer-name
-# pylint: disable=unnecessary-lambda,use-implicit-booleaness-not-comparison
 
 import json
 import logging
@@ -21,15 +13,20 @@ import time
 import pytest
 
 from octoprint_pandabreath import protocol as protocol_mod
-
 from octoprint_pandabreath.protocol import (
-    PandaProtocolAdapter,
-    WORK_MODE_AUTO,
-    WORK_MODE_MANUAL,
-    WORK_MODE_DRY,
-    WORK_MODE_STANDBY,
     MODE_SERVER,
+    WORK_MODE_AUTO,
+    WORK_MODE_DRY,
+    WORK_MODE_MANUAL,
+    WORK_MODE_STANDBY,
+    PandaProtocolAdapter,
 )
+
+# Pylint strictness is relaxed in this test module because it validates
+# internal helper methods and intentionally uses many concise test functions.
+# pylint: disable=protected-access,missing-function-docstring
+# pylint: disable=missing-class-docstring,redefined-outer-name
+# pylint: disable=unnecessary-lambda,use-implicit-booleaness-not-comparison
 
 
 @pytest.fixture
@@ -50,12 +47,8 @@ adapter = _adapter_fixture
 
 
 def test_build_frame_heater_on_off(adapter):
-    assert adapter._build_frame("heater_on", {}) == {
-        "settings": {"work_on": True}
-    }
-    assert adapter._build_frame("heater_off", {}) == {
-        "settings": {"work_on": False}
-    }
+    assert adapter._build_frame("heater_on", {}) == {"settings": {"work_on": True}}
+    assert adapter._build_frame("heater_off", {}) == {"settings": {"work_on": False}}
 
 
 def test_build_frame_set_target_coerces_to_int(adapter):
@@ -128,15 +121,9 @@ def test_build_frame_thresholds_and_running(adapter):
     assert adapter._build_frame("set_heater_threshold", {"value": 45}) == {
         "settings": {"hotbedtemp": 45}
     }
-    assert adapter._build_frame("start_drying", {}) == {
-        "settings": {"isrunning": 1}
-    }
-    assert adapter._build_frame("stop_drying", {}) == {
-        "settings": {"isrunning": 0}
-    }
-    assert adapter._build_frame("scan_printers", {}) == {
-        "printer": {"scan": 1}
-    }
+    assert adapter._build_frame("start_drying", {}) == {"settings": {"isrunning": 1}}
+    assert adapter._build_frame("stop_drying", {}) == {"settings": {"isrunning": 0}}
+    assert adapter._build_frame("scan_printers", {}) == {"printer": {"scan": 1}}
 
 
 def test_build_frame_unknown_returns_none(adapter):
@@ -233,9 +220,7 @@ def test_normalise_work_on_zero_is_false(adapter):
 def test_normalise_invalid_temp_skipped(adapter):
     # An unparseable temperature is dropped; with nothing else useful in
     # the frame the normaliser returns None (only the "type" key remained).
-    out = adapter._normalise_status(
-        {"settings": {"warehouse_temper": "not-a-number"}}
-    )
+    out = adapter._normalise_status({"settings": {"warehouse_temper": "not-a-number"}})
     assert out is None
 
 
@@ -263,9 +248,7 @@ def test_normalise_printer_list(adapter):
             }
         }
     )
-    assert out["printer_list"] == [
-        {"name": "p1", "ip": "1.1.1.1", "port": 80}
-    ]
+    assert out["printer_list"] == [{"name": "p1", "ip": "1.1.1.1", "port": 80}]
 
 
 def test_normalise_dry_fields(adapter):
@@ -286,9 +269,7 @@ def test_normalise_dry_fields(adapter):
 
 
 def test_normalise_response_frame(adapter):
-    out = adapter._normalise_status(
-        {"response": {"type": "set_hostname", "ok": "1"}}
-    )
+    out = adapter._normalise_status({"response": {"type": "set_hostname", "ok": "1"}})
     assert out["response"]["type"] == "set_hostname"
     assert out["response"]["ok"] == 1
     assert "ts" in out["response"]
@@ -322,8 +303,10 @@ def test_normalise_empty_returns_none(adapter):
 def test_redact_access_code_and_password(adapter):
     password_value = "hunter" + "2"
     raw = json.dumps(
-        {"printer": {"access_code": "topsecret", "sn": "X"},
-         "wifi": {"password": password_value, "ssid": "Net"}}
+        {
+            "printer": {"access_code": "topsecret", "sn": "X"},
+            "wifi": {"password": password_value, "ssid": "Net"},
+        }
     )
     redacted = adapter._redact_frame(raw)
     decoded = json.loads(redacted)
@@ -368,9 +351,7 @@ def test_classify_timeout_text():
 
 
 def test_classify_no_route():
-    bucket, _ = PandaProtocolAdapter._classify_error(
-        Exception("No route to host")
-    )
+    bucket, _ = PandaProtocolAdapter._classify_error(Exception("No route to host"))
     assert bucket == "unreachable"
 
 
@@ -681,9 +662,7 @@ def test_ssl_context_disabled_returns_none(adapter):
 
 
 def test_ssl_context_server_requires_cert():
-    a = PandaProtocolAdapter(
-        mode=MODE_SERVER, tls_enabled=True
-    )
+    a = PandaProtocolAdapter(mode=MODE_SERVER, tls_enabled=True)
     with pytest.raises(RuntimeError):
         a._build_ssl_context(server_side=True)
 
@@ -746,8 +725,8 @@ def test_client_run_loop_full_cycle(monkeypatch):
     fake_ws = _FakeClientWS(
         script=[
             '{"settings": {"set_temp": 50}}',  # one status frame
-            _FakeClientWS.TIMEOUT,             # drive recv-timeout branch
-            _FakeClientWS.TIMEOUT,             # second timeout -> keepalive
+            _FakeClientWS.TIMEOUT,  # drive recv-timeout branch
+            _FakeClientWS.TIMEOUT,  # second timeout -> keepalive
         ]
     )
     fake_mod = _FakeWebsocketModule(fake_ws)
@@ -767,9 +746,7 @@ def test_client_run_loop_full_cycle(monkeypatch):
     # Advance the monotonic clock 10s per call so the >=5s keepalive
     # interval elapses between recv timeouts and the query frame is sent.
     ticks = iter(range(0, 100000, 10))
-    monkeypatch.setattr(
-        protocol_mod.time, "monotonic", lambda: float(next(ticks))
-    )
+    monkeypatch.setattr(protocol_mod.time, "monotonic", lambda: float(next(ticks)))
 
     a._run_client()
 
@@ -792,9 +769,7 @@ def test_client_run_loop_connect_error(monkeypatch):
             err.errno = 61
             raise err
 
-    a = PandaProtocolAdapter(
-        client_url="ws://panda.local/ws", reconnect_delay=0.01
-    )
+    a = PandaProtocolAdapter(client_url="ws://panda.local/ws", reconnect_delay=0.01)
     monkeypatch.setattr(protocol_mod, "websocket", _FailingMod())
     monkeypatch.setattr(a, "_backoff_sleep", lambda: a._stop_event.set())
 

@@ -1,29 +1,27 @@
-# coding=utf-8
 """Tests for the ChamberController state machine + command dispatcher.
 
 Exercised against ``FakeAdapter`` (see ``conftest.py``) so no socket or
 background thread is involved.
 """
-from __future__ import absolute_import
-
-# Test module intentionally exercises many small test functions and fixture
-# names; strict production-style lint rules are relaxed here.
-# pylint: disable=missing-function-docstring,redefined-outer-name
-# pylint: disable=protected-access,unused-argument
-# pylint: disable=use-implicit-booleaness-not-comparison
 
 import time
 
 import pytest
 
 from octoprint_pandabreath.controller import (
-    ChamberController,
     MODE_AUTO,
     MODE_DRY,
     MODE_MANUAL,
     MODE_STANDBY,
+    ChamberController,
 )
 from tests.conftest import FakeAdapter
+
+# Test module intentionally exercises many small test functions and fixture
+# names; strict production-style lint rules are relaxed here.
+# pylint: disable=missing-function-docstring,redefined-outer-name
+# pylint: disable=protected-access,unused-argument
+# pylint: disable=use-implicit-booleaness-not-comparison
 
 
 @pytest.fixture
@@ -98,9 +96,7 @@ def test_set_target_blocked_in_observe_only():
 # ---- set_mode -----------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "mode", [MODE_AUTO, MODE_MANUAL, MODE_DRY, MODE_STANDBY]
-)
+@pytest.mark.parametrize("mode", [MODE_AUTO, MODE_MANUAL, MODE_DRY, MODE_STANDBY])
 def test_set_mode_valid(controller, adapter, mode):
     controller.set_mode(mode)
     assert ("set_mode", {"mode": mode}) in adapter.commands
@@ -217,17 +213,17 @@ def test_set_custom_dry_negative_rejected(controller):
 def test_set_custom_dry_out_of_device_range_rejected(controller):
     # Device range: temp 40-60 °C, timer 1-99 h (see DEVICE_DRY_* limits).
     with pytest.raises(ValueError):
-        controller.set_custom_dry(39, 8)   # below temp min
+        controller.set_custom_dry(39, 8)  # below temp min
     with pytest.raises(ValueError):
-        controller.set_custom_dry(61, 8)   # above temp max
+        controller.set_custom_dry(61, 8)  # above temp max
     with pytest.raises(ValueError):
-        controller.set_custom_dry(50, 0)   # below timer min
+        controller.set_custom_dry(50, 0)  # below timer min
     with pytest.raises(ValueError):
         controller.set_custom_dry(50, 100)  # above timer max
 
 
 def test_set_custom_dry_accepts_device_bounds(controller, adapter):
-    controller.set_custom_dry(40, 1)   # both at min
+    controller.set_custom_dry(40, 1)  # both at min
     controller.set_custom_dry(60, 99)  # both at max
     assert adapter.command_names().count("commit_dry") == 2
 
@@ -257,7 +253,7 @@ def test_threshold_out_of_device_range_rejected(controller):
     with pytest.raises(ValueError):
         controller.set_filter_threshold(121)
     with pytest.raises(ValueError):
-        controller.set_heater_threshold(39)   # heater floor is 40
+        controller.set_heater_threshold(39)  # heater floor is 40
     with pytest.raises(ValueError):
         controller.set_heater_threshold(121)
 
@@ -437,6 +433,7 @@ def test_watchdog_no_lock_when_fresh():
 
 
 # ---- control sink (MQTT transport routing) ------------------------------
+
 
 class RecordingSink:
     """Records (verb, params) and returns a configurable handled flag."""

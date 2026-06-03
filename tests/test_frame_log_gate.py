@@ -1,4 +1,3 @@
-# coding=utf-8
 """Tests for the debug-panel gate on the on-disk frame log.
 
 The debug panel is the master switch for all debug-only behaviour. Disk
@@ -8,7 +7,6 @@ persistence regardless of that toggle. ``_refresh_frame_log`` is pure
 duck-typed logic over ``self._settings`` and ``get_plugin_data_folder``,
 so it is testable here without a live OctoPrint harness.
 """
-from __future__ import absolute_import
 
 import logging
 from typing import Any, cast
@@ -45,12 +43,15 @@ def _plugin(tmp_path, **bools):
     return plugin
 
 
-@pytest.mark.parametrize("debug,persist,expect_open", [
-    (True, True, True),     # both on -> log open
-    (True, False, False),   # persist off -> closed
-    (False, True, False),   # debug off gates persist -> closed
-    (False, False, False),  # both off -> closed
-])
+@pytest.mark.parametrize(
+    "debug,persist,expect_open",
+    [
+        (True, True, True),  # both on -> log open
+        (True, False, False),  # persist off -> closed
+        (False, True, False),  # debug off gates persist -> closed
+        (False, False, False),  # both off -> closed
+    ],
+)
 def test_frame_log_gate(tmp_path, debug, persist, expect_open):
     """Frame log opens only when debug panel and persistence toggle are on."""
     plugin = _plugin(
@@ -78,10 +79,14 @@ def test_disabling_debug_closes_open_log(tmp_path):
     getattr(plugin, "_refresh_frame_log")()
     assert getattr(plugin, "_frame_log") is not None
 
-    setattr(plugin, "_settings", FakeSettings(
-        debug_panel_enabled=False,
-        frame_log_enabled=True,
-        frame_log_retention_days=7,
-    ))
+    setattr(
+        plugin,
+        "_settings",
+        FakeSettings(
+            debug_panel_enabled=False,
+            frame_log_enabled=True,
+            frame_log_retention_days=7,
+        ),
+    )
     getattr(plugin, "_refresh_frame_log")()
     assert getattr(plugin, "_frame_log") is None

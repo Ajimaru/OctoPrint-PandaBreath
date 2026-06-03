@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Portions of this file are derived from MIT-licensed upstream work.
 # Per the MIT License, the original copyright notices below are retained.
@@ -32,13 +31,11 @@ clicked OFF. The controller now only forwards explicit user actions and
 maintains a UI snapshot — the device is the single source of truth for
 when the heater is on.
 """
-from __future__ import absolute_import
 
 import collections
 import logging
 import threading
 import time
-
 
 MODE_AUTO = "auto"
 MODE_MANUAL = "manual"
@@ -179,7 +176,9 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             except Exception:  # pylint: disable=broad-exception-caught
                 self._log.warning(
                     "ChamberController: control sink failed for %s, "
-                    "falling back to WebSocket", verb, exc_info=True
+                    "falling back to WebSocket",
+                    verb,
+                    exc_info=True,
                 )
         self._adapter.send_command(verb, **params)
 
@@ -236,7 +235,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         """
         base = self._dry_remaining_s
         anchor = self._dry_remaining_anchor
-        if (base is None or anchor is None or not self._is_running):
+        if base is None or anchor is None or not self._is_running:
             return base
         anchor_ts, anchor_remaining = anchor
         elapsed = int(time.monotonic() - anchor_ts)
@@ -338,9 +337,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             # the internal state is already flipped to locked above, and
             # the user-facing safety guarantee holds regardless of
             # whether the wire frames made it out.
-            self._log.exception(
-                "ChamberController: emergency_stop frame send failed"
-            )
+            self._log.exception("ChamberController: emergency_stop frame send failed")
         self._notify()
 
     def unlock(self):
@@ -368,8 +365,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             )
         if not DEVICE_DRY_TIMER_MIN <= hours <= DEVICE_DRY_TIMER_MAX:
             raise ValueError(
-                f"dry timer must be {DEVICE_DRY_TIMER_MIN}-"
-                f"{DEVICE_DRY_TIMER_MAX} h"
+                f"dry timer must be {DEVICE_DRY_TIMER_MIN}-" f"{DEVICE_DRY_TIMER_MAX} h"
             )
         if self._locked:
             raise PermissionError("system locked")
@@ -403,8 +399,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         Auto-mode where the device acts on hotbed readings.
         """
         value = float(value)
-        if not (DEVICE_FILTER_THRESHOLD_MIN
-                <= value <= DEVICE_FILTER_THRESHOLD_MAX):
+        if not (DEVICE_FILTER_THRESHOLD_MIN <= value <= DEVICE_FILTER_THRESHOLD_MAX):
             raise ValueError(
                 f"filter threshold must be {DEVICE_FILTER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_FILTER_THRESHOLD_MAX:.0f}"
@@ -418,8 +413,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
     def set_heater_threshold(self, value):
         """Set the chamber-heater activation threshold (in °C)."""
         value = float(value)
-        if not (DEVICE_HEATER_THRESHOLD_MIN
-                <= value <= DEVICE_HEATER_THRESHOLD_MAX):
+        if not (DEVICE_HEATER_THRESHOLD_MIN <= value <= DEVICE_HEATER_THRESHOLD_MAX):
             raise ValueError(
                 f"heater threshold must be {DEVICE_HEATER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_HEATER_THRESHOLD_MAX:.0f}"
@@ -488,8 +482,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         # (reason='estop') stay engaged until the operator releases them.
         if self._locked and self._last_safety_reason == "timeout":
             self._log.info(
-                "ChamberController: data flow recovered, releasing "
-                "watchdog lock"
+                "ChamberController: data flow recovered, releasing " "watchdog lock"
             )
             self.unlock()
         with self._lock:
@@ -515,9 +508,14 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             # Pass-through firmware extras — protocol.py has already
             # cast them; store as-is and let the UI decide.
             for key in (
-                "fw_version", "dry_target", "dry_timer_hours",
-                "dry_remaining_s", "bed_temp_limit",
-                "filter_threshold", "is_running", "printer_type",
+                "fw_version",
+                "dry_target",
+                "dry_timer_hours",
+                "dry_remaining_s",
+                "bed_temp_limit",
+                "filter_threshold",
+                "is_running",
+                "printer_type",
                 "printer_state",
             ):
                 if key in payload:
@@ -528,7 +526,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             # post-reset value.
             if "dry_remaining_s" in payload and self._is_running:
                 self._dry_remaining_anchor = (
-                    time.monotonic(), int(payload["dry_remaining_s"])
+                    time.monotonic(),
+                    int(payload["dry_remaining_s"]),
                 )
             elif not self._is_running:
                 self._dry_remaining_anchor = None
@@ -537,13 +536,23 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             # even when subsequent status frames are slimmer.
             for key in (
                 "language",
-                "net_sta_ip", "net_sta_hostname", "net_sta_state",
-                "net_ap_ssid", "net_ap_ip", "net_ap_on",
+                "net_sta_ip",
+                "net_sta_hostname",
+                "net_sta_state",
+                "net_ap_ssid",
+                "net_ap_ip",
+                "net_ap_on",
                 "net_wifi_ssid",
-                "printer_name", "printer_host", "printer_port",
-                "printer_scan", "printer_list",
+                "printer_name",
+                "printer_host",
+                "printer_port",
+                "printer_scan",
+                "printer_list",
                 # HA/MQTT broker mirror (V1.0.4+); password never included.
-                "ha_ip", "ha_port", "ha_user", "ha_state",
+                "ha_ip",
+                "ha_port",
+                "ha_user",
+                "ha_state",
             ):
                 if key in payload:
                     self._diagnostics[key] = payload[key]
@@ -551,9 +560,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 self._responses.append(payload["response"])
             # Append a history sample whenever we have a chamber reading.
             if self._chamber_temp is not None:
-                self._history.append(
-                    (time.time(), self._chamber_temp, self._target)
-                )
+                self._history.append((time.time(), self._chamber_temp, self._target))
         self._check_safety_limits()
         self._notify()
 
@@ -578,8 +585,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             temp = self._chamber_temp
         if temp is not None and temp > self._max_temp:
             self._log.error(
-                "ChamberController: chamber %.1f exceeds "
-                "hard limit %.1f — locking",
+                "ChamberController: chamber %.1f exceeds " "hard limit %.1f — locking",
                 temp,
                 self._max_temp,
             )

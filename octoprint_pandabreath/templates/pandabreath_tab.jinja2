@@ -1,111 +1,87 @@
 <div class="pandabreath-tab">
     <div data-bind="visible: observeOnly" class="alert alert-info">
-        <strong>{{ _('OBSERVE-ONLY') }}</strong>
-        — {{ _('No write frames are sent to the device.') }}
+        <strong>{{ _("OBSERVE-ONLY") }}</strong>
+        — {{ _("No write frames are sent to the device.") }}
     </div>
-
     <ul class="nav nav-pills pandabreath-subnav">
         <li class="active">
-            <a href="#pandabreath_sub_status" data-toggle="tab">
-                {{ _('Status') }}
-            </a>
+            <a href="#pandabreath_sub_status" data-toggle="tab">{{ _("Status") }}</a>
         </li>
         <li>
-            <a href="#pandabreath_sub_chamber" data-toggle="tab">
-                {{ _('Chamber') }}
-            </a>
+            <a href="#pandabreath_sub_chamber" data-toggle="tab">{{ _("Chamber") }}</a>
         </li>
         <li>
-            <a href="#pandabreath_sub_drying" data-toggle="tab">
-                {{ _('Drying') }}
-            </a>
+            <a href="#pandabreath_sub_drying" data-toggle="tab">{{ _("Drying") }}</a>
         </li>
         <li>
-            <a href="#pandabreath_sub_safety" data-toggle="tab">
-                {{ _('Safety') }}
-            </a>
+            <a href="#pandabreath_sub_safety" data-toggle="tab">{{ _("Safety") }}</a>
         </li>
         <li>
-            <a href="#pandabreath_sub_network" data-toggle="tab">
-                {{ _('Network') }}
-            </a>
+            <a href="#pandabreath_sub_network" data-toggle="tab">{{ _("Network") }}</a>
         </li>
         <li data-bind="visible: debugPanelEnabled">
-            <a href="#pandabreath_sub_debug" data-toggle="tab">
-                {{ _('Debug') }}
-            </a>
+            <a href="#pandabreath_sub_debug" data-toggle="tab">{{ _("Debug") }}</a>
         </li>
     </ul>
-
     <div class="tab-content">
-
         <!-- =========================================================
              STATUS — read-only summary + temperature chart
              ========================================================= -->
         <div class="tab-pane active" id="pandabreath_sub_status">
-            <h4>{{ _('Live status') }}</h4>
+            <h4>{{ _("Live status") }}</h4>
             <table class="table table-condensed">
                 <tr>
-                    <th>{{ _('Chamber') }}</th>
+                    <th>{{ _("Chamber") }}</th>
                     <td data-bind="text: chamberTempDisplay"></td>
                 </tr>
                 <tr>
-                    <th>{{ _('Target') }}</th>
+                    <th>{{ _("Target") }}</th>
                     <td data-bind="text: targetTempDisplay"></td>
                 </tr>
                 <tr>
-                    <th>{{ _('Power') }}</th>
+                    <th>{{ _("Power") }}</th>
                     <td>
-                        <span data-bind="text: heaterStateDetailed,
-                                         css: { 'text-success': heaterHeatingNow,
-                                                'text-warning': heaterOn() && !heaterHeatingNow(),
-                                                'text-muted':  !heaterOn() }"></span>
+                        <span data-bind="text: heaterStateDetailed, css: { 'text-success': heaterHeatingNow, 'text-warning': heaterOn() && !heaterHeatingNow(), 'text-muted':  !heaterOn() }"></span>
                     </td>
                 </tr>
                 <tr>
-                    <th>{{ _('Mode') }}</th>
+                    <th>{{ _("Mode") }}</th>
                     <td data-bind="text: mode"></td>
                 </tr>
                 <tr>
-                    <th>{{ _('Connection') }}</th>
+                    <th>{{ _("Connection") }}</th>
                     <td>
-                        <span data-bind="text: connected() ? '{{ _('online') }}'
-                                                          : '{{ _('offline') }}',
-                                         css: { 'text-success': connected,
-                                                'text-error': !connected() }"></span>
+                        <span data-bind="text: connected() ? '{{ _("online") }}' : '{{ _("offline") }}', css: { 'text-success': connected, 'text-error': !connected() }"></span>
                     </td>
                 </tr>
                 <tr data-bind="visible: pairedPrinterKnown">
-                    <th>{{ _('Paired printer') }}</th>
+                    <th>{{ _("Paired printer") }}</th>
                     <td>
                         <span data-bind="text: pairedPrinterDisplay"></span>
-                        <span data-bind="css: pairedPrinterBadgeCss,
-                                         text: pairedPrinterBadgeText"
-                              style="margin-left: 6px;"></span>
+                        <span data-bind="css: pairedPrinterBadgeCss, text: pairedPrinterBadgeText"
+                              style="margin-left: 6px"></span>
                     </td>
                 </tr>
                 <tr data-bind="visible: locked">
-                    <th>{{ _('Safety') }}</th>
+                    <th>{{ _("Safety") }}</th>
                     <td>
                         <span class="label label-important">
-                            {{ _('LOCKED') }}
+                            {{ _("LOCKED") }}
                             (<span data-bind="text: lockReason"></span>)
                         </span>
                     </td>
                 </tr>
             </table>
-
             <hr>
-
-            <h4>{{ _('Temperature history') }}</h4>
+            <h4>{{ _("Temperature history") }}</h4>
             <div id="pandabreath-chart"
                  class="pandabreath-chart"
-                 style="width: 100%; height: 260px;"></div>
+                 style="width: 100%;
+                        height: 260px"></div>
             <div data-bind="visible: history().length === 0" class="text-muted">
-                {{ _('No samples yet — history starts as soon as the device sends status frames.') }}
+                {{ _("No samples yet — history starts as soon as the device sends status frames.") }}
             </div>
         </div>
-
         <!-- =========================================================
              CHAMBER — all heater / mode / threshold / safety controls
              ========================================================= -->
@@ -116,205 +92,170 @@
                  off). The mode change buttons would be ignored by the
                  firmware in this state anyway. -->
             <div class="control-group">
-                <label>{{ _('Power') }}</label>
+                <label>{{ _("Power") }}</label>
                 <div class="btn-group">
                     <button class="btn btn-success"
-                            data-bind="click: function(){ setHeater(true); },
-                                       enable: controlsEnabled,
-                                       css: { active: heaterOn }">
-                        {{ _('ON') }}
+                            data-bind="click: function(){ setHeater(true); }, enable: controlsEnabled, css: { active: heaterOn }">
+                        {{ _("ON") }}
                     </button>
                     <button class="btn"
-                            data-bind="click: function(){ setHeater(false); },
-                                       enable: heaterOffEnabled,
-                                       css: { active: !heaterOn() }">
-                        {{ _('OFF') }}
+                            data-bind="click: function(){ setHeater(false); }, enable: heaterOffEnabled, css: { active: !heaterOn() }">
+                        {{ _("OFF") }}
                     </button>
                 </div>
                 <span class="help-block" data-bind="visible: !heaterOn()">
-                    {{ _('Turn power on to choose a mode and configure the chamber.') }}
+                    {{ _("Turn power on to choose a mode and configure the chamber.") }}
                 </span>
             </div>
-
             <div data-bind="visible: heaterOn">
                 <hr>
-
                 <p class="text-muted">
                     <a href="https://github.com/bigtreetech/docs/blob/master/docs/Panda_Breath.md"
-                       target="_blank" rel="noopener">
-                        {{ _('See BIQU documentation') }} ↗
-                    </a>
+                       target="_blank"
+                       rel="noopener">{{ _("See BIQU documentation") }} ↗</a>
                 </p>
-
                 <div class="control-group">
-                    <label>{{ _('Mode') }}</label>
+                    <label>{{ _("Mode") }}</label>
                     <div class="btn-group">
                         <button class="btn"
-                                data-bind="click: function(){ setMode('auto'); },
-                                           enable: controlsEnabled,
-                                           css: { active: mode() === 'auto' }">{{ _('Auto') }}</button>
+                                data-bind="click: function(){ setMode('auto'); }, enable: controlsEnabled, css: { active: mode() === 'auto' }">
+                            {{ _("Auto") }}
+                        </button>
                         <button class="btn"
-                                data-bind="click: function(){ setMode('manual'); },
-                                           enable: controlsEnabled,
-                                           css: { active: mode() === 'manual' }">{{ _('Manual') }}</button>
+                                data-bind="click: function(){ setMode('manual'); }, enable: controlsEnabled, css: { active: mode() === 'manual' }">
+                            {{ _("Manual") }}
+                        </button>
                         <button class="btn"
-                                data-bind="click: function(){ setMode('dry'); },
-                                           enable: canSelectDryMode,
-                                           css: { active: mode() === 'dry' }">{{ _('Dry') }}</button>
+                                data-bind="click: function(){ setMode('dry'); }, enable: canSelectDryMode, css: { active: mode() === 'dry' }">
+                            {{ _("Dry") }}
+                        </button>
                         <!-- Standby (work_mode=0) is silently reverted to
                              Dry by Panda Breath firmware V1.0.3 — button omitted. -->
                     </div>
-                    <span class="help-block text-warning"
-                          data-bind="visible: octoprintBusy">
-                        {{ _('Dry mode is disabled while the printer is running a job — the chamber is needed for printing, not filament drying.') }}
+                    <span class="help-block text-warning" data-bind="visible: octoprintBusy">
+                        {{ _("Dry mode is disabled while the printer is running a job — the chamber is needed for printing, not filament drying.") }}
                     </span>
                 </div>
-
                 <!-- Manual mode: just a target temperature -->
                 <div data-bind="visible: mode() === 'manual'">
                     <hr>
-                    <h4>{{ _('Manual mode') }}</h4>
+                    <h4>{{ _("Manual mode") }}</h4>
                     <div class="control-group">
-                        <label>{{ _('Target') }} (°C)</label>
+                        <label>{{ _("Target") }} (°C)</label>
                         <div class="input-append">
-                            <input type="number" min="0" max="60" step="1"
-                                   data-bind="value: targetInput,
-                                              valueUpdate: 'input',
-                                              hasFocus: targetInputFocused,
-                                              enable: controlsEnabled">
-                            <button class="btn"
-                                    data-bind="click: applyTarget,
-                                               enable: controlsEnabled">
-                                {{ _('Apply') }}
-                            </button>
+                            <input type="number"
+                                   min="0"
+                                   max="60"
+                                   step="1"
+                                   data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled">
+                            <button class="btn" data-bind="click: applyTarget, enable: controlsEnabled">{{ _("Apply") }}</button>
                         </div>
-                        <span class="help-block">
-                            {{ _('Chamber heats to this temperature regardless of the paired printer state.') }}
-                        </span>
+                        <span class="help-block">{{ _("Chamber heats to this temperature regardless of the paired printer state.") }}</span>
                     </div>
                 </div>
-
                 <!-- Auto mode: target + two thresholds tracking the printer hotbed -->
                 <div data-bind="visible: mode() === 'auto'">
                     <hr>
-                    <h4>{{ _('Auto mode') }}</h4>
+                    <h4>{{ _("Auto mode") }}</h4>
                     <p class="text-muted" data-bind="visible: pairedPrinterKnown">
                         {{ _('The device monitors the bound printer\'s hotbed temperature and engages the filter fan and heater independently once their respective thresholds are crossed.') }}
-                    </p>
-                    <p class="text-warning" data-bind="visible: !pairedPrinterKnown()">
-                        {{ _('No paired printer bound — the device cannot read a hotbed temperature, so auto-mode will not trigger. Bind a printer in the Network tab first.') }}
-                    </p>
-                    <div class="control-group">
-                        <label>{{ _('Target chamber temperature') }} (°C)</label>
-                        <div class="input-append">
-                            <input type="number" min="0" max="60" step="1"
-                                   data-bind="value: targetInput,
-                                              valueUpdate: 'input',
-                                              hasFocus: targetInputFocused,
-                                              enable: controlsEnabled">
-                            <button class="btn"
-                                    data-bind="click: applyTarget,
-                                               enable: controlsEnabled">
-                                {{ _('Apply') }}
-                            </button>
-                        </div>
-                        <span class="help-block">
-                            {{ _('Setpoint the chamber heats to once activated by the heater threshold below.') }}
+                                            </p>
+                                            <p class="text-warning" data-bind="visible: !pairedPrinterKnown()">
+                                                {{ _('No paired printer bound — the device cannot read a hotbed temperature, so auto-mode will not trigger. Bind a printer in the Network tab first.') }}
+                                            </p>
+                                            <div class="control-group">
+                                                <label>{{ _('Target chamber temperature') }} (°C)</label>
+                                                <div class="input-append">
+                                                    <input type="number"
+                                                           min="0"
+                                                           max="60"
+                                                           step="1"
+                                                           data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled">
+                                                    <button class="btn" data-bind="click: applyTarget, enable: controlsEnabled">{{ _('Apply') }}</button>
+                                                </div>
+                                                <span class="help-block">{{ _('Setpoint the chamber heats to once activated by the heater threshold below.') }}</span>
+                                            </div>
+                                            <div class="control-group">
+                                                <label>{{ _('Filter-fan activation threshold') }} (°C)</label>
+                                                <div class="input-append">
+                                                    <input type="number"
+                                                           min="0"
+                                                           max="120"
+                                                           step="1"
+                                                           data-bind="value: filterThresholdInput, valueUpdate: 'input', hasFocus: filterThresholdInputFocused, enable: controlsEnabled">
+                                                    <button class="btn"
+                                                            data-bind="click: applyFilterThreshold, enable: controlsEnabled">
+                                                        {{ _('Apply') }}
+                                                    </button>
+                                                </div>
+                                                <span class="help-block">
+                                                    {{ _('Filter fan switches on when the printer hotbed crosses this temperature — useful for filament odour control at lower bed temperatures (e.g. PLA).') }}
                         </span>
                     </div>
                     <div class="control-group">
-                        <label>{{ _('Filter-fan activation threshold') }} (°C)</label>
+                        <label>{{ _("Heater activation threshold") }} (°C)</label>
                         <div class="input-append">
-                            <input type="number" min="0" max="120" step="1"
-                                   data-bind="value: filterThresholdInput,
-                                              valueUpdate: 'input',
-                                              hasFocus: filterThresholdInputFocused,
-                                              enable: controlsEnabled">
+                            <input type="number"
+                                   min="40"
+                                   max="120"
+                                   step="1"
+                                   data-bind="value: heaterThresholdInput, valueUpdate: 'input', hasFocus: heaterThresholdInputFocused, enable: controlsEnabled">
                             <button class="btn"
-                                    data-bind="click: applyFilterThreshold,
-                                               enable: controlsEnabled">
-                                {{ _('Apply') }}
+                                    data-bind="click: applyHeaterThreshold, enable: controlsEnabled">
+                                {{ _("Apply") }}
                             </button>
                         </div>
                         <span class="help-block">
-                            {{ _('Filter fan switches on when the printer hotbed crosses this temperature — useful for filament odour control at lower bed temperatures (e.g. PLA).') }}
-                        </span>
-                    </div>
-                    <div class="control-group">
-                        <label>{{ _('Heater activation threshold') }} (°C)</label>
-                        <div class="input-append">
-                            <input type="number" min="40" max="120" step="1"
-                                   data-bind="value: heaterThresholdInput,
-                                              valueUpdate: 'input',
-                                              hasFocus: heaterThresholdInputFocused,
-                                              enable: controlsEnabled">
-                            <button class="btn"
-                                    data-bind="click: applyHeaterThreshold,
-                                               enable: controlsEnabled">
-                                {{ _('Apply') }}
-                            </button>
-                        </div>
-                        <span class="help-block">
-                            {{ _('Chamber heater (and filter fan) switch on when the printer hotbed crosses this temperature — typically set higher than the filter threshold to limit heating to materials that need it (e.g. ABS, PETG).') }}
+                            {{ _("Chamber heater (and filter fan) switch on when the printer hotbed crosses this temperature — typically set higher than the filter threshold to limit heating to materials that need it (e.g. ABS, PETG).") }}
                         </span>
                     </div>
                 </div>
-
                 <!-- Dry mode: pointer to dedicated Drying tab -->
                 <div data-bind="visible: mode() === 'dry'">
                     <hr>
-                    <h4>{{ _('Dry mode') }}</h4>
+                    <h4>{{ _("Dry mode") }}</h4>
                     <p class="text-muted">
-                        {{ _('Configure filament presets, custom target/timer and start/stop the dry cycle in the Drying tab.') }}
+                        {{ _("Configure filament presets, custom target/timer and start/stop the dry cycle in the Drying tab.") }}
                     </p>
                 </div>
             </div>
         </div>
-
         <!-- =========================================================
              SAFETY — lock, unlock, emergency stop
              ========================================================= -->
         <div class="tab-pane" id="pandabreath_sub_safety">
             <div class="control-group">
-                <label>{{ _('Safety lock') }}</label>
+                <label>{{ _("Safety lock") }}</label>
                 <div class="btn-group">
                     <button class="btn btn-warning"
-                            data-bind="visible: !locked(), click: lock,
-                                       enable: !observeOnly()">
-                        {{ _('Lock') }}
+                            data-bind="visible: !locked(), click: lock, enable: !observeOnly()">
+                        {{ _("Lock") }}
                     </button>
-                    <button class="btn btn-success"
-                            data-bind="visible: locked, click: unlock">
-                        {{ _('Unlock') }}
-                    </button>
+                    <button class="btn btn-success" data-bind="visible: locked, click: unlock">{{ _("Unlock") }}</button>
                 </div>
-                <span class="help-block">
-                    {{ _('Locks all write commands. Unlock when ready to issue commands again.') }}
-                </span>
+                <span class="help-block">{{ _("Locks all write commands. Unlock when ready to issue commands again.") }}</span>
             </div>
-
             <hr>
-
             <div class="control-group">
-                <label>{{ _('Emergency stop') }}</label>
+                <label>{{ _("Emergency stop") }}</label>
                 <div>
                     <button class="btn btn-danger btn-large"
                             data-bind="click: confirmEmergencyStop">
                         <i class="fa fa-power-off"></i>
-                        {{ _('E-STOP') }}
+                        {{ _("E-STOP") }}
                     </button>
                 </div>
                 <span class="help-block">
-                    {{ _('Switches the device power off and engages the safety lock — even in observe-only mode. The Panda Breath firmware stops any running dry cycle on its own.') }}
+                    {{ _("Switches the device power off and engages the safety lock — even in observe-only mode. The Panda Breath firmware stops any running dry cycle on its own.") }}
                 </span>
             </div>
-
-            <div data-bind="visible: locked" class="alert alert-error" style="margin-top: 16px;">
-                <strong>{{ _('LOCKED') }}</strong>
+            <div data-bind="visible: locked"
+                 class="alert alert-error"
+                 style="margin-top: 16px">
+                <strong>{{ _("LOCKED") }}</strong>
                 — <span data-bind="text: lockReason"></span>
             </div>
         </div>
-
         <!-- =========================================================
              DRYING — presets, custom values, start/stop, status
              ========================================================= -->
@@ -322,161 +263,135 @@
             <div class="row-fluid pandabreath-dry">
                 <div class="span6">
                     <div class="control-group">
-                        <label>{{ _('Filament preset') }}</label>
+                        <label>{{ _("Filament preset") }}</label>
                         <div class="btn-group">
                             <button class="btn"
-                                    data-bind="click: selectPresetPla,
-                                               enable: dryEditEnabled,
-                                               css: { active: dryPreset() === 'pla' }">
+                                    data-bind="click: selectPresetPla, enable: dryEditEnabled, css: { active: dryPreset() === 'pla' }">
                                 PLA
                             </button>
                             <button class="btn"
-                                    data-bind="click: selectPresetPetg,
-                                               enable: dryEditEnabled,
-                                               css: { active: dryPreset() === 'petg' }">
+                                    data-bind="click: selectPresetPetg, enable: dryEditEnabled, css: { active: dryPreset() === 'petg' }">
                                 PETG / ABS
                             </button>
                             <button class="btn"
-                                    data-bind="click: function(){ dryPreset('custom'); },
-                                               enable: dryEditEnabled,
-                                               css: { active: dryPreset() === 'custom' }">
-                                {{ _('Custom') }}
+                                    data-bind="click: function(){ dryPreset('custom'); }, enable: dryEditEnabled, css: { active: dryPreset() === 'custom' }">
+                                {{ _("Custom") }}
                             </button>
                         </div>
                         <span class="help-block">
-                            {{ _('Presets load device-internal defaults for the chosen filament. Switch to Custom to set target & timer manually.') }}
+                            {{ _("Presets load device-internal defaults for the chosen filament. Switch to Custom to set target & timer manually.") }}
                         </span>
                         <span class="help-block text-warning"
                               data-bind="visible: mode() !== 'dry' && !dryingActive()">
-                            {{ _('Switch to Dry mode in the Chamber tab to edit these values.') }}
+                            {{ _("Switch to Dry mode in the Chamber tab to edit these values.") }}
                         </span>
-                        <span class="help-block text-warning"
-                              data-bind="visible: dryingActive">
-                            {{ _('Stop the current drying cycle to change preset or values.') }}
+                        <span class="help-block text-warning" data-bind="visible: dryingActive">
+                            {{ _("Stop the current drying cycle to change preset or values.") }}
                         </span>
                     </div>
-
                     <div data-bind="visible: dryPreset() === 'custom'">
                         <div class="control-group">
-                            <label>{{ _('Dry target') }} (°C)</label>
-                            <input type="number" min="40" max="60" step="1"
-                                   data-bind="value: dryTargetInput,
-                                              valueUpdate: 'input',
-                                              hasFocus: dryTargetInputFocused,
-                                              enable: dryEditEnabled">
+                            <label>{{ _("Dry target") }} (°C)</label>
+                            <input type="number"
+                                   min="40"
+                                   max="60"
+                                   step="1"
+                                   data-bind="value: dryTargetInput, valueUpdate: 'input', hasFocus: dryTargetInputFocused, enable: dryEditEnabled">
                         </div>
                         <div class="control-group">
-                            <label>{{ _('Dry timer') }} ({{ _('hours') }})</label>
-                            <input type="number" min="1" max="99" step="1"
-                                   data-bind="value: dryTimerInput,
-                                              valueUpdate: 'input',
-                                              hasFocus: dryTimerInputFocused,
-                                              enable: dryEditEnabled">
-                            <span class="help-block">
-                                {{ _('Minimum 2 h — the device firmware silently rejects shorter values.') }}
-                            </span>
+                            <label>{{ _("Dry timer") }} ({{ _("hours") }})</label>
+                            <input type="number"
+                                   min="1"
+                                   max="99"
+                                   step="1"
+                                   data-bind="value: dryTimerInput, valueUpdate: 'input', hasFocus: dryTimerInputFocused, enable: dryEditEnabled">
+                            <span class="help-block">{{ _("Minimum 2 h — the device firmware silently rejects shorter values.") }}</span>
                         </div>
                         <div class="control-group">
                             <button class="btn btn-primary"
-                                    data-bind="click: applyCustomDry,
-                                               enable: dryEditEnabled">
-                                {{ _('Apply Custom') }}
+                                    data-bind="click: applyCustomDry, enable: dryEditEnabled">
+                                {{ _("Apply Custom") }}
                             </button>
-                            <span class="help-block">
-                                {{ _('Sends target + timer + commit in one transaction (single reconnect).') }}
-                            </span>
+                            <span class="help-block">{{ _("Sends target + timer + commit in one transaction (single reconnect).") }}</span>
                         </div>
                     </div>
                 </div>
-
                 <div class="span6">
-                    <h4>{{ _('Drying status') }}</h4>
+                    <h4>{{ _("Drying status") }}</h4>
                     <table class="table table-condensed">
                         <tr>
-                            <th>{{ _('Current dry target') }}</th>
+                            <th>{{ _("Current dry target") }}</th>
                             <td data-bind="text: dryTargetDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Timer remaining') }}</th>
+                            <th>{{ _("Timer remaining") }}</th>
                             <td data-bind="text: dryRemainingDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Currently drying') }}</th>
+                            <th>{{ _("Currently drying") }}</th>
                             <td>
-                                <span data-bind="text: dryingActive() ? '{{ _('yes') }}' : '{{ _('no') }}',
-                                                 css: { 'text-success': dryingActive,
-                                                        'text-muted':   !dryingActive() }"></span>
+                                <span data-bind="text: dryingActive() ? '{{ _("yes") }}' : '{{ _("no") }}', css: { 'text-success': dryingActive, 'text-muted':   !dryingActive() }"></span>
                             </td>
                         </tr>
                     </table>
-
                     <div class="control-group">
-                        <label>{{ _('Drying control') }}</label>
+                        <label>{{ _("Drying control") }}</label>
                         <div class="btn-group">
                             <button class="btn btn-success"
-                                    data-bind="click: startDrying,
-                                               enable: canStartDrying,
-                                               css: { active: dryingActive }">
-                                <i class="fa fa-play"></i> {{ _('Start drying') }}
+                                    data-bind="click: startDrying, enable: canStartDrying, css: { active: dryingActive }">
+                                <i class="fa fa-play"></i> {{ _("Start drying") }}
                             </button>
                             <button class="btn btn-danger"
-                                    data-bind="click: stopDrying,
-                                               enable: canStopDrying,
-                                               css: { active: !dryingActive() }">
-                                <i class="fa fa-stop"></i> {{ _('Stop drying') }}
+                                    data-bind="click: stopDrying, enable: canStopDrying, css: { active: !dryingActive() }">
+                                <i class="fa fa-stop"></i> {{ _("Stop drying") }}
                             </button>
                         </div>
-                        <span class="help-block text-warning"
-                              data-bind="visible: octoprintBusy">
-                            {{ _('Drying is disabled while the printer is running a job — the chamber is needed for printing, not filament drying.') }}
+                        <span class="help-block text-warning" data-bind="visible: octoprintBusy">
+                            {{ _("Drying is disabled while the printer is running a job — the chamber is needed for printing, not filament drying.") }}
                         </span>
                         <span class="help-block"
                               data-bind="visible: !octoprintBusy() && !canStartDrying() && !dryingActive()">
-                            {{ _('To start drying: switch to Dry mode and turn Power on in the Chamber tab first.') }}
+                            {{ _("To start drying: switch to Dry mode and turn Power on in the Chamber tab first.") }}
                         </span>
                         <span class="help-block"
                               data-bind="visible: canStartDrying() || dryingActive()">
-                            {{ _('Mirrors the Start/Stop buttons in the Panda Breath WebUI.') }}
+                            {{ _("Mirrors the Start/Stop buttons in the Panda Breath WebUI.") }}
                         </span>
                     </div>
                 </div>
             </div>
         </div>
-
         <!-- =========================================================
              NETWORK — paired printer + Panda Breath LAN + firmware + responses
              ========================================================= -->
         <div class="tab-pane" id="pandabreath_sub_network">
             <div class="row-fluid">
                 <div class="span6">
-                    <h4>{{ _('Paired printer') }}</h4>
+                    <h4>{{ _("Paired printer") }}</h4>
                     <table class="table table-condensed">
                         <tr>
-                            <th>{{ _('Endpoint') }}</th>
+                            <th>{{ _("Endpoint") }}</th>
                             <td data-bind="text: pairedPrinterDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Reachability') }}</th>
+                            <th>{{ _("Reachability") }}</th>
                             <td data-bind="text: printerStateDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Scan status') }}</th>
+                            <th>{{ _("Scan status") }}</th>
                             <td>
-                                <span data-bind="css: printerScanBadgeCss,
-                                                 text: printerScanDisplay"></span>
+                                <span data-bind="css: printerScanBadgeCss, text: printerScanDisplay"></span>
                             </td>
                         </tr>
                     </table>
-                    <p class="text-muted" data-bind="visible: printerScanList().length > 0">
-                        {{ _('Scan list') }}:
-                    </p>
+                    <p class="text-muted" data-bind="visible: printerScanList().length > 0">{{ _("Scan list") }}:</p>
                     <table class="table table-condensed"
                            data-bind="visible: printerScanList().length > 0">
                         <thead>
                             <tr>
-                                <th>{{ _('Name') }}</th>
-                                <th>{{ _('IP') }}</th>
-                                <th>{{ _('Port') }}</th>
+                                <th>{{ _("Name") }}</th>
+                                <th>{{ _("IP") }}</th>
+                                <th>{{ _("Port") }}</th>
                             </tr>
                         </thead>
                         <tbody data-bind="foreach: printerScanList">
@@ -488,129 +403,122 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div class="span6">
-                    <h4>{{ _('Panda Breath network') }}</h4>
+                    <h4>{{ _("Panda Breath network") }}</h4>
                     <table class="table table-condensed">
                         <tr>
-                            <th>{{ _('Hostname') }}</th>
+                            <th>{{ _("Hostname") }}</th>
                             <td data-bind="text: netStaHostnameDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('LAN IP') }}</th>
+                            <th>{{ _("LAN IP") }}</th>
                             <td data-bind="text: netStaIpDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('WiFi SSID') }}</th>
+                            <th>{{ _("WiFi SSID") }}</th>
                             <td data-bind="text: netWifiSsidDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('STA state') }}</th>
+                            <th>{{ _("STA state") }}</th>
                             <td data-bind="text: netStaStateDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Access point') }}</th>
+                            <th>{{ _("Access point") }}</th>
                             <td data-bind="text: netApOnDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('AP SSID') }}</th>
+                            <th>{{ _("AP SSID") }}</th>
                             <td data-bind="text: netApSsidDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('AP IP') }}</th>
+                            <th>{{ _("AP IP") }}</th>
                             <td data-bind="text: netApIpDisplay"></td>
                         </tr>
                     </table>
                 </div>
             </div>
-
             <hr>
-
             <div class="row-fluid">
                 <div class="span6">
-                    <h4>{{ _('Firmware') }}</h4>
+                    <h4>{{ _("Firmware") }}</h4>
                     <table class="table table-condensed">
                         <tr>
-                            <th>{{ _('Version') }}</th>
+                            <th>{{ _("Version") }}</th>
                             <td>
                                 <span data-bind="text: fwVersion() || '—'"></span>
-                                <a data-bind="visible: fwVersion() && latestFwVersion() && _normFw(fwVersion()) !== _normFw(latestFwVersion()),
-                                              attr: { href: latestFwVersionUrl() }"
+                                <a data-bind="visible: fwVersion() && latestFwVersion() && _normFw(fwVersion()) !== _normFw(latestFwVersion()), attr: { href: latestFwVersionUrl() }"
                                    class="label label-warning"
-                                   target="_blank" rel="noopener noreferrer"
-                                   style="margin-left: calc(-1em + 7px);">
-                                    <span data-bind="text: latestFwVersion() + '{{ _(' available') }}'"></span>
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   style="margin-left: calc(-1em + 7px)">
+                                    <span data-bind="text: latestFwVersion() + '{{ _(" available") }}'"></span>
                                 </a>
                             </td>
                         </tr>
                         <tr>
-                            <th>{{ _('Language') }}</th>
+                            <th>{{ _("Language") }}</th>
                             <td data-bind="text: languageDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Printer type') }}</th>
+                            <th>{{ _("Printer type") }}</th>
                             <td data-bind="text: printerTypeDisplay"></td>
                         </tr>
                     </table>
                 </div>
                 <div class="span6">
-                    <h4>{{ _('MQTT') }}</h4>
+                    <h4>{{ _("MQTT") }}</h4>
                     <table class="table table-condensed">
                         <tr>
-                            <th>{{ _('Firmware support') }}</th>
+                            <th>{{ _("Firmware support") }}</th>
                             <td>
                                 <span class="label"
-                                      data-bind="text: mqttSupportDisplay,
-                                                 css: mqttSupportBadgeCss"></span>
+                                      data-bind="text: mqttSupportDisplay, css: mqttSupportBadgeCss"></span>
                             </td>
                         </tr>
                         <tr>
-                            <th>{{ _('Bridge') }}</th>
+                            <th>{{ _("Bridge") }}</th>
                             <td>
                                 <span class="label"
-                                      data-bind="text: mqttBridgeStateDisplay,
-                                                 css: mqttBridgeBadgeCss"></span>
+                                      data-bind="text: mqttBridgeStateDisplay, css: mqttBridgeBadgeCss"></span>
                             </td>
                         </tr>
                         <tr>
-                            <th>{{ _('Configured broker') }}</th>
+                            <th>{{ _("Configured broker") }}</th>
                             <td data-bind="text: mqttConfiguredBrokerDisplay"></td>
                         </tr>
                         <tr>
-                            <th>{{ _('Base topic') }}</th>
-                            <td><code data-bind="text: mqttBaseTopicDisplay"></code></td>
+                            <th>{{ _("Base topic") }}</th>
+                            <td>
+                                <code data-bind="text: mqttBaseTopicDisplay"></code>
+                            </td>
                         </tr>
                         <tr>
-                            <th>{{ _('Device broker') }}</th>
+                            <th>{{ _("Device broker") }}</th>
                             <td data-bind="text: mqttDeviceBrokerDisplay"></td>
                         </tr>
                     </table>
                 </div>
             </div>
-
             <div class="row-fluid" data-bind="visible: responses().length > 0">
                 <div class="span12">
-                    <h4>{{ _('Recent device responses') }}</h4>
-                    <p class="text-muted">
-                        {{ _('Command acknowledgements from the Panda Breath (set_hostname, scan, etc.).') }}
-                    </p>
+                    <h4>{{ _("Recent device responses") }}</h4>
+                    <p class="text-muted">{{ _("Command acknowledgements from the Panda Breath (set_hostname, scan, etc.).") }}</p>
                     <table class="table table-condensed">
                         <thead>
                             <tr>
-                                <th>{{ _('Time') }}</th>
-                                <th>{{ _('Type') }}</th>
-                                <th>{{ _('Result') }}</th>
+                                <th>{{ _("Time") }}</th>
+                                <th>{{ _("Type") }}</th>
+                                <th>{{ _("Result") }}</th>
                             </tr>
                         </thead>
                         <tbody data-bind="foreach: responses().slice().reverse()">
                             <tr>
                                 <td data-bind="text: tsDisplay"></td>
-                                <td><code data-bind="text: type"></code></td>
                                 <td>
-                                    <span data-bind="text: okDisplay,
-                                                     css: { 'text-success': ok === 1,
-                                                            'text-error':   ok === 0,
-                                                            'text-muted':   ok === null }"></span>
+                                    <code data-bind="text: type"></code>
+                                </td>
+                                <td>
+                                    <span data-bind="text: okDisplay, css: { 'text-success': ok === 1, 'text-error':   ok === 0, 'text-muted':   ok === null }"></span>
                                 </td>
                             </tr>
                         </tbody>
@@ -618,79 +526,63 @@
                 </div>
             </div>
         </div>
-
         <!-- =========================================================
              DEBUG — frame ring + persistent log (only when enabled)
              ========================================================= -->
-        <div class="tab-pane" id="pandabreath_sub_debug"
+        <div class="tab-pane"
+             id="pandabreath_sub_debug"
              data-bind="visible: debugPanelEnabled">
-            <h4>{{ _('Recent frames') }}</h4>
-            <p class="text-muted">
-                {{ _('Live ring buffer of WebSocket frames exchanged with the device.') }}
-            </p>
-            <div class="pandabreath-frames"
-                 data-bind="foreach: frames">
+            <h4>{{ _("Recent frames") }}</h4>
+            <p class="text-muted">{{ _("Live ring buffer of WebSocket frames exchanged with the device.") }}</p>
+            <div class="pandabreath-frames" data-bind="foreach: frames">
                 <div class="pandabreath-frame"
-                     data-bind="css: { 'pandabreath-rx': dir === 'rx',
-                                       'pandabreath-tx': dir === 'tx' }">
-                    <span class="pandabreath-frame-dir"
-                          data-bind="text: dir.toUpperCase()"></span>
-                    <span class="pandabreath-frame-ts"
-                          data-bind="text: tsDisplay"></span>
+                     data-bind="css: { 'pandabreath-rx': dir === 'rx', 'pandabreath-tx': dir === 'tx' }">
+                    <span class="pandabreath-frame-dir" data-bind="text: dir.toUpperCase()"></span>
+                    <span class="pandabreath-frame-ts" data-bind="text: tsDisplay"></span>
                     <code data-bind="text: frame"></code>
                 </div>
             </div>
-            <div data-bind="visible: frames().length === 0"
-                 class="text-muted">
-                {{ _('No frames yet.') }}
-            </div>
-
+            <div data-bind="visible: frames().length === 0" class="text-muted">{{ _("No frames yet.") }}</div>
             <hr>
-
-            <h4>{{ _('Persistent frame log') }}</h4>
+            <h4>{{ _("Persistent frame log") }}</h4>
             <p data-bind="visible: !frameLogEnabled()" class="text-muted">
-                {{ _('Disabled — enable "Persist WS frames to disk" in plugin settings to capture long sessions.') }}
+                {{ _("Disabled — enable \"Persist WS frames to disk\" in plugin settings to capture long sessions.") }}
             </p>
             <div data-bind="visible: frameLogEnabled">
                 <p class="text-muted">
-                    {{ _('Files in') }} <code data-bind="text: frameLogDir"></code>
+                    {{ _("Files in") }} <code data-bind="text: frameLogDir"></code>
                 </p>
                 <table class="table table-condensed"
                        data-bind="visible: frameLogFiles().length > 0">
                     <thead>
                         <tr>
-                            <th>{{ _('File') }}</th>
-                            <th>{{ _('Size') }}</th>
-                            <th>{{ _('Modified') }}</th>
+                            <th>{{ _("File") }}</th>
+                            <th>{{ _("Size") }}</th>
+                            <th>{{ _("Modified") }}</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody data-bind="foreach: frameLogFiles">
                         <tr>
-                            <td><code data-bind="text: name"></code></td>
+                            <td>
+                                <code data-bind="text: name"></code>
+                            </td>
                             <td data-bind="text: sizeDisplay"></td>
                             <td data-bind="text: mtimeDisplay"></td>
                             <td>
                                 <a class="btn btn-mini"
-                                   data-bind="attr: { href: downloadUrl }, text: '{{ _('Download') }}'"></a>
+                                   data-bind="attr: { href: downloadUrl }, text: '{{ _("Download") }}'"></a>
                                 <button class="btn btn-mini btn-danger"
-                                        data-bind="click: $parent.deleteFrameLog">
-                                    {{ _('Delete') }}
-                                </button>
+                                        data-bind="click: $parent.deleteFrameLog">{{ _("Delete") }}</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <p data-bind="visible: frameLogFiles().length === 0"
-                   class="text-muted">
-                    {{ _('No log files yet — frames will land here on the next received status.') }}
+                <p data-bind="visible: frameLogFiles().length === 0" class="text-muted">
+                    {{ _("No log files yet — frames will land here on the next received status.") }}
                 </p>
-                <button class="btn btn-small"
-                        data-bind="click: refreshFrameLog">
-                    {{ _('Refresh') }}
-                </button>
+                <button class="btn btn-small" data-bind="click: refreshFrameLog">{{ _("Refresh") }}</button>
             </div>
         </div>
-
     </div>
 </div>

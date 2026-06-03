@@ -1,4 +1,3 @@
-# coding=utf-8
 """Tests for the print/drying interlock in the plugin glue.
 
 Dry-mode exists to dry filament, so it must not be possible to switch the
@@ -11,7 +10,6 @@ The plugin glue (``__init__``) is otherwise excluded from coverage because
 it needs a live OctoPrint harness, but the interlock is pure duck-typed
 logic over ``self._printer`` and a stubbed Flask, so it is testable here.
 """
-from __future__ import absolute_import
 
 import pytest
 
@@ -48,16 +46,25 @@ def _plugin(printer):
     # pylint: disable=protected-access
     plugin._printer = printer
     import logging
+
     plugin._logger = logging.getLogger("test")
     return plugin
 
 
 # ---- _printer_is_busy -------------------------------------------------
 
-@pytest.mark.parametrize("flag", [
-    "is_printing", "is_starting", "is_pausing",
-    "is_paused", "is_resuming", "is_cancelling",
-])
+
+@pytest.mark.parametrize(
+    "flag",
+    [
+        "is_printing",
+        "is_starting",
+        "is_pausing",
+        "is_paused",
+        "is_resuming",
+        "is_cancelling",
+    ],
+)
 def test_busy_for_each_active_state(flag):
     """Interlock reports busy for each known active OctoPrint predicate."""
     plugin = _plugin(FakePrinter(**{flag: True}))
