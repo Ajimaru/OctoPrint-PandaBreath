@@ -12,7 +12,7 @@
 [![Downloads](https://img.shields.io/github/downloads/Ajimaru/OctoPrint-PandaBreath/total.svg)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
 [![Made with Love](https://img.shields.io/badge/made_with-❤️-ff69b4)](https://github.com/Ajimaru/OctoPrint-PandaBreath)
 
-### Direct WebSocket control of the BIQU Panda Breath chamber heater from OctoPrint
+### Direct control of the BIQU Panda Breath chamber heater from OctoPrint
 
 <!-- markdownlint-disable MD033-->
 <img src="assets/img/main_screen.png" alt="OctoPrint PandaBreath Main Screen" width="666" />

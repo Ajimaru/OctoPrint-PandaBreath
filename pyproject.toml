@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "OctoPrint-PandaBreath"
-version = "0.1.1dev36+d411dd6"
+version = "0.1.1rc1+dcd06aa"
 description = "PandaBreath plugin for OctoPrint"
 authors = [
     {name = "ajimaru", email = "ajimaru_gdr@pm.me"}
