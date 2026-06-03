@@ -1,0 +1,30 @@
+# Code owners for OctoPrint-PandaBreath.
+# GitHub auto-requests reviews from the listed owners when a pull request
+# touches matching paths.
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default reviewer for the entire repository
+* @Ajimaru
+
+# Core plugin modules
+octoprint_pandabreath/__init__.py @Ajimaru
+octoprint_pandabreath/protocol.py @Ajimaru
+octoprint_pandabreath/controller.py @Ajimaru
+octoprint_pandabreath/frame_log.py @Ajimaru
+
+# Frontend
+octoprint_pandabreath/static/ @Ajimaru
+octoprint_pandabreath/templates/ @Ajimaru
+
+# Documentation
+README.md @Ajimaru
+CHANGELOG.md @Ajimaru
+CONTRIBUTING.md @Ajimaru
+SECURITY.md @Ajimaru
+CODE_OF_CONDUCT.md @Ajimaru
+AUTHORS.md @Ajimaru
+
+# Configuration and metadata
+setup.py @Ajimaru
+pyproject.toml @Ajimaru
+.github/ @Ajimaru

@@ -1,0 +1,322 @@
+<form class="form-horizontal">
+    <h4>{{ _('Safety') }}</h4>
+
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.observe_only">
+                <strong>{{ _('Observe-only mode') }}</strong>
+            </label>
+            <span class="help-block">
+                {{ _('Strongly recommended until the protocol is verified against your hardware. The plugin will connect, send the pairing bind and pull status, but suppress every write frame. The HTTP API rejects mutating commands.') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.navbar_estop_enabled">
+                <strong>{{ _('Show emergency-stop button in navbar') }}</strong>
+            </label>
+            <span class="help-block">
+                {{ _('Triggers a confirmation dialog, then forces target=0, heater OFF and safety lock — even in observe-only mode.') }}
+            </span>
+        </div>
+    </div>
+
+    <h4>{{ _('Transport') }}</h4>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Mode') }}</label>
+        <div class="controls">
+            <select data-bind="value: settings.plugins.pandabreath.transport">
+                <option value="client">
+                    {{ _('Client (OctoPrint connects to ws://<panda>/ws)') }}
+                </option>
+                <option value="server">
+                    {{ _('Server (Bambu-emulation; Panda Breath connects to us)') }}
+                </option>
+            </select>
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.transport() === 'server'">
+        <label class="control-label">{{ _('Bind host') }}</label>
+        <div class="controls">
+            <input type="text"
+                   data-bind="value: settings.plugins.pandabreath.bind_host">
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.transport() === 'server'">
+        <label class="control-label">{{ _('Bind port') }}</label>
+        <div class="controls">
+            <input type="number"
+                   data-bind="value: settings.plugins.pandabreath.bind_port">
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.transport() === 'client'">
+        <label class="control-label">{{ _('Panda Breath IP / host') }}</label>
+        <div class="controls">
+            <input type="text" placeholder="192.168.1.50"
+                   data-bind="value: settings.plugins.pandabreath.client_host">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Bound printer') }}</label>
+        <div class="controls">
+            <span id="pandabreath_paired_printer_inline"
+                  class="uneditable-input">{{ _('not bound') }}</span>
+            <span class="help-block">
+                {{ _('The printer the Panda Breath is currently bound to (read from its last status snapshot).') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Pairing actions') }}</label>
+        <div class="controls">
+            <button type="button" class="btn"
+                    id="pandabreath_btn_scan_printers">
+                <i class="fa fa-search"></i>
+                {{ _('Scan for printers') }}
+            </button>
+            <button type="button" class="btn"
+                    id="pandabreath_btn_refresh_settings">
+                <i class="fa fa-refresh"></i>
+                {{ _('Refresh from device') }}
+            </button>
+            <span class="help-block">
+                {{ _('Scan triggers a fresh LAN discovery on the Panda Breath — this takes 2–3 minutes; watch the Scan status badge under Diagnostics. Refresh forces a WebSocket reconnect so the device re-sends its full settings snapshot — expect a brief offline blip in the sidebar while it cycles.') }}
+            </span>
+        </div>
+    </div>
+
+    <h4>{{ _('TLS') }}</h4>
+
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.tls_enabled">
+                {{ _('Enable TLS (wss://) for the WebSocket transport') }}
+            </label>
+            <span class="help-block">
+                {{ _('Real Panda Breath firmware does not require TLS on its /ws endpoint. Only enable this if your network policy or a custom firmware needs it.') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.tls_enabled">
+        <label class="control-label">{{ _('CA file') }}</label>
+        <div class="controls">
+            <input type="text"
+                   data-bind="value: settings.plugins.pandabreath.tls_ca_file">
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.tls_enabled">
+        <label class="control-label">{{ _('Client cert file') }}</label>
+        <div class="controls">
+            <input type="text"
+                   data-bind="value: settings.plugins.pandabreath.tls_cert_file">
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.tls_enabled">
+        <label class="control-label">{{ _('Client key file') }}</label>
+        <div class="controls">
+            <input type="text"
+                   data-bind="value: settings.plugins.pandabreath.tls_key_file">
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.tls_enabled">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.tls_insecure">
+                {{ _('Skip certificate verification (debug only)') }}
+            </label>
+        </div>
+    </div>
+
+    <div data-bind="visible: settings.plugins.pandabreath.transport() === 'server'">
+        <h4>{{ _('Pairing (server mode)') }}</h4>
+
+        <div class="control-group">
+            <div class="controls">
+                <span class="help-block">
+                    {{ _('Bambu-emulation setups (server mode) need these credentials so the Panda Breath accepts the bind frame. Leave them empty for any other use.') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Host IP') }}</label>
+            <div class="controls">
+                <input type="text" placeholder="{{ _('leave empty to skip') }}"
+                       data-bind="value: settings.plugins.pandabreath.host_ip">
+                <span class="help-block">
+                    {{ _('IP of this OctoPrint host, echoed back to the Panda Breath in the bind frame.') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Serial number') }}</label>
+            <div class="controls">
+                <input type="text" placeholder="{{ _('leave empty to skip') }}"
+                       data-bind="value: settings.plugins.pandabreath.serial_number">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Access code') }}</label>
+            <div class="controls">
+                <input type="password" placeholder="{{ _('leave empty to skip') }}"
+                       data-bind="value: settings.plugins.pandabreath.access_code">
+            </div>
+        </div>
+    </div>
+
+    <h4>{{ _('Limits') }}</h4>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Max temperature') }} (°C)</label>
+        <div class="controls">
+            <input type="number" step="0.5"
+                   data-bind="value: settings.plugins.pandabreath.max_temp">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Timeout') }} (s)</label>
+        <div class="controls">
+            <input type="number" step="1"
+                   data-bind="value: settings.plugins.pandabreath.timeout_seconds">
+        </div>
+    </div>
+
+    <h4>{{ _('Print integration') }}</h4>
+
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.gcode_integration">
+                {{ _('Control chamber from M141/M191 in G-code') }}
+            </label>
+            <span class="help-block">
+                {{ _('When your slicer or G-code sets a chamber temperature with M141/M191, apply it to the Panda Breath. The command is not forwarded to the printer (most firmware rejects it).') }}
+            </span>
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.auto_on_print_start">
+                {{ _('Heat chamber when print starts') }}
+            </label>
+            <span class="help-block">
+                {{ _('When a print starts, switch the Panda Breath to auto mode and heat to the print-start target below.') }}
+            </span>
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.auto_off_print_end">
+                {{ _('Cool down when print ends') }}
+            </label>
+            <span class="help-block">
+                {{ _('When a print finishes, is cancelled or fails, set the chamber target to 0 °C and switch the heater off.') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.auto_on_print_start">
+        <label class="control-label">{{ _('Print-start target') }} (°C)</label>
+        <div class="controls">
+            <input type="number" step="0.5"
+                   data-bind="value: settings.plugins.pandabreath.print_start_target">
+        </div>
+    </div>
+
+    <h4>{{ _('Debug') }}</h4>
+
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.debug_panel_enabled">
+                <strong>{{ _('Show debug panel in plugin tab') }}</strong>
+            </label>
+            <span class="help-block">
+                {{ _('Enable only when troubleshooting protocol issues — broadcasts are rate-limited but still add noise to the plugin-message channel.') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.debug_panel_enabled">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox"
+                       data-bind="checked: settings.plugins.pandabreath.frame_log_enabled">
+                <strong>{{ _('Persist WS frames to disk') }}</strong>
+            </label>
+            <span class="help-block">
+                {{ _('Requires the debug panel above. One JSONL file per day in the plugin data folder. Older files are removed automatically based on the retention setting.') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group"
+         data-bind="visible: settings.plugins.pandabreath.debug_panel_enabled() &amp;&amp; settings.plugins.pandabreath.frame_log_enabled()">
+        <label class="control-label">{{ _('Retention') }} ({{ _('days') }})</label>
+        <div class="controls">
+            <input type="number" min="1" max="365" step="1"
+                   data-bind="value: settings.plugins.pandabreath.frame_log_retention_days">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Firmware') }}</label>
+        <div class="controls">
+            <span id="pandabreath_fwversion_inline"
+                  class="uneditable-input">{{ _('not reported') }}</span>
+            <a id="pandabreath_fw_update_badge"
+               class="label label-warning"
+               target="_blank" rel="noopener noreferrer"
+               style="display: none; margin-top: 4px;"></a>
+            <span class="help-block">
+                {{ _('Firmware string reported by the Panda Breath. Empty until the device sends its first status frame.') }}
+            </span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Frame logs on disk') }}</label>
+        <div class="controls">
+            <span id="pandabreath_framelog_summary"
+                  class="text-muted">{{ _('no log files') }}</span>
+            <button type="button" class="btn btn-danger"
+                    id="pandabreath_btn_delete_frame_logs"
+                    style="margin-left: 8px;">
+                <i class="fa fa-trash"></i>
+                {{ _('Delete all') }}
+            </button>
+            <span class="help-block">
+                {{ _('Removes every persistent frame log file in the plugin data folder. A fresh file will be created on the next received frame if persistence is enabled.') }}
+            </span>
+        </div>
+    </div>
+</form>

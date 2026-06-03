@@ -1,0 +1,88 @@
+name: i18n
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  i18n:
+    name: i18n catalog check
+    runs-on: ubuntu-latest
+
+    steps:
+      - # Checkout repository code
+        name: Checkout
+        uses: actions/checkout@v6
+
+      - # Setup Python 3.12 for i18n tools
+        name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - # Create venv and install Babel and polib for i18n
+        name: Create venv and install minimal i18n deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install setuptools 'polib==1.2.0' 'Babel>=2.16,<2.17' 'OctoPrint>=1.11.0,<2'
+
+      - # Extract and validate translation catalog
+        name: Verify messages.pot is up to date
+        run: |
+          . .venv/bin/activate
+          ./.venv/bin/pybabel extract --sort-output -F babel.cfg -o /tmp/messages.pot .
+          python - <<'PY'
+          import pathlib
+          import sys
+
+          def normalize(path: str) -> str:
+              text = pathlib.Path(path).read_text(encoding="utf-8")
+              lines = text.splitlines()
+              out = []
+              for line in lines:
+                  # These headers are time/tool-version dependent.
+                  if line.startswith('"POT-Creation-Date:'):
+                      continue
+                  if line.startswith('"Generated-By:'):
+                      continue
+                  out.append(line)
+              return "\n".join(out).strip() + "\n"
+
+          repo = "translations/messages.pot"
+          tmp = "/tmp/messages.pot"
+
+          if not pathlib.Path(repo).exists():
+              print(f"Missing {repo}")
+              sys.exit(1)
+
+          if normalize(repo) != normalize(tmp):
+              print("translations/messages.pot is out of date. Run:")
+              print("  pybabel extract --sort-output -F babel.cfg -o translations/messages.pot .")
+              print("  pybabel update -i translations/messages.pot -d translations -l de")
+              print("  pybabel update -i translations/messages.pot -d translations -l en")
+              sys.exit(1)
+          PY
+
+      - # Compile translation catalogs and copy to plugin directory
+        name: Compile catalogs
+        run: |
+          . .venv/bin/activate
+          ./.venv/bin/pybabel compile -d translations
+          mkdir -p octoprint_pandabreath/translations
+          if [ -n "$(find translations -maxdepth 2 -type f -print -quit 2>/dev/null)" ]; then
+            cp -a translations/* octoprint_pandabreath/translations/
+          else
+            echo "Warning: translations/ is empty or missing; skipping copy"
+          fi

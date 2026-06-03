@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+recursive-include licenses *
+recursive-include octoprint_pandabreath/templates *
+recursive-include octoprint_pandabreath/translations *
+recursive-include octoprint_pandabreath/static *

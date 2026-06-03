@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+
+      - name: Build sdist and wheel
+        run: |
+          python -m build
+
+      - name: Create zip assets (versioned + latest)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+          zip_versioned="dist/OctoPrint-PandaBreath-${version}.zip"
+          zip_latest="dist/OctoPrint-PandaBreath-latest.zip"
+
+          shopt -s nullglob
+          sdist_candidates=(dist/*"${version}".tar.gz)
+          if (( ${#sdist_candidates[@]} != 1 )); then
+            echo "Expected exactly one sdist tarball matching version ${version}, found ${#sdist_candidates[@]}" >&2
+            ls -la dist >&2 || true
+            exit 1
+          fi
+          sdist="${sdist_candidates[0]}"
+
+          if [[ ! -f "$sdist" ]]; then
+            echo "Expected sdist not found: $sdist" >&2
+            exit 1
+          fi
+
+          python - "$sdist" "$zip_versioned" <<'PY'
+          import sys
+          import tarfile
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          tar_path = Path(sys.argv[1])
+          zip_path = Path(sys.argv[2])
+          zip_path.parent.mkdir(parents=True, exist_ok=True)
+
+          with tarfile.open(tar_path, "r:gz") as tf, zipfile.ZipFile(
+              zip_path, "w", compression=zipfile.ZIP_DEFLATED
+          ) as zf:
+              for member in tf.getmembers():
+                  if not member.isfile():
+                      continue
+
+                  # Defensive: ensure tar member paths cannot become path traversal entries in the zip.
+                  # Tar archives always use POSIX-style paths.
+                  member_path = PurePosixPath(member.name)
+                  if (
+                      member_path.is_absolute()
+                      or ".." in member_path.parts
+                      or ":" in member.name
+                      or member.name.startswith("\\")
+                  ):
+                      continue
+
+                  extracted = tf.extractfile(member)
+                  if extracted is None:
+                      continue
+                  data = extracted.read()
+
+                  zi = zipfile.ZipInfo(str(member_path))
+                  zi.external_attr = (member.mode & 0o777) << 16
+                  zf.writestr(zi, data)
+          PY
+
+          cp -f "$zip_versioned" "$zip_latest"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/*
+
+      - name: Generate release notes
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require("fs");
+
+            const tag = process.env.GITHUB_REF_NAME;
+            const title = String(tag || "")
+              .replace(/^OctoPrint[-_\s]?PandaBreath[-_\s]?/i, "")
+              .trim() || tag;
+
+            const { owner, repo } = context.repo;
+            const response = await github.rest.repos.generateReleaseNotes({
+              owner,
+              repo,
+              tag_name: tag,
+            });
+
+            const assets = [
+              "wheel (.whl)",
+              "sdist (.tar.gz)",
+              "versioned zip (.zip)",
+              "OctoPrint-PandaBreath-latest.zip",
+            ];
+
+            const body = [
+              title,
+              "",
+              response.data.body?.trim() || "",
+              "",
+              "Assets:",
+              ...assets.map((a) => `- ${a}`),
+              "",
+            ].join("\n");
+
+            fs.writeFileSync("release_notes.md", body, { encoding: "utf-8" });
+            fs.writeFileSync("release_title.txt", title, { encoding: "utf-8" });
+
+      - name: Read release title
+        id: release_title
+        run: |
+          title=$(cat release_title.txt)
+          echo "title=$title" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
+        with:
+          name: ${{ steps.release_title.outputs.title }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'a') || contains(github.ref_name, 'b') }}
+          body_path: release_notes.md
+          files: dist/*
+
+      # Optional: Publish to PyPI
+      #
+      # 1) Create a repository secret named PYPI_API_TOKEN
+      # 2) Uncomment the step below
+      #
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     password: ${{ secrets.PYPI_API_TOKEN }}

@@ -1,0 +1,105 @@
+.pandabreath-sidebar .pandabreath-status > div {
+    padding: 2px 0;
+}
+
+.pandabreath-sidebar .pandabreath-controls .control-group {
+    margin-bottom: 6px;
+}
+
+.pandabreath-sidebar .text-success { color: #468847; }
+.pandabreath-sidebar .text-error   { color: #b94a48; }
+.pandabreath-sidebar .text-muted   { color: #999; }
+
+.pandabreath-sidebar .pandabreath-observe-banner {
+    background: #fcf8e3;
+    border: 1px solid #faebcc;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.pandabreath-sidebar .pandabreath-debug a {
+    font-weight: 600;
+    text-decoration: none;
+}
+.pandabreath-sidebar .pandabreath-frames {
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 6px;
+    font-family: monospace;
+    font-size: 11px;
+}
+.pandabreath-sidebar .pandabreath-frame {
+    padding: 2px 4px;
+    border-left: 3px solid transparent;
+    word-break: break-all;
+}
+.pandabreath-sidebar .pandabreath-frame.pandabreath-rx {
+    border-left-color: #3a87ad;
+}
+.pandabreath-sidebar .pandabreath-frame.pandabreath-tx {
+    border-left-color: #468847;
+}
+.pandabreath-sidebar .pandabreath-frame-dir {
+    display: inline-block;
+    width: 22px;
+    font-weight: 600;
+}
+.pandabreath-sidebar .pandabreath-frame-ts {
+    color: #999;
+    margin-right: 4px;
+}
+
+/* Debug subtab frame ring — capped to a viewport-relative height so the
+ * page itself doesn't grow longer than the browser window. The list
+ * scrolls internally instead. 40vh ≈ 432 px on Full-HD with browser
+ * chrome subtracted, leaving room for the persistent-frame-log section
+ * below without forcing an outer scroll. */
+.pandabreath-tab .pandabreath-frames {
+    max-height: 40vh;
+    overflow-y: auto;
+    padding: 6px 0;
+    margin-top: 6px;
+    font-family: monospace;
+    font-size: 12px;
+}
+.pandabreath-tab .pandabreath-frame {
+    padding: 2px 4px;
+    border-left: 3px solid transparent;
+    word-break: break-all;
+}
+.pandabreath-tab .pandabreath-frame.pandabreath-rx {
+    border-left-color: #3a87ad;
+}
+.pandabreath-tab .pandabreath-frame.pandabreath-tx {
+    border-left-color: #468847;
+}
+.pandabreath-tab .pandabreath-frame-dir {
+    display: inline-block;
+    width: 22px;
+    font-weight: 600;
+}
+.pandabreath-tab .pandabreath-frame-ts {
+    color: #999;
+    margin-right: 4px;
+}
+
+/* Navbar emergency-stop button — red and obvious. */
+#navbar_plugin_pandabreath .pandabreath-estop-btn {
+    background: #b94a48;
+    color: #fff !important;
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+#navbar_plugin_pandabreath .pandabreath-estop-btn:hover {
+    background: #953b39;
+    text-decoration: none;
+}
+#navbar_plugin_pandabreath .pandabreath-estop-btn i {
+    margin-right: 4px;
+}

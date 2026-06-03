@@ -1,0 +1,130 @@
+<div class="pandabreath-sidebar">
+    <div data-bind="visible: observeOnly"
+         class="pandabreath-observe-banner">
+        <span class="label label-info">{{ _('OBSERVE-ONLY') }}</span>
+    </div>
+
+    <div class="pandabreath-status">
+        <div>
+            <strong>{{ _('Chamber') }}:</strong>
+            <span data-bind="text: chamberTempDisplay"></span>
+        </div>
+        <div>
+            <strong>{{ _('Power') }}:</strong>
+            <span data-bind="text: heaterStateDetailed,
+                             css: { 'text-success': heaterHeatingNow,
+                                    'text-warning': heaterOn() && !heaterHeatingNow(),
+                                    'text-muted':   !heaterOn() }"></span>
+        </div>
+        <div data-bind="visible: heaterOn">
+            <strong>{{ _('Mode') }}:</strong>
+            <span data-bind="text: mode"></span>
+        </div>
+        <div>
+            <strong>{{ _('Connection') }}:</strong>
+            <span data-bind="text: connected() ? '{{ _('online') }}'
+                                              : '{{ _('offline') }}',
+                             css: { 'text-success': connected,
+                                    'text-error': !connected() }"></span>
+        </div>
+        <div data-bind="visible: pairedPrinterKnown">
+            <strong>{{ _('Printer') }}:</strong>
+            <span data-bind="text: pairedPrinterSidebarStatus,
+                             css: { 'text-success': pairedPrinterBadgeCss() === 'label label-success',
+                                    'text-error': pairedPrinterBadgeCss() === 'label label-important',
+                                    'text-warning': pairedPrinterBadgeCss() === 'label label-info' }"></span>
+        </div>
+        <div data-bind="visible: !pairedPrinterKnown()">
+            <strong>{{ _('Printer') }}:</strong>
+            <span class="text-muted">{{ _('not bound') }}</span>
+        </div>
+        <div data-bind="visible: locked">
+            <span class="label label-important">
+                {{ _('LOCKED') }}
+                (<span data-bind="text: lockReason"></span>)
+            </span>
+        </div>
+    </div>
+
+    <!-- Mode-specific summary: shows the parameters in effect right now -->
+    <div data-bind="visible: heaterOn() && mode() === 'manual'"
+         class="pandabreath-modebox">
+        <hr>
+        <div><strong>{{ _('Manual mode') }}</strong></div>
+        <div>
+            <strong>{{ _('Setpoint') }}:</strong>
+            <span data-bind="text: targetTempDisplay"></span>
+        </div>
+    </div>
+
+    <div data-bind="visible: heaterOn() && mode() === 'auto'"
+         class="pandabreath-modebox">
+        <hr>
+        <div><strong>{{ _('Auto mode') }}</strong></div>
+        <div>
+            <strong>{{ _('Target') }}:</strong>
+            <span data-bind="text: targetTempDisplay"></span>
+        </div>
+        <div>
+            <strong>{{ _('Filter on') }}:</strong>
+            <span data-bind="text: filterTempDisplay"></span>
+        </div>
+        <div>
+            <strong>{{ _('Heater on') }}:</strong>
+            <span data-bind="text: bedTempLimitDisplay"></span>
+        </div>
+    </div>
+
+    <div data-bind="visible: heaterOn() && mode() === 'dry'"
+         class="pandabreath-modebox">
+        <hr>
+        <div><strong>{{ _('Dry mode') }}</strong></div>
+        <div>
+            <strong>{{ _('Preset') }}:</strong>
+            <span data-bind="text: dryPresetLabel"></span>
+        </div>
+        <div>
+            <strong>{{ _('Target') }}:</strong>
+            <span data-bind="text: dryTargetDisplay"></span>
+        </div>
+        <div>
+            <strong>{{ _('Remaining') }}:</strong>
+            <span data-bind="text: dryRemainingDisplay"></span>
+        </div>
+        <div data-bind="visible: dryingActive">
+            <span class="label label-success">
+                {{ _('drying') }}
+            </span>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="pandabreath-safety-wrap"
+         style="display: flex; gap: 4px; align-items: stretch;">
+        <button class="btn btn-warning"
+                style="flex: 1;"
+                title="{{ _('Engage safety lock') }}"
+                data-bind="visible: !locked(),
+                           click: lock,
+                           enable: !observeOnly()">
+            <i class="fa fa-lock"></i>
+            {{ _('Lock') }}
+        </button>
+        <button class="btn btn-success"
+                style="flex: 1;"
+                title="{{ _('Release safety lock') }}"
+                data-bind="visible: locked,
+                           click: unlock">
+            <i class="fa fa-unlock"></i>
+            {{ _('Unlock') }}
+        </button>
+        <button class="btn btn-danger"
+                style="flex: 1;"
+                title="{{ _('Panda Breath emergency stop') }}"
+                data-bind="click: confirmEmergencyStop">
+            <i class="fa fa-power-off"></i>
+            {{ _('E-STOP') }}
+        </button>
+    </div>
+</div>
