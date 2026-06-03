@@ -177,7 +177,7 @@
                     <div class="control-group">
                         <label>{{ _('Target') }} (°C)</label>
                         <div class="input-append">
-                            <input type="number" min="0" step="0.5"
+                            <input type="number" min="0" max="60" step="1"
                                    data-bind="value: targetInput,
                                               valueUpdate: 'input',
                                               hasFocus: targetInputFocused,
@@ -207,7 +207,7 @@
                     <div class="control-group">
                         <label>{{ _('Target chamber temperature') }} (°C)</label>
                         <div class="input-append">
-                            <input type="number" min="0" step="0.5"
+                            <input type="number" min="0" max="60" step="1"
                                    data-bind="value: targetInput,
                                               valueUpdate: 'input',
                                               hasFocus: targetInputFocused,
@@ -243,7 +243,7 @@
                     <div class="control-group">
                         <label>{{ _('Heater activation threshold') }} (°C)</label>
                         <div class="input-append">
-                            <input type="number" min="0" max="120" step="1"
+                            <input type="number" min="40" max="120" step="1"
                                    data-bind="value: heaterThresholdInput,
                                               valueUpdate: 'input',
                                               hasFocus: heaterThresholdInputFocused,
@@ -359,7 +359,7 @@
                     <div data-bind="visible: dryPreset() === 'custom'">
                         <div class="control-group">
                             <label>{{ _('Dry target') }} (°C)</label>
-                            <input type="number" min="0" step="1"
+                            <input type="number" min="40" max="60" step="1"
                                    data-bind="value: dryTargetInput,
                                               valueUpdate: 'input',
                                               hasFocus: dryTargetInputFocused,
@@ -367,7 +367,7 @@
                         </div>
                         <div class="control-group">
                             <label>{{ _('Dry timer') }} ({{ _('hours') }})</label>
-                            <input type="number" min="2" max="48" step="1"
+                            <input type="number" min="1" max="99" step="1"
                                    data-bind="value: dryTimerInput,
                                               valueUpdate: 'input',
                                               hasFocus: dryTimerInputFocused,

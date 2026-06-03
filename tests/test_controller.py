@@ -206,6 +206,24 @@ def test_set_custom_dry_negative_rejected(controller):
         controller.set_custom_dry(60, -1)
 
 
+def test_set_custom_dry_out_of_device_range_rejected(controller):
+    # Device range: temp 40-60 °C, timer 1-99 h (see DEVICE_DRY_* limits).
+    with pytest.raises(ValueError):
+        controller.set_custom_dry(39, 8)   # below temp min
+    with pytest.raises(ValueError):
+        controller.set_custom_dry(61, 8)   # above temp max
+    with pytest.raises(ValueError):
+        controller.set_custom_dry(50, 0)   # below timer min
+    with pytest.raises(ValueError):
+        controller.set_custom_dry(50, 100)  # above timer max
+
+
+def test_set_custom_dry_accepts_device_bounds(controller, adapter):
+    controller.set_custom_dry(40, 1)   # both at min
+    controller.set_custom_dry(60, 99)  # both at max
+    assert adapter.command_names().count("commit_dry") == 2
+
+
 def test_presets(controller, adapter):
     controller.select_preset_pla()
     controller.select_preset_petg()
@@ -224,6 +242,43 @@ def test_threshold_negative_rejected(controller):
         controller.set_filter_threshold(-1)
     with pytest.raises(ValueError):
         controller.set_heater_threshold(-1)
+
+
+def test_threshold_out_of_device_range_rejected(controller):
+    # filter 0-120 °C, heater 40-120 °C.
+    with pytest.raises(ValueError):
+        controller.set_filter_threshold(121)
+    with pytest.raises(ValueError):
+        controller.set_heater_threshold(39)   # heater floor is 40
+    with pytest.raises(ValueError):
+        controller.set_heater_threshold(121)
+
+
+def test_threshold_accepts_device_bounds(controller, adapter):
+    controller.set_filter_threshold(0)
+    controller.set_filter_threshold(120)
+    controller.set_heater_threshold(40)
+    controller.set_heater_threshold(120)
+    assert ("set_heater_threshold", {"value": 40.0}) in adapter.commands
+
+
+def test_set_target_at_device_max(controller, adapter):
+    # Device hard limit is 60; the default max_temp (70) is higher, so 60
+    # must be accepted and 61 rejected.
+    controller.set_target(60)
+    assert ("set_target", {"value": 60.0}) in adapter.commands
+    with pytest.raises(ValueError):
+        controller.set_target(61)
+
+
+def test_set_target_respects_lower_max_temp_setting():
+    # When the operator's max_temp cap is below the device limit, the cap
+    # wins.
+    a = FakeAdapter()
+    c = ChamberController(a, max_temp=45.0)
+    c.set_target(45)
+    with pytest.raises(ValueError):
+        c.set_target(50)  # under device 60 but over the configured cap
 
 
 def test_start_stop_drying(controller, adapter):

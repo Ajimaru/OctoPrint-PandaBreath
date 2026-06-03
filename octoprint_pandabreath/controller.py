@@ -46,6 +46,26 @@ MODE_DRY = "dry"
 MODE_STANDBY = "standby"
 VALID_MODES = (MODE_AUTO, MODE_MANUAL, MODE_DRY, MODE_STANDBY)
 
+# Device-enforced input ranges, reverse-engineered from the V1.0.4 Home
+# Assistant MQTT discovery configs (and confirmed by WebUI clamping). The
+# firmware rejects / clamps out-of-range values on its own; we mirror the
+# limits here so the plugin gives the same feedback before sending a frame.
+# (target_temp's upper bound is additionally capped by the configurable
+# ``max_temp`` safety setting, applied in ``set_target``.)
+DEVICE_TARGET_MIN = 0.0
+DEVICE_TARGET_MAX = 60.0
+DEVICE_FILTER_THRESHOLD_MIN = 0.0
+DEVICE_FILTER_THRESHOLD_MAX = 120.0
+DEVICE_HEATER_THRESHOLD_MIN = 40.0
+DEVICE_HEATER_THRESHOLD_MAX = 120.0
+DEVICE_DRY_TARGET_MIN = 40.0
+DEVICE_DRY_TARGET_MAX = 60.0
+# The discovery config declares custom_timer min=1, but the device itself
+# accepted and held 0 in testing. We use 1 as the lower bound to match the
+# device's own HA contract; 0 is a documented edge case.
+DEVICE_DRY_TIMER_MIN = 1
+DEVICE_DRY_TIMER_MAX = 99
+
 # Temperature-history ring buffer size. At a 5 s adapter poll cadence this
 # covers ~30 minutes; samples older than that are silently dropped.
 HISTORY_MAX_SAMPLES = 360
@@ -200,12 +220,13 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         guess the on-device controller.
         """
         value = float(value)
-        if value < 0:
-            raise ValueError("target must be >= 0")
-        if value > self._max_temp:
-            raise ValueError(
-                f"target exceeds configured max {self._max_temp:.1f}"
-            )
+        if value < DEVICE_TARGET_MIN:
+            raise ValueError(f"target must be >= {DEVICE_TARGET_MIN:.0f}")
+        # Upper bound is the lower of the device limit and the operator's
+        # configurable safety cap.
+        upper = min(DEVICE_TARGET_MAX, self._max_temp)
+        if value > upper:
+            raise ValueError(f"target exceeds max {upper:.1f}")
         if self._locked:
             raise PermissionError("system locked")
         if self._is_observe_only():
@@ -299,10 +320,16 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         """
         value = float(value)
         hours = int(float(hours))
-        if value < 0:
-            raise ValueError("dry target must be >= 0")
-        if hours < 0:
-            raise ValueError("dry timer must be >= 0")
+        if not DEVICE_DRY_TARGET_MIN <= value <= DEVICE_DRY_TARGET_MAX:
+            raise ValueError(
+                f"dry target must be {DEVICE_DRY_TARGET_MIN:.0f}-"
+                f"{DEVICE_DRY_TARGET_MAX:.0f}"
+            )
+        if not DEVICE_DRY_TIMER_MIN <= hours <= DEVICE_DRY_TIMER_MAX:
+            raise ValueError(
+                f"dry timer must be {DEVICE_DRY_TIMER_MIN}-"
+                f"{DEVICE_DRY_TIMER_MAX} h"
+            )
         if self._locked:
             raise PermissionError("system locked")
         if self._is_observe_only():
@@ -335,8 +362,12 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         Auto-mode where the device acts on hotbed readings.
         """
         value = float(value)
-        if value < 0:
-            raise ValueError("threshold must be >= 0")
+        if not (DEVICE_FILTER_THRESHOLD_MIN
+                <= value <= DEVICE_FILTER_THRESHOLD_MAX):
+            raise ValueError(
+                f"filter threshold must be {DEVICE_FILTER_THRESHOLD_MIN:.0f}-"
+                f"{DEVICE_FILTER_THRESHOLD_MAX:.0f}"
+            )
         if self._locked:
             raise PermissionError("system locked")
         if self._is_observe_only():
@@ -346,8 +377,12 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
     def set_heater_threshold(self, value):
         """Set the chamber-heater activation threshold (in °C)."""
         value = float(value)
-        if value < 0:
-            raise ValueError("threshold must be >= 0")
+        if not (DEVICE_HEATER_THRESHOLD_MIN
+                <= value <= DEVICE_HEATER_THRESHOLD_MAX):
+            raise ValueError(
+                f"heater threshold must be {DEVICE_HEATER_THRESHOLD_MIN:.0f}-"
+                f"{DEVICE_HEATER_THRESHOLD_MAX:.0f}"
+            )
         if self._locked:
             raise PermissionError("system locked")
         if self._is_observe_only():
