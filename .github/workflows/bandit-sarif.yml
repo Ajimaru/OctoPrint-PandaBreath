@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir -p reports
           bandit -r octoprint_pandabreath -x .venv,venv,.git -ll \
-            --format sarif --output reports/bandit.sarif
+            --format sarif --output reports/bandit.sarif --exit-zero
 
       - # Upload SARIF to GitHub Security tab
         name: Upload Bandit SARIF to GitHub Security

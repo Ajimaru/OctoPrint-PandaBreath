@@ -115,16 +115,14 @@ jobs:
 
       - # Setup Node.js for pre-commit hooks (ESLint/Prettier)
         name: Set up Node.js for hooks
-        if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' }}
+        if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' && hashFiles('package.json') != '' }}
         uses: actions/setup-node@v6
         with:
           node-version: "20.19.0"
-          cache: "npm"
-          cache-dependency-path: "package-lock.json"
 
       - # Install npm dependencies required by hooks
         name: Install Node.js dependencies for hooks
-        if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' }}
+        if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' && hashFiles('package.json') != '' }}
         run: |
           if [ -f package.json ] && [ -f package-lock.json ]; then
             npm ci --no-audit --no-fund
