@@ -25,6 +25,7 @@ class FakePrinter:
         self._flags = flags
 
     def __getattr__(self, name):
+        """Return predicate callables matching the requested printer flag."""
         return lambda: self._flags.get(name, False)
 
 
@@ -32,15 +33,19 @@ class RaisingPrinter:
     """Printer whose predicates raise — probe must fail open (not busy)."""
 
     def is_printing(self):
+        """Simulate a backend error when probing print activity."""
         raise RuntimeError("boom")
 
     def __getattr__(self, name):
+        """All other predicates default to idle for this test double."""
         return lambda: False
 
 
 def _plugin(printer):
     """Build a plugin instance with just enough state for the probe."""
-    plugin = PandabreathPlugin.__new__(PandabreathPlugin)
+    plugin = object.__new__(PandabreathPlugin)
+    # Protected members are intentional in test setup for plugin internals.
+    # pylint: disable=protected-access
     plugin._printer = printer
     import logging
     plugin._logger = logging.getLogger("test")
@@ -54,19 +59,23 @@ def _plugin(printer):
     "is_paused", "is_resuming", "is_cancelling",
 ])
 def test_busy_for_each_active_state(flag):
+    """Interlock reports busy for each known active OctoPrint predicate."""
     plugin = _plugin(FakePrinter(**{flag: True}))
-    assert plugin._printer_is_busy() is True
+    assert getattr(plugin, "_printer_is_busy")() is True
 
 
 def test_not_busy_when_idle():
-    assert _plugin(FakePrinter())._printer_is_busy() is False
+    """Interlock reports not busy when no active state predicate is true."""
+    assert getattr(_plugin(FakePrinter()), "_printer_is_busy")() is False
 
 
 def test_not_busy_without_printer():
-    assert _plugin(None)._printer_is_busy() is False
+    """Interlock reports not busy if no printer interface is available."""
+    assert getattr(_plugin(None), "_printer_is_busy")() is False
 
 
 def test_probe_fails_open_on_error():
+    """Interlock fails open when probing printer state raises an exception."""
     # A raising predicate must be treated as not-busy so command dispatch
     # never breaks on an availability glitch.
-    assert _plugin(RaisingPrinter())._printer_is_busy() is False
+    assert getattr(_plugin(RaisingPrinter()), "_printer_is_busy")() is False

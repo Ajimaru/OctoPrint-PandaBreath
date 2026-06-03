@@ -32,7 +32,43 @@ from octoprint.util import RepeatedTimer
 from ._version import VERSION as PLUGIN_VERSION
 from .controller import ChamberController, MODE_AUTO
 from .frame_log import FrameLog
+from .mqtt_bridge import MqttBridge, paho_available
 from .protocol import PandaProtocolAdapter
+
+# Minimum device firmware that exposes the MQTT control interface.
+MQTT_MIN_FW = (1, 0, 4)
+
+
+def _parse_fw_version(raw):
+    """Parse a 'V1.0.4'/'1.0.4' string into a (1, 0, 4) tuple, or None.
+
+    Numeric tuple compare avoids the string-compare trap where
+    'V1.0.10' < 'V1.0.4'.
+    """
+    if not raw:
+        return None
+    s = str(raw).strip().lstrip("vV")
+    parts = s.split(".")
+    try:
+        return tuple(int(p) for p in parts[:3])
+    except (ValueError, TypeError):
+        return None
+
+
+def fw_supports_mqtt(raw):
+    """True if the firmware string is known and >= MQTT_MIN_FW.
+
+    Returns False for unknown (None) versions — callers must distinguish
+    'too old' from 'not yet known' themselves where it matters; for the
+    hard gate on bridge start, unknown means 'do not start yet'.
+    """
+    parsed = _parse_fw_version(raw)
+    if parsed is None:
+        return False
+    # Pad to 3 components for a clean tuple compare.
+    parsed = parsed + (0,) * (3 - len(parsed))
+    return parsed >= MQTT_MIN_FW
+
 
 if TYPE_CHECKING:
     from octoprint.plugin import PluginSettings
@@ -83,6 +119,7 @@ class PandabreathPlugin(
         self._controller = None
         self._watchdog = None
         self._frame_log = None  # type: FrameLog | None
+        self._mqtt_bridge = None  # type: MqttBridge | None
         self._stack_lock = threading.Lock()
         # Throttle frame broadcasts: an idle Panda emits status frames
         # every few seconds, but a chatty bind sequence can burst. Cap
@@ -146,6 +183,25 @@ class PandabreathPlugin(
             # Days of frame-log files to retain. Older files are removed on
             # plugin start and on the daily rollover.
             "frame_log_retention_days": 7,
+            # ---- MQTT control bridge (firmware V1.0.4+) ----------------
+            # Off by default. Only usable when the device reports firmware
+            # V1.0.4 or newer (the MQTT interface does not exist before
+            # that) — the UI greys the toggle out otherwise. Day-to-day
+            # control then flows over MQTT (acknowledged, no reconnect);
+            # the WebSocket stays the safety + setup backbone.
+            "mqtt_enabled": False,
+            "mqtt_host": "",
+            "mqtt_port": 1883,
+            "mqtt_username": "",
+            "mqtt_password": "",
+            # Plugin-owned topic namespace for the snapshot the plugin
+            # publishes and the command topic it listens on. The device's
+            # own native topics (panda_breath/<id>/...) are used separately
+            # for reading state and sending control frames.
+            "mqtt_base_topic": "octoprint/pandabreath",
+            # Allow inbound commands on <base>/command to drive the chamber.
+            # Off → the bridge is publish/telemetry only.
+            "mqtt_allow_control": True,
         }
 
     def get_settings_restricted_paths(self):
@@ -161,6 +217,10 @@ class PandabreathPlugin(
                 ["tls_ca_file"],
                 ["tls_cert_file"],
                 ["tls_key_file"],
+                # MQTT broker credentials are secrets too.
+                ["mqtt_host"],
+                ["mqtt_username"],
+                ["mqtt_password"],
             ]
         }
 
@@ -363,6 +423,7 @@ class PandabreathPlugin(
         snapshot["available"] = True
         snapshot["latest_fw_version"] = self._latest_fw_version
         snapshot["latest_fw_url"] = self._latest_fw_url
+        self._decorate_mqtt_status(snapshot)
         # Always attach the full history on REST GET so the tab can
         # populate the chart on first paint. Push messages send only the
         # incremental sample to keep the channel cheap.
@@ -523,42 +584,7 @@ class PandabreathPlugin(
                     409,
                 )
         try:
-            if command == "set_target":
-                self._controller.set_target(data.get("value"))
-            elif command == "set_mode":
-                self._controller.set_mode(data.get("mode"))
-            elif command == "set_heater":
-                self._controller.set_heater(bool(data.get("on")))
-            elif command == "set_custom_dry":
-                self._controller.set_custom_dry(
-                    data.get("value"), data.get("hours")
-                )
-            elif command == "preset_pla":
-                self._controller.select_preset_pla()
-            elif command == "preset_petg":
-                self._controller.select_preset_petg()
-            elif command == "start_drying":
-                self._controller.start_drying()
-            elif command == "stop_drying":
-                self._controller.stop_drying()
-            elif command == "set_filter_threshold":
-                self._controller.set_filter_threshold(data.get("value"))
-            elif command == "set_heater_threshold":
-                self._controller.set_heater_threshold(data.get("value"))
-            elif command == "scan_printers":
-                self._controller.scan_printers()
-            elif command == "refresh_settings":
-                self._controller.refresh_settings()
-            elif command == "lock":
-                self._controller.lock(reason="api")
-            elif command == "unlock":
-                self._controller.unlock()
-            elif command == "emergency_stop":
-                self._logger.warning(
-                    "PandaBreath: EMERGENCY STOP triggered via API"
-                )
-                self._controller.emergency_stop(reason="navbar_estop")
-            else:
+            if not self._apply_control_command(command, data, source="api"):
                 return flask.make_response(
                     flask.jsonify({"error": "unknown command"}), 400
                 )
@@ -574,6 +600,90 @@ class PandabreathPlugin(
                 flask.jsonify({"error": str(exc)}), 400
             )
         return flask.jsonify(self._controller.snapshot())
+
+    def _apply_control_command(self, command, data, source="api"):
+        """Map a control verb onto the controller. Shared by HTTP + MQTT.
+
+        Returns True if the command was recognised and dispatched, False
+        for an unknown command. Raises ``ValueError``/``TypeError`` for bad
+        input and ``PermissionError`` for lock/observe-only — callers
+        translate those into their own error responses. Requires
+        ``self._controller`` to be set (checked by callers).
+
+        ``emergency_stop`` is intentionally reachable here, but the MQTT
+        bridge never forwards it (e-stop stays on the WebSocket); only the
+        HTTP navbar button does.
+        """
+        c = self._controller
+        if c is None:
+            # Stack torn down between the caller's check and here (settings
+            # restart). Treat as not-dispatched; callers already guard too.
+            return False
+        if command == "set_target":
+            c.set_target(data.get("value"))
+        elif command == "set_mode":
+            c.set_mode(data.get("mode"))
+        elif command == "set_heater":
+            c.set_heater(bool(data.get("on")))
+        elif command == "set_custom_dry":
+            c.set_custom_dry(data.get("value"), data.get("hours"))
+        elif command == "preset_pla":
+            c.select_preset_pla()
+        elif command == "preset_petg":
+            c.select_preset_petg()
+        elif command == "start_drying":
+            c.start_drying()
+        elif command == "stop_drying":
+            c.stop_drying()
+        elif command == "set_filter_threshold":
+            c.set_filter_threshold(data.get("value"))
+        elif command == "set_heater_threshold":
+            c.set_heater_threshold(data.get("value"))
+        elif command == "scan_printers":
+            c.scan_printers()
+        elif command == "refresh_settings":
+            c.refresh_settings()
+        elif command == "lock":
+            c.lock(reason=source)
+        elif command == "unlock":
+            c.unlock()
+        elif command == "emergency_stop":
+            self._logger.warning(
+                "PandaBreath: EMERGENCY STOP triggered via %s", source
+            )
+            c.emergency_stop(reason="navbar_estop")
+        else:
+            return False
+        return True
+
+    def _on_mqtt_command(self, action, data):
+        """Inbound MQTT command handler passed to MqttBridge.
+
+        Runs on paho's network thread. Routes through the same validated
+        dispatch as the HTTP API so ranges, lock and observe-only all
+        apply. Refuses e-stop over MQTT (safety stays on the WebSocket)
+        and the dry interlock while a print job is busy.
+        """
+        if self._controller is None:
+            return
+        if action == "emergency_stop":
+            self._logger.warning(
+                "PandaBreath: refused emergency_stop over MQTT "
+                "(use the WebSocket/navbar)"
+            )
+            return
+        if action in ("start_drying",) or (
+            action == "set_mode" and data.get("mode") == "dry"
+        ):
+            if self._printer_is_busy():
+                self._logger.info(
+                    "PandaBreath: MQTT dry command ignored — printer busy"
+                )
+                return
+        if not self._apply_control_command(action, data, source="mqtt"):
+            self._logger.warning(
+                "PandaBreath: unknown MQTT command '%s'", action
+            )
 
     # ---- EventHandlerPlugin -----------------------------------------
 
@@ -796,8 +906,106 @@ class PandabreathPlugin(
                 s.get(["bind_port"]),
                 s.get_boolean(["observe_only"]),
             )
+        # MQTT bridge is started outside the stack lock: it has its own
+        # network thread and must not hold the lock while connecting.
+        self._start_mqtt_bridge()
+
+    def _start_mqtt_bridge(self):
+        """Bring up the MQTT bridge if enabled and fw-supported.
+
+        Deliberately gated three ways:
+        * setting ``mqtt_enabled`` on,
+        * paho-mqtt importable,
+        * device firmware known and >= V1.0.4.
+
+        The firmware is read from the controller snapshot. If it is not yet
+        known (WebSocket still connecting) we skip and rely on the next
+        settings save / reconnect to retry, rather than starting a bridge
+        the device cannot serve.
+        """
+        s = self._settings
+        if not s.get_boolean(["mqtt_enabled"]):
+            return
+        if self._mqtt_bridge is not None:
+            return
+        if not paho_available():
+            self._logger.warning(
+                "PandaBreath: mqtt_enabled but paho-mqtt not installed — "
+                "bridge inactive."
+            )
+            return
+        host = (s.get(["mqtt_host"]) or "").strip()
+        if not host:
+            self._logger.warning(
+                "PandaBreath: mqtt_enabled but no broker host set — "
+                "bridge inactive"
+            )
+            return
+        fw = None
+        if self._controller is not None:
+            fw = self._controller.snapshot().get("fw_version")
+        if fw is None:
+            self._logger.info(
+                "PandaBreath: mqtt_enabled and broker configured, waiting "
+                "for first device status frame to confirm firmware before "
+                "starting MQTT bridge"
+            )
+            return
+        if not fw_supports_mqtt(fw):
+            self._logger.warning(
+                "PandaBreath: MQTT requires firmware V1.0.4+ — device "
+                "reports %r; bridge not started",
+                fw,
+            )
+            return
+        try:
+            bridge = MqttBridge(
+                host=host,
+                port=int(s.get(["mqtt_port"]) or 1883),
+                username=s.get(["mqtt_username"]) or None,
+                password=s.get(["mqtt_password"]) or None,
+                base_topic=s.get(["mqtt_base_topic"])
+                or "octoprint/pandabreath",
+                command_handler=self._on_mqtt_command,
+                allow_control=s.get_boolean(["mqtt_allow_control"]),
+                logger=self._logger,
+            )
+            bridge.start()
+            if self._controller is not None:
+                self._controller.add_listener(bridge.publish_state)
+                # Route operational commands over MQTT (acknowledged, no
+                # WS reconnect). Safety frames stay on the WebSocket — the
+                # controller never sends those through the sink.
+                self._controller.set_control_sink(bridge.control_sink)
+            self._mqtt_bridge = bridge
+            self._logger.info(
+                "PandaBreath: MQTT bridge started (control over MQTT)"
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            self._logger.exception(
+                "PandaBreath: failed to start MQTT bridge"
+            )
+            self._mqtt_bridge = None
+
+    def _stop_mqtt_bridge(self):
+        bridge = self._mqtt_bridge
+        self._mqtt_bridge = None
+        # Detach the control sink first so any in-flight command falls back
+        # to the WebSocket rather than a stopping bridge.
+        if self._controller is not None:
+            self._controller.set_control_sink(None)
+        if bridge is not None:
+            try:
+                bridge.stop()
+            except Exception:  # pylint: disable=broad-exception-caught
+                self._logger.exception(
+                    "PandaBreath: MQTT bridge stop failed"
+                )
 
     def _stop_stack(self):
+        # Bridge first: it holds a controller-listener reference and its own
+        # network thread; stop it before the controller goes away.
+        self._stop_mqtt_bridge()
         with self._stack_lock:
             adapter = self._adapter
             self._adapter = None
@@ -869,10 +1077,26 @@ class PandabreathPlugin(
         if self._controller is not None:
             self._push_status(self._controller.snapshot())
 
+    def _decorate_mqtt_status(self, snapshot):
+        """Attach MQTT gate/state fields to a snapshot. Shared by GET+push."""
+        snapshot["mqtt_enabled"] = self._settings.get_boolean(["mqtt_enabled"])
+        snapshot["mqtt_active"] = self._mqtt_bridge is not None
+        snapshot["mqtt_supported"] = fw_supports_mqtt(
+            snapshot.get("fw_version")
+        )
+
     def _push_status(self, snapshot):
         snapshot["latest_fw_version"] = self._latest_fw_version
         snapshot["latest_fw_url"] = self._latest_fw_url
+        self._decorate_mqtt_status(snapshot)
         self._send_plugin_message({"kind": "status", "snapshot": snapshot})
+        # Deferred bridge start: the firmware version only becomes known
+        # once the WebSocket delivers a snapshot, which may be after
+        # _start_stack ran. Retry here when the device now qualifies.
+        if (self._mqtt_bridge is None
+                and self._settings.get_boolean(["mqtt_enabled"])
+                and fw_supports_mqtt(snapshot.get("fw_version"))):
+            self._start_mqtt_bridge()
 
     def _on_frame_persist(self, direction, frame):
         """Write the untruncated frame to the on-disk log if enabled."""
@@ -968,6 +1192,7 @@ __plugin_description__ = (
 __plugin_version__ = PLUGIN_VERSION
 __plugin_license__ = "MIT"
 __plugin_url__ = "https://github.com/ajimaru/OctoPrint-PandaBreath"
+__plugin_author__ = "Ajimaru"
 __plugin_pythoncompat__ = ">=3.9,<4"
 
 __plugin_implementation__ = None

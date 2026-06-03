@@ -9,7 +9,7 @@
                 <strong>{{ _('Observe-only mode') }}</strong>
             </label>
             <span class="help-block">
-                {{ _('Strongly recommended until the protocol is verified against your hardware. The plugin will connect, send the pairing bind and pull status, but suppress every write frame. The HTTP API rejects mutating commands.') }}
+                {{ _('Recommended until validated on your hardware. The plugin still connects, binds and reads status, but blocks write commands over WebSocket, HTTP API and MQTT.') }}
             </span>
         </div>
     </div>
@@ -95,7 +95,7 @@
                 {{ _('Refresh from device') }}
             </button>
             <span class="help-block">
-                {{ _('Scan triggers a fresh LAN discovery on the Panda Breath — this takes 2–3 minutes; watch the Scan status badge under Diagnostics. Refresh forces a WebSocket reconnect so the device re-sends its full settings snapshot — expect a brief offline blip in the sidebar while it cycles.') }}
+                {{ _('Scan starts a new LAN discovery (2-3 min; see Scan badge in Diagnostics). Refresh reconnects the WebSocket and may briefly show offline in the sidebar.') }}
             </span>
         </div>
     </div>
@@ -247,6 +247,93 @@
         <div class="controls">
             <input type="number" step="0.5"
                    data-bind="value: settings.plugins.pandabreath.print_start_target">
+        </div>
+    </div>
+
+    <h4>{{ _('MQTT control (firmware V1.0.4+)') }}</h4>
+
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" id="pandabreath_mqtt_enabled"
+                       data-bind="checked: settings.plugins.pandabreath.mqtt_enabled">
+                <strong>{{ _('Enable MQTT control bridge') }}</strong>
+            </label>
+            <span class="help-block">
+                {{ _('MQTT control + status via your broker. WebSocket remains for safety/setup. Requires firmware V1.0.4+. Bind the Panda to the same broker in its "Bind a Broker" menu.') }}
+            </span>
+            <div id="pandabreath_mqtt_broker_hint" class="alert alert-info"
+                 style="display: none; margin-top: 6px;"></div>
+            <div id="pandabreath_mqtt_unsupported" class="alert alert-warning"
+                 style="display: none; margin-top: 6px;">
+                {{ _('The connected device does not report firmware V1.0.4+ (or has not connected yet). MQTT stays disabled until it does.') }}
+            </div>
+        </div>
+    </div>
+
+    <div data-bind="visible: settings.plugins.pandabreath.mqtt_enabled">
+        <div class="control-group">
+            <label class="control-label">{{ _('Broker host') }}</label>
+            <div class="controls">
+                <input type="text" placeholder="192.168.1.10"
+                       data-bind="value: settings.plugins.pandabreath.mqtt_host">
+                <button type="button" class="btn"
+                        id="pandabreath_mqtt_prefill"
+                        style="margin-left: 6px;">
+                    {{ _('Use device broker') }}
+                </button>
+                <span class="help-block">
+                    {{ _('The broker the plugin connects to. If the Panda is already bound to a broker, "Use device broker" fills host/port/user from what the device reports (you still enter the password).') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Broker port') }}</label>
+            <div class="controls">
+                <input type="number" min="1" max="65535" step="1"
+                       data-bind="value: settings.plugins.pandabreath.mqtt_port">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Username') }}</label>
+            <div class="controls">
+                <input type="text"
+                       data-bind="value: settings.plugins.pandabreath.mqtt_username">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Password') }}</label>
+            <div class="controls">
+                <input type="password"
+                       data-bind="value: settings.plugins.pandabreath.mqtt_password">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Base topic') }}</label>
+            <div class="controls">
+                <input type="text" placeholder="octoprint/pandabreath"
+                       data-bind="value: settings.plugins.pandabreath.mqtt_base_topic">
+                <span class="help-block">
+                    {{ _('Plugin-owned topic namespace: status is published to <base>/state, and inbound commands are read from <base>/command.') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           data-bind="checked: settings.plugins.pandabreath.mqtt_allow_control">
+                    {{ _('Accept inbound commands over MQTT') }}
+                </label>
+                <span class="help-block">
+                    {{ _('When off, the bridge is telemetry-only (publishes status, ignores commands on <base>/command). Emergency stop is never accepted over MQTT regardless of this setting.') }}
+                </span>
+            </div>
         </div>
     </div>
 

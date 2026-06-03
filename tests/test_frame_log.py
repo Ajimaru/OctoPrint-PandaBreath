@@ -16,14 +16,17 @@ from octoprint_pandabreath.frame_log import (
 
 
 def _name_for(day):
+    """Build the canonical frame-log filename for a given date."""
     return f"{LOG_FILENAME_PREFIX}{day.isoformat()}{LOG_FILENAME_SUFFIX}"
 
 
 def _today_name():
+    """Return today's frame-log filename."""
     return _name_for(datetime.date.today())
 
 
 def test_write_creates_dated_file_with_jsonl_entry(tmp_path):
+    """A write creates today's file and stores a JSONL record."""
     log = FrameLog(str(tmp_path))
     log.write("rx", {"settings": {"warehouse_temper": 42}}, timestamp=123.0)
     log.close()
@@ -39,6 +42,7 @@ def test_write_creates_dated_file_with_jsonl_entry(tmp_path):
 
 
 def test_write_appends_default_timestamp(tmp_path):
+    """Writes without explicit timestamp include an auto-generated float ts."""
     log = FrameLog(str(tmp_path))
     log.write("tx", "raw-frame")
     log.close()
@@ -51,6 +55,7 @@ def test_write_appends_default_timestamp(tmp_path):
 
 
 def test_multiple_writes_append(tmp_path):
+    """Multiple writes append additional JSONL lines to the same file."""
     log = FrameLog(str(tmp_path))
     for i in range(3):
         log.write("rx", {"n": i})
@@ -62,6 +67,7 @@ def test_multiple_writes_append(tmp_path):
 
 
 def test_close_is_idempotent_and_reopens_on_write(tmp_path):
+    """Closing twice is safe and a subsequent write reopens lazily."""
     log = FrameLog(str(tmp_path))
     log.write("rx", {"a": 1})
     log.close()
@@ -74,6 +80,7 @@ def test_close_is_idempotent_and_reopens_on_write(tmp_path):
 
 
 def test_reopens_when_file_deleted_underneath(tmp_path):
+    """The logger recreates today's file when it is deleted externally."""
     log = FrameLog(str(tmp_path))
     log.write("rx", {"a": 1})
     # Operator deletes the file via the UI while the handle is open.
@@ -90,6 +97,7 @@ def test_reopens_when_file_deleted_underneath(tmp_path):
 
 
 def test_list_files_returns_sorted_metadata(tmp_path):
+    """list_files returns only valid log files sorted newest-first."""
     # Drop two valid files plus one unrelated file that must be ignored.
     (tmp_path / "frames_2026-01-01.jsonl").write_text("x\n")
     (tmp_path / "frames_2026-02-01.jsonl").write_text("yy\n")
@@ -107,13 +115,15 @@ def test_list_files_returns_sorted_metadata(tmp_path):
 
 
 def test_list_files_missing_dir_returns_empty(tmp_path):
+    """list_files returns empty when the backing directory no longer exists."""
     log = FrameLog(str(tmp_path), retention_days=0)
     # Remove the directory out from under the logger.
     os.rmdir(tmp_path)
-    assert log.list_files() == []
+    assert not log.list_files()
 
 
 def test_directory_returns_configured_path(tmp_path):
+    """directory returns the exact configured storage path."""
     log = FrameLog(str(tmp_path))
     assert log.directory() == str(tmp_path)
 
@@ -135,11 +145,13 @@ def test_directory_returns_configured_path(tmp_path):
     ],
 )
 def test_path_for_rejects_bad_names(tmp_path, bad_name):
+    """path_for rejects unsafe or malformed filenames."""
     log = FrameLog(str(tmp_path))
     assert log.path_for(bad_name) is None
 
 
 def test_path_for_accepts_valid_name(tmp_path):
+    """path_for resolves a valid log filename inside the log directory."""
     log = FrameLog(str(tmp_path))
     name = "frames_2026-01-01.jsonl"
     resolved = log.path_for(name)
@@ -147,6 +159,7 @@ def test_path_for_accepts_valid_name(tmp_path):
 
 
 def test_path_for_rejects_symlink(tmp_path):
+    """path_for rejects symlinked files to prevent path traversal via links."""
     # The symlink target lives outside the log dir — the exact traversal
     # the islink guard is meant to block. Use today's date for the name and
     # retention_days=0 so construction-time cleanup never removes the link.
@@ -165,6 +178,7 @@ def test_path_for_rejects_symlink(tmp_path):
 
 
 def test_cleanup_removes_files_older_than_retention(tmp_path):
+    """Constructor cleanup removes files older than retention_days."""
     old_day = datetime.date.today() - datetime.timedelta(days=30)
     recent_day = datetime.date.today() - datetime.timedelta(days=1)
     (tmp_path / _name_for(old_day)).write_text("old\n")
@@ -178,6 +192,7 @@ def test_cleanup_removes_files_older_than_retention(tmp_path):
 
 
 def test_cleanup_disabled_when_retention_zero(tmp_path):
+    """Retention value 0 disables cleanup of historical files."""
     old_day = datetime.date.today() - datetime.timedelta(days=365)
     (tmp_path / _name_for(old_day)).write_text("old\n")
 
@@ -187,6 +202,7 @@ def test_cleanup_disabled_when_retention_zero(tmp_path):
 
 
 def test_negative_retention_clamped_to_zero(tmp_path):
+    """Negative retention values are clamped so cleanup stays disabled."""
     old_day = datetime.date.today() - datetime.timedelta(days=365)
     (tmp_path / _name_for(old_day)).write_text("old\n")
 
@@ -197,6 +213,7 @@ def test_negative_retention_clamped_to_zero(tmp_path):
 
 
 def test_cleanup_ignores_unparseable_names(tmp_path):
+    """Cleanup skips invalidly named files without raising errors."""
     (tmp_path / "frames_garbage.jsonl").write_text("x\n")
     # Must not raise even though the stem is not a date.
     FrameLog(str(tmp_path), retention_days=1)

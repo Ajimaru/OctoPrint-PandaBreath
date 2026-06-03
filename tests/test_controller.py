@@ -6,6 +6,12 @@ background thread is involved.
 """
 from __future__ import absolute_import
 
+# Test module intentionally exercises many small test functions and fixture
+# names; strict production-style lint rules are relaxed here.
+# pylint: disable=missing-function-docstring,redefined-outer-name
+# pylint: disable=protected-access,unused-argument
+# pylint: disable=use-implicit-booleaness-not-comparison
+
 import time
 
 import pytest
@@ -92,7 +98,9 @@ def test_set_target_blocked_in_observe_only():
 # ---- set_mode -----------------------------------------------------------
 
 
-@pytest.mark.parametrize("mode", [MODE_AUTO, MODE_MANUAL, MODE_DRY, MODE_STANDBY])
+@pytest.mark.parametrize(
+    "mode", [MODE_AUTO, MODE_MANUAL, MODE_DRY, MODE_STANDBY]
+)
 def test_set_mode_valid(controller, adapter, mode):
     controller.set_mode(mode)
     assert ("set_mode", {"mode": mode}) in adapter.commands
@@ -426,3 +434,81 @@ def test_watchdog_no_lock_when_fresh():
     c = ChamberController(a, timeout_seconds=5.0)
     c.watchdog_tick()
     assert c.is_locked() is False
+
+
+# ---- control sink (MQTT transport routing) ------------------------------
+
+class RecordingSink:
+    """Records (verb, params) and returns a configurable handled flag."""
+
+    def __init__(self, handled=True, raises=None):
+        self.calls = []
+        self._handled = handled
+        self._raises = raises
+
+    def __call__(self, verb, **params):
+        self.calls.append((verb, params))
+        if self._raises is not None:
+            raise self._raises
+        return self._handled
+
+
+def test_control_sink_receives_operational_commands(controller, adapter):
+    sink = RecordingSink(handled=True)
+    controller.set_control_sink(sink)
+    controller.set_target(45)
+    controller.set_mode(MODE_AUTO)
+    controller.set_filter_threshold(40)
+    # Handled by the sink → nothing went to the WebSocket adapter.
+    assert adapter.commands == []
+    verbs = [v for v, _ in sink.calls]
+    assert verbs == ["set_target", "set_mode", "set_filter_threshold"]
+
+
+def test_control_sink_fallback_to_adapter_when_declined(controller, adapter):
+    sink = RecordingSink(handled=False)  # declines everything
+    controller.set_control_sink(sink)
+    controller.set_target(45)
+    # Declined → fell back to the WebSocket adapter.
+    assert ("set_target", {"value": 45.0}) in adapter.commands
+
+
+def test_control_sink_fallback_on_exception(controller, adapter):
+    sink = RecordingSink(raises=RuntimeError("broker down"))
+    controller.set_control_sink(sink)
+    controller.set_target(45)
+    assert ("set_target", {"value": 45.0}) in adapter.commands
+
+
+def test_emergency_stop_always_uses_adapter_not_sink(controller, adapter):
+    sink = RecordingSink(handled=True)
+    controller.set_control_sink(sink)
+    controller.emergency_stop()
+    # Safety frame must reach the WebSocket adapter directly.
+    assert ("heater_off", {}) in adapter.commands
+    # The sink must NOT have seen the safety frame.
+    assert sink.calls == []
+
+
+def test_lock_heater_off_always_uses_adapter_not_sink(controller, adapter):
+    sink = RecordingSink(handled=True)
+    controller.set_control_sink(sink)
+    controller.lock(reason="user")
+    assert ("heater_off", {}) in adapter.commands
+    assert sink.calls == []
+
+
+def test_normal_heater_toggle_uses_sink(controller, adapter):
+    sink = RecordingSink(handled=True)
+    controller.set_control_sink(sink)
+    controller.set_heater(True)
+    assert ("heater_on", {}) in [(v, p) for v, p in sink.calls]
+    assert adapter.commands == []
+
+
+def test_clearing_sink_restores_adapter(controller, adapter):
+    sink = RecordingSink(handled=True)
+    controller.set_control_sink(sink)
+    controller.set_control_sink(None)
+    controller.set_target(45)
+    assert ("set_target", {"value": 45.0}) in adapter.commands

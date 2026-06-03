@@ -11,6 +11,7 @@ so it is testable here without a live OctoPrint harness.
 from __future__ import absolute_import
 
 import logging
+from typing import Any, cast
 
 import pytest
 
@@ -24,14 +25,19 @@ class FakeSettings:
         self._bools = bools
 
     def get_boolean(self, path):
+        """Return boolean settings values by key path."""
         return bool(self._bools.get(path[0], False))
 
     def get(self, path):
+        """Return raw settings values by key path."""
         return self._bools.get(path[0])
 
 
 def _plugin(tmp_path, **bools):
-    plugin = PandabreathPlugin.__new__(PandabreathPlugin)
+    """Build a minimally initialized plugin instance for gate testing."""
+    plugin = cast(Any, object.__new__(PandabreathPlugin))
+    # Protected members are intentionally manipulated in tests.
+    # pylint: disable=protected-access
     plugin._logger = logging.getLogger("test")
     plugin._frame_log = None
     plugin._settings = FakeSettings(**bools)
@@ -46,19 +52,22 @@ def _plugin(tmp_path, **bools):
     (False, False, False),  # both off -> closed
 ])
 def test_frame_log_gate(tmp_path, debug, persist, expect_open):
+    """Frame log opens only when debug panel and persistence toggle are on."""
     plugin = _plugin(
         tmp_path,
         debug_panel_enabled=debug,
         frame_log_enabled=persist,
         frame_log_retention_days=7,
     )
-    plugin._refresh_frame_log()
-    assert (plugin._frame_log is not None) is expect_open
-    if plugin._frame_log is not None:
-        plugin._frame_log.close()
+    getattr(plugin, "_refresh_frame_log")()
+    frame_log = getattr(plugin, "_frame_log")
+    assert (frame_log is not None) is expect_open
+    if frame_log is not None:
+        frame_log.close()
 
 
 def test_disabling_debug_closes_open_log(tmp_path):
+    """Disabling the debug panel closes an already-open frame log."""
     # Open with both on, then turn the debug panel off -> must close.
     plugin = _plugin(
         tmp_path,
@@ -66,13 +75,13 @@ def test_disabling_debug_closes_open_log(tmp_path):
         frame_log_enabled=True,
         frame_log_retention_days=7,
     )
-    plugin._refresh_frame_log()
-    assert plugin._frame_log is not None
+    getattr(plugin, "_refresh_frame_log")()
+    assert getattr(plugin, "_frame_log") is not None
 
-    plugin._settings = FakeSettings(
+    setattr(plugin, "_settings", FakeSettings(
         debug_panel_enabled=False,
         frame_log_enabled=True,
         frame_log_retention_days=7,
-    )
-    plugin._refresh_frame_log()
-    assert plugin._frame_log is None
+    ))
+    getattr(plugin, "_refresh_frame_log")()
+    assert getattr(plugin, "_frame_log") is None

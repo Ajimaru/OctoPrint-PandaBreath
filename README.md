@@ -24,6 +24,7 @@
 - 📊 **Dedicated Tab** - Status / Chamber / Drying / Safety / Network / Debug subtabs with a Flot temperature chart (~30 min history)
 - 🧪 **Filament Drying** - PLA / PETG-ABS / Custom presets, target + timer in one transaction, start/stop and a live countdown
 - 🌬️ **Auto Mode** - Independent heater and filter-fan activation thresholds tied to the bound printer's hotbed
+- 📡 **MQTT Control Bridge (V1.0.4+)** - Day-to-day control/status over the Panda's broker path, while WebSocket remains the safety/setup backbone
 - 🔌 **Native Protocol** - Talks the Panda Breath WebSocket protocol — no Bambu emulation required
 - 💓 **Keepalive + Auto-Reconnect** - Periodic query frames and a self-healing reconnect loop survive Panda Breath firmware pauses
 - 🛡️ **Observe-Only Mode** - Safe default: connect, decode and display without sending any write frames
@@ -63,7 +64,7 @@ The `releases/latest` URL always points to the newest stable release.
 
 Access plugin settings via **OctoPrint Settings → Plugins → PandaBreath**.
 
-> ⚠️ **Start in Observe-Only mode.** The plugin defaults to read-only and rejects every write command with HTTP 423. Only disable this once you have verified frame traffic in the debug panel and confirmed your device address.
+> ⚠️ **Start in Observe-Only mode.** The plugin defaults to read-only and rejects every write command (HTTP API and MQTT-routed control). Only disable this once you have verified frame traffic in the debug panel and confirmed your device address.
 
 ### Step 1 — Connect to the Panda Breath
 
@@ -100,6 +101,18 @@ Once you trust the connection:
 | **Max Temperature** | `70.0 °C` | Hard ceiling. Targets above this are rejected. |
 | **Timeout** | `15.0 s` | Watchdog timeout — locks the controller if no status arrives in this window (auto-released on the next received frame). |
 | **Reconnect Delay** | `5.0 s` | Base wait between reconnect attempts on WS drop (exponential backoff up to 60 s). |
+
+### MQTT Control (optional, firmware V1.0.4+)
+
+Enable this if your Panda Breath is already bound to an MQTT broker (for example via the device's **Bind a Broker** menu).
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| **MQTT Enabled** | ⬜ disabled | Routes operational control through MQTT when available. |
+| **Broker Host / Port** | _(empty)_ / `1883` | Broker endpoint the plugin connects to. |
+| **Allow MQTT Control** | ✅ enabled | Accepts inbound MQTT commands from the broker topic handler. |
+
+When the MQTT bridge is active, chamber control writes are sent over MQTT; WebSocket remains active for setup/safety functions and status capture.
 
 ### Print Integration
 

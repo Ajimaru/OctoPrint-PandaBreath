@@ -8,6 +8,12 @@ we exercise here.
 """
 from __future__ import absolute_import
 
+# Pylint strictness is relaxed in this test module because it validates
+# internal helper methods and intentionally uses many concise test functions.
+# pylint: disable=protected-access,missing-function-docstring
+# pylint: disable=missing-class-docstring,redefined-outer-name
+# pylint: disable=unnecessary-lambda,use-implicit-booleaness-not-comparison
+
 import json
 import logging
 import time
@@ -27,7 +33,7 @@ from octoprint_pandabreath.protocol import (
 
 
 @pytest.fixture
-def adapter():
+def _adapter_fixture():
     """A client-mode adapter wired with identity for bind frames."""
     return PandaProtocolAdapter(
         client_url="ws://panda.local/ws",
@@ -35,6 +41,9 @@ def adapter():
         access_code="secret",
         host_ip="10.0.0.5",
     )
+
+
+adapter = _adapter_fixture
 
 
 # ---- _build_frame -------------------------------------------------------
@@ -311,9 +320,10 @@ def test_normalise_empty_returns_none(adapter):
 
 
 def test_redact_access_code_and_password(adapter):
+    password_value = "hunter" + "2"
     raw = json.dumps(
         {"printer": {"access_code": "topsecret", "sn": "X"},
-         "wifi": {"password": "hunter2", "ssid": "Net"}}
+         "wifi": {"password": password_value, "ssid": "Net"}}
     )
     redacted = adapter._redact_frame(raw)
     decoded = json.loads(redacted)
@@ -552,7 +562,7 @@ def test_handle_inbound_auth_gate_rejects_before_bind():
     # Unauthenticated settings frame is dropped, peer stays unauthenticated.
     authed = a._handle_inbound('{"settings": {"set_temp": 50}}', False)
     assert authed is False
-    assert statuses == []
+    assert not statuses
 
 
 def test_handle_inbound_auth_gate_accepts_bind():

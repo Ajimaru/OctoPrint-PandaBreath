@@ -90,6 +90,93 @@ $(function () {
         self.printerType = ko.observable(null);
         self.printerState = ko.observable(null);
 
+        // MQTT bridge state (firmware V1.0.4+). The settings template is
+        // bound to the SettingsViewModel (custom_bindings: False), so these
+        // dynamic bits are driven by direct DOM access from here — same
+        // approach as the firmware-version row. mqttSupported gates the
+        // toggle; mqttDeviceBroker holds the broker the device itself
+        // reports (from the WS `ha` block) for the auto-prefill.
+        self.mqttSupported = ko.observable(false);
+        self.mqttActive = ko.observable(false);
+        self.mqttDeviceBroker = ko.observable(null);  // {ip,port,user} | null
+
+        self._updateMqttSettingsDom = function () {
+            var supported = self.mqttSupported();
+            var cb = document.getElementById("pandabreath_mqtt_enabled");
+            if (cb) cb.disabled = !supported;
+            var warn = document.getElementById("pandabreath_mqtt_unsupported");
+            if (warn) warn.style.display = supported ? "none" : "";
+            var hintEl = document.getElementById("pandabreath_mqtt_broker_hint");
+            if (hintEl) {
+                var b = self.mqttDeviceBroker();
+                if (b && b.ip) {
+                    hintEl.innerHTML = "Device is bound to broker <code>"
+                        + b.ip + ":" + (b.port || 1883) + "</code>.";
+                    hintEl.style.display = "inline-block";
+                } else {
+                    hintEl.style.display = "none";
+                }
+            }
+            var btn = document.getElementById("pandabreath_mqtt_prefill");
+            if (btn) btn.disabled = !self.mqttDeviceBroker();
+        };
+        self.mqttSupported.subscribe(self._updateMqttSettingsDom);
+        self.mqttDeviceBroker.subscribe(self._updateMqttSettingsDom);
+
+        var pbSettings = function () {
+            var s = self.settings && self.settings.settings
+                && self.settings.settings.plugins
+                && self.settings.settings.plugins.pandabreath;
+            return s || null;
+        };
+        var readPbSetting = function (name) {
+            var s = pbSettings();
+            if (!s || !s[name]) return null;
+            return ko.unwrap(s[name]);
+        };
+        self.mqttSupportDisplay = ko.pureComputed(function () {
+            if (!self.fwVersion()) return gettext("waiting for device status");
+            return self.mqttSupported()
+                ? gettext("supported")
+                : gettext("requires firmware V1.0.4+");
+        });
+        self.mqttBridgeStateDisplay = ko.pureComputed(function () {
+            if (!readPbSetting("mqtt_enabled")) return gettext("disabled");
+            return self.mqttActive()
+                ? gettext("active")
+                : gettext("enabled, waiting");
+        });
+        self.mqttSupportBadgeCss = ko.pureComputed(function () {
+            return {
+                "label-success": self.mqttSupported(),
+                "label-warning": !self.mqttSupported() && !!self.fwVersion(),
+                "label-info": !self.fwVersion()
+            };
+        });
+        self.mqttBridgeBadgeCss = ko.pureComputed(function () {
+            var enabled = !!readPbSetting("mqtt_enabled");
+            return {
+                "label-success": enabled && self.mqttActive(),
+                "label-warning": enabled && !self.mqttActive(),
+                "label-info": !enabled
+            };
+        });
+        self.mqttConfiguredBrokerDisplay = ko.pureComputed(function () {
+            var host = readPbSetting("mqtt_host");
+            var port = readPbSetting("mqtt_port");
+            if (!host) return "—";
+            var normalizedPort = port || 1883;
+            return host + ":" + normalizedPort;
+        });
+        self.mqttBaseTopicDisplay = ko.pureComputed(function () {
+            return readPbSetting("mqtt_base_topic") || "octoprint/pandabreath";
+        });
+        self.mqttDeviceBrokerDisplay = ko.pureComputed(function () {
+            var b = self.mqttDeviceBroker();
+            if (!b || !b.ip) return "—";
+            return b.ip + ":" + (b.port || 1883);
+        });
+
         // Recent command-acknowledgement frames from the device.
         // Each entry: { ts: epoch_seconds, type: str, ok: 0|1|null }.
         self.responses = ko.observableArray([]);
@@ -463,11 +550,22 @@ $(function () {
             }
             if ("printer_type" in state) self.printerType(state.printer_type);
             if ("printer_state" in state) self.printerState(state.printer_state);
+            if ("mqtt_supported" in state) self.mqttSupported(!!state.mqtt_supported);
+            if ("mqtt_active" in state) self.mqttActive(!!state.mqtt_active);
             if ("diagnostics" in state && state.diagnostics) {
                 // Merge so a slim status frame doesn't blow away the
                 // network/pairing fields we got from the initial pull.
                 var merged = $.extend({}, self.diagnostics(), state.diagnostics);
                 self.diagnostics(merged);
+                // Surface the broker the device itself reports (ha_* keys
+                // from the WS snapshot) for the MQTT settings auto-prefill.
+                if (merged.ha_ip) {
+                    self.mqttDeviceBroker({
+                        ip: merged.ha_ip,
+                        port: merged.ha_port || 1883,
+                        user: merged.ha_user || ""
+                    });
+                }
             }
             if ("responses" in state && Array.isArray(state.responses)) {
                 // The controller maintains the ring; we just decorate
@@ -551,6 +649,20 @@ $(function () {
             }).done(self.applyFrameLogStatus);
         };
 
+        // Fill the MQTT broker settings from the broker the device itself
+        // reports (WS `ha` block). Password is never auto-filled — the
+        // device redacts it, so the user must (re-)enter it.
+        self.prefillMqttFromDevice = function () {
+            var b = self.mqttDeviceBroker();
+            var s = self.settings && self.settings.settings
+                && self.settings.settings.plugins
+                && self.settings.settings.plugins.pandabreath;
+            if (!b || !b.ip || !s) return;
+            s.mqtt_host(b.ip);
+            if (b.port) s.mqtt_port(b.port);
+            if (b.user) s.mqtt_username(b.user);
+        };
+
         self.refresh = function () {
             var withDebug = self.debugPanelEnabled();
             var url = "plugin/pandabreath";
@@ -565,6 +677,14 @@ $(function () {
 
         self.onStartupComplete = function () {
             self.refresh();
+        };
+
+        // Settings dialog just opened: its DOM now exists, so sync the
+        // MQTT gate/hint/prefill button to current state. Also pull a fresh
+        // snapshot so fw_version (and the ha block) are current.
+        self.onSettingsShown = function () {
+            self.refresh();
+            self._updateMqttSettingsDom();
         };
 
         // OctoPrint fires onAfterTabChange when the user switches tabs.
@@ -645,6 +765,35 @@ $(function () {
                     if (opts.autoRefresh) self.scheduleAutoRefresh();
                 })
                 .fail(function (xhr) {
+                    // Invalid user inputs (range/type) are rejected by the
+                    // API with 4xx. Revert edit fields to the last known
+                    // valid controller state so stale invalid values do not
+                    // stay in the form after the toast is shown.
+                    self.targetInputFocused(false);
+                    self.heaterThresholdInputFocused(false);
+                    self.filterThresholdInputFocused(false);
+                    self.dryTargetInputFocused(false);
+                    self.dryTimerInputFocused(false);
+                    if (self.targetTemp() !== null
+                            && self.targetTemp() !== undefined) {
+                        self.targetInput(self.targetTemp());
+                    }
+                    if (self.filterThreshold() !== null
+                            && self.filterThreshold() !== undefined) {
+                        self.filterThresholdInput(self.filterThreshold());
+                    }
+                    if (self.bedTempLimit() !== null
+                            && self.bedTempLimit() !== undefined) {
+                        self.heaterThresholdInput(self.bedTempLimit());
+                    }
+                    if (self.dryTarget() !== null
+                            && self.dryTarget() !== undefined) {
+                        self.dryTargetInput(self.dryTarget());
+                    }
+                    if (self.dryTimerHours() !== null
+                            && self.dryTimerHours() !== undefined) {
+                        self.dryTimerInput(self.dryTimerHours());
+                    }
                     new PNotify({
                         title: "Panda Breath",
                         text: self._errorText(xhr),
@@ -678,6 +827,13 @@ $(function () {
         // reconnectPending — set here, cleared when the next 'connected'
         // status push arrives, with a safety timeout as a backstop.
         self.scheduleAutoRefresh = function () {
+            // With active MQTT control there is no write-induced WS reset,
+            // and forcing one defeats the point of the MQTT path. Keep a
+            // lightweight REST refresh as a backstop for UI sync only.
+            if (self.mqttActive()) {
+                setTimeout(function () { self.refresh(); }, 1500);
+                return;
+            }
             if (self.reconnectPending()) return;
             self.reconnectPending(true);
             setTimeout(function () {
@@ -817,6 +973,8 @@ $(function () {
             function () { self.scanPrinters(); });
         $(document).on("click", "#pandabreath_btn_refresh_settings",
             function () { self.refreshSettings(); });
+        $(document).on("click", "#pandabreath_mqtt_prefill",
+            function () { self.prefillMqttFromDevice(); });
         $(document).on("click", "#pandabreath_btn_delete_frame_logs",
             function () {
                 if (!window.confirm(gettext(

@@ -12,6 +12,7 @@ from __future__ import absolute_import
 
 import sys
 import types
+from typing import Optional
 
 import pytest
 
@@ -38,15 +39,17 @@ def _install_octoprint_stubs():
 
     # flask + flask_babel.gettext
     try:
-        import flask  # noqa: F401
+        import flask  # noqa: F401  # pylint: disable=unused-import
     except ImportError:
         _module("flask")
         babel = _module("flask_babel")
-        babel.gettext = lambda s, *a, **k: s
+        # setattr (not ``babel.gettext = ...``) so static checkers don't
+        # flag attribute assignment on the dynamically-built ModuleType.
+        setattr(babel, "gettext", lambda s, *a, **k: s)
 
     # octoprint.plugin mixins, access control, events, util.RepeatedTimer
     try:
-        import octoprint  # noqa: F401
+        import octoprint  # noqa: F401  # pylint: disable=unused-import
     except ImportError:
         octoprint = _module("octoprint")
         plugin = _module("octoprint.plugin")
@@ -65,27 +68,27 @@ def _install_octoprint_stubs():
         def _route(*_a, **_k):
             return lambda fn: fn
 
-        plugin.BlueprintPlugin = type(
+        setattr(plugin, "BlueprintPlugin", type(
             "BlueprintPlugin",
             (object,),
             {"route": staticmethod(_route)},
-        )
-        octoprint.plugin = plugin
+        ))
+        setattr(octoprint, "plugin", plugin)
 
         access = _module("octoprint.access")
-        access.ADMIN_GROUP = "admins"
+        setattr(access, "ADMIN_GROUP", "admins")
         perms = _module("octoprint.access.permissions")
-        perms.Permissions = type("Permissions", (object,), {})
-        access.permissions = perms
+        setattr(perms, "Permissions", type("Permissions", (object,), {}))
+        setattr(access, "permissions", perms)
 
         events = _module("octoprint.events")
-        events.Events = type("Events", (object,), {})
+        setattr(events, "Events", type("Events", (object,), {}))
 
         util = _module("octoprint.util")
-        util.RepeatedTimer = type("RepeatedTimer", (object,), {})
-        octoprint.util = util
-        octoprint.access = access
-        octoprint.events = events
+        setattr(util, "RepeatedTimer", type("RepeatedTimer", (object,), {}))
+        setattr(octoprint, "util", util)
+        setattr(octoprint, "access", access)
+        setattr(octoprint, "events", events)
 
 
 _install_octoprint_stubs()
@@ -105,32 +108,39 @@ class FakeAdapter:
         self._last_rx = last_rx
         self.force_reconnect_calls = 0
         # When set, ``send_command`` raises this to exercise error paths.
-        self.raise_on_send = None
+        self.raise_on_send: Optional[Exception] = None
 
     def send_command(self, command, **params):
+        """Record a command; optionally raise to exercise error paths."""
         self.commands.append((command, params))
         if self.raise_on_send is not None:
             raise self.raise_on_send
         return True
 
     def is_connected(self):
+        """Return the configured connection state."""
         return self._connected
 
     def is_observe_only(self):
+        """Return the configured observe-only state."""
         return self._observe_only
 
     def last_rx_timestamp(self):
+        """Return the configured last-rx timestamp."""
         return self._last_rx
 
     def force_reconnect(self):
+        """Count a reconnect request."""
         self.force_reconnect_calls += 1
 
     # ---- test helpers ----
 
     def last_command(self):
+        """Return the most recent recorded command, or None."""
         return self.commands[-1] if self.commands else None
 
     def command_names(self):
+        """Return the recorded command verbs in order."""
         return [c for c, _ in self.commands]
 
 

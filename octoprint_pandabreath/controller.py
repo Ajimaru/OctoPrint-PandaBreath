@@ -99,6 +99,18 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._max_temp = float(max_temp)
         self._timeout = float(timeout_seconds)
         self._log = logger or logging.getLogger(__name__)
+        # Optional alternate transport for *operational* commands. When set
+        # (the plugin installs the MQTT bridge here), set_target/set_mode/
+        # dry/threshold/heater-on-off frames go through it instead of the
+        # WebSocket adapter, avoiding the adapter's reconnect-after-write
+        # (the WS does not ACK TX frames). The callable takes
+        # ``(verb, **params)`` and returns True if it handled the send;
+        # any falsey return or absence falls back to the WebSocket.
+        #
+        # SAFETY: this sink is *never* used for emergency_stop or the
+        # lock-driven heater_off — those always go straight to the
+        # WebSocket adapter so they cannot depend on broker availability.
+        self._control_sink = None
 
         self._lock = threading.Lock()
         self._target = 0.0
@@ -141,6 +153,35 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
     def add_listener(self, callback):
         """Register ``callback(snapshot)`` for every state change."""
         self._listeners.append(callback)
+
+    def set_control_sink(self, sink):
+        """Install (or clear with ``None``) the alternate command transport.
+
+        ``sink(verb, **params) -> bool``: return True if the send was
+        handled, falsey to fall back to the WebSocket adapter. Used by the
+        MQTT bridge so operational commands skip the WS reconnect cycle.
+        Never receives safety frames (see ``__init__`` note).
+        """
+        self._control_sink = sink
+
+    def _send(self, verb, **params):
+        """Route an operational command through the sink, else the adapter.
+
+        Falls back to the WebSocket adapter when no sink is installed, the
+        sink declines (returns falsey), or the sink raises — so a broker
+        hiccup degrades to the WS path rather than dropping the command.
+        """
+        sink = self._control_sink
+        if sink is not None:
+            try:
+                if sink(verb, **params):
+                    return
+            except Exception:  # pylint: disable=broad-exception-caught
+                self._log.warning(
+                    "ChamberController: control sink failed for %s, "
+                    "falling back to WebSocket", verb, exc_info=True
+                )
+        self._adapter.send_command(verb, **params)
 
     def _notify(self):
         snapshot = self.snapshot()
@@ -231,7 +272,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("set_target", value=value)
+        self._send("set_target", value=value)
         with self._lock:
             self._target = value
         self._notify()
@@ -246,7 +287,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("observe-only mode")
         with self._lock:
             self._mode = mode
-        self._adapter.send_command("set_mode", mode=mode)
+        self._send("set_mode", mode=mode)
         self._notify()
 
     def set_heater(self, on):
@@ -268,7 +309,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         # the warning) but we do not push a heater_off frame to the
         # device — the operator may be debugging exactly that scenario.
         if not self._is_observe_only():
-            self._command_heater(False)
+            self._command_heater(False, safety=True)
         self._notify()
 
     def emergency_stop(self, reason="estop"):
@@ -334,9 +375,9 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("set_dry_target", value=value)
-        self._adapter.send_command("set_dry_timer", hours=hours)
-        self._adapter.send_command("commit_dry")
+        self._send("set_dry_target", value=value)
+        self._send("set_dry_timer", hours=hours)
+        self._send("commit_dry")
 
     def select_preset_pla(self):
         """Select the device's built-in PLA dry preset."""
@@ -344,7 +385,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("preset_pla")
+        self._send("preset_pla")
 
     def select_preset_petg(self):
         """Select the device's built-in PETG/ABS dry preset."""
@@ -352,7 +393,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("preset_petg")
+        self._send("preset_petg")
 
     def set_filter_threshold(self, value):
         """Set the filter-fan activation threshold (in °C).
@@ -372,7 +413,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("set_filter_threshold", value=value)
+        self._send("set_filter_threshold", value=value)
 
     def set_heater_threshold(self, value):
         """Set the chamber-heater activation threshold (in °C)."""
@@ -387,7 +428,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("set_heater_threshold", value=value)
+        self._send("set_heater_threshold", value=value)
 
     def start_drying(self):
         """Trigger the dry-mode timer / heater on the device.
@@ -399,7 +440,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("start_drying")
+        self._send("start_drying")
 
     def stop_drying(self):
         """Stop an in-progress dry cycle on the device."""
@@ -407,7 +448,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("system locked")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
-        self._adapter.send_command("stop_drying")
+        self._send("stop_drying")
 
     def scan_printers(self):
         """Ask the device to (re-)scan the LAN for printers.
@@ -501,6 +542,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 "net_wifi_ssid",
                 "printer_name", "printer_host", "printer_port",
                 "printer_scan", "printer_list",
+                # HA/MQTT broker mirror (V1.0.4+); password never included.
+                "ha_ip", "ha_port", "ha_user", "ha_state",
             ):
                 if key in payload:
                     self._diagnostics[key] = payload[key]
@@ -542,8 +585,18 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             )
             self.lock(reason="over_temp")
 
-    def _command_heater(self, on):
+    def _command_heater(self, on, safety=False):
+        """Send a heater on/off frame.
+
+        ``safety=True`` (lock-driven heater-off) always goes straight to
+        the WebSocket adapter — it must not depend on the MQTT broker.
+        Normal user toggles (``safety=False``) use the control sink when
+        installed, falling back to the WebSocket.
+        """
         with self._lock:
             self._heater_on = bool(on)
         cmd = "heater_on" if on else "heater_off"
-        self._adapter.send_command(cmd)
+        if safety:
+            self._adapter.send_command(cmd)
+        else:
+            self._send(cmd)

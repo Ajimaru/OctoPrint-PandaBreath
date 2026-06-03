@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "OctoPrint-PandaBreath"
-version = "0.1.1dev33+unknown"
+version = "0.1.1dev36+d411dd6"
 description = "PandaBreath plugin for OctoPrint"
 authors = [
     {name = "ajimaru", email = "ajimaru_gdr@pm.me"}
@@ -20,6 +20,7 @@ requires-python = ">=3.9, <4"
 dependencies = [
     "websocket-client>=1.6",
     "websockets>=11.0",
+    "paho-mqtt>=2.0,<3",
 ]
 
 [tool.setuptools]
@@ -43,11 +44,6 @@ develop = [
     "Babel",
     "polib",
     "pyyaml"
-]
-# Optional Home-Assistant bridge — only pulled if the user opts in.
-# Pinned to v2+: v1 is unmaintained and uses an incompatible callback API.
-ha-bridge = [
-    "paho-mqtt>=2.0,<3"
 ]
 test = [
     "pytest>=7.4",

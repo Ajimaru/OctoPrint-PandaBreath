@@ -605,6 +605,26 @@ class PandaProtocolAdapter(object):
         wifi = decoded.get("wifi")
         if isinstance(wifi, dict) and "ssid" in wifi:
             out["net_wifi_ssid"] = wifi["ssid"]
+        # HA / MQTT broker block (firmware V1.0.4+). Read-only mirror of the
+        # broker the device is bound to; used by the plugin to pre-fill its
+        # own MQTT settings. The password is never surfaced (it is redacted
+        # upstream and must not enter the snapshot).
+        ha = decoded.get("ha")
+        if isinstance(ha, dict):
+            if "ip" in ha:
+                out["ha_ip"] = ha["ip"]
+            if "port" in ha:
+                try:
+                    out["ha_port"] = int(ha["port"])
+                except (TypeError, ValueError):
+                    pass
+            if "user" in ha:
+                out["ha_user"] = ha["user"]
+            if "state" in ha:
+                try:
+                    out["ha_state"] = int(ha["state"])
+                except (TypeError, ValueError):
+                    pass
         settings = decoded.get("settings")
         if not isinstance(settings, dict):
             return out if len(out) > 1 else None

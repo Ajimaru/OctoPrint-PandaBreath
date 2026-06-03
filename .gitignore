@@ -19,3 +19,4 @@ build/
 *.egg-info
 tools/
 .coverage
+.DS_Store
