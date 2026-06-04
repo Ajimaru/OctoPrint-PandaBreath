@@ -21,6 +21,7 @@ jobs:
     env:
       BABEL_VERSION: "2.18.0"
       POLIB_VERSION: "1.2.0"
+      NODE_VERSION: "20.19.0"
     strategy:
       fail-fast: false
       matrix:
@@ -55,6 +56,13 @@ jobs:
       - # Checkout repository code
         name: Checkout
         uses: actions/checkout@v6
+
+      - # Load central tool-version pins, overriding the env: fallbacks above.
+        name: Load tool versions
+        run: |
+          if [ -f .development/versions.env ]; then
+            grep -vE '^\s*(#|$)' .development/versions.env >> "$GITHUB_ENV"
+          fi
 
       - # Setup Python version and pip cache
         name: Set up Python
@@ -118,7 +126,7 @@ jobs:
         if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' && hashFiles('package.json') != '' }}
         uses: actions/setup-node@v6
         with:
-          node-version: "20.19.0"
+          node-version: "${{ env.NODE_VERSION }}"
 
       - # Install npm dependencies required by hooks
         name: Install Node.js dependencies for hooks
@@ -135,7 +143,7 @@ jobs:
         if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' }}
         run: |
           set -e
-          SHELLCHECK_VERSION="0.11.0"
+          SHELLCHECK_VERSION="${SHELLCHECK_MIN_VERSION:-0.11.0}"
           INSTALL_DIR="/usr/local/bin"
           SHELLCHECK_URL="https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
 

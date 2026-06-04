@@ -18,11 +18,21 @@ jobs:
   i18n:
     name: i18n catalog check
     runs-on: ubuntu-latest
+    env:
+      BABEL_VERSION: "2.18.0"
+      POLIB_VERSION: "1.2.0"
 
     steps:
       - # Checkout repository code
         name: Checkout
         uses: actions/checkout@v6
+
+      - # Load central tool-version pins, overriding the env: fallbacks above.
+        name: Load tool versions
+        run: |
+          if [ -f .development/versions.env ]; then
+            grep -vE '^\s*(#|$)' .development/versions.env >> "$GITHUB_ENV"
+          fi
 
       - # Setup Python 3.12 for i18n tools
         name: Set up Python
@@ -37,7 +47,7 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install setuptools 'polib==1.2.0' 'Babel>=2.16,<2.17' 'OctoPrint>=1.11.0,<2'
+          python -m pip install setuptools "polib==${{ env.POLIB_VERSION }}" "Babel==${{ env.BABEL_VERSION }}" 'OctoPrint>=1.11.0,<2'
 
       - # Extract and validate translation catalog
         name: Verify messages.pot is up to date

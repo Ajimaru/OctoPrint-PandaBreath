@@ -99,7 +99,7 @@ class PandabreathPlugin(
 
     # OctoPrint injects these attributes after construction (see
     # ``Plugin.__init__`` in ``octoprint.plugin.core``, which sets them to
-    # ``None`` placeholders). Re-declaring them here under ``TYPE_CHECKING``
+    # ``None`` placeholders). Redeclaring them here under ``TYPE_CHECKING``
     # tells Pylance the real runtime types without changing behaviour.
     if TYPE_CHECKING:
         _logger: logging.Logger
@@ -226,9 +226,7 @@ class PandabreathPlugin(
     def on_settings_save(self, data):
         """Persist the new settings and bounce the adapter/controller stack."""
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        self._logger.info(
-            "PandaBreath: settings changed — restarting adapter"
-        )
+        self._logger.info("PandaBreath: settings changed — restarting adapter")
         # Do not block the HTTP worker on adapter teardown (websocket close
         # + thread join can take seconds).
         threading.Thread(
@@ -253,7 +251,9 @@ class PandabreathPlugin(
             "/docs/Panda_Breath.md"
         )
         try:
-            with urlopen(url, timeout=10) as resp:
+            # nosec B310: url is a fixed https:// literal above, not
+            # user-controlled, so no file:/custom-scheme risk applies.
+            with urlopen(url, timeout=10) as resp:  # nosec B310
                 text = resp.read().decode("utf-8")
         except (URLError, OSError) as exc:
             self._logger.warning(
@@ -357,9 +357,7 @@ class PandabreathPlugin(
             {
                 "key": PERMISSION_STATUS,
                 "name": gettext("View chamber status"),
-                "description": gettext(
-                    "Allows reading Panda Breath chamber state."
-                ),
+                "description": gettext("Allows reading Panda Breath chamber state."),
                 "default_groups": [ADMIN_GROUP],
                 "roles": ["status"],
                 "dangerous": False,
@@ -432,9 +430,7 @@ class PandabreathPlugin(
         # ?debug=1 attaches the frame ring buffer for the debug panel.
         if request.values.get("debug") in ("1", "true", "yes"):
             snapshot["frames"] = (
-                self._adapter.get_frame_history()
-                if self._adapter is not None
-                else []
+                self._adapter.get_frame_history() if self._adapter is not None else []
             )
             snapshot["frame_log"] = self._frame_log_status()
         return flask.jsonify(snapshot)
@@ -597,9 +593,7 @@ class PandabreathPlugin(
             # 409 for observe-only (configuration conflict), 423 for safety
             # lock (resource is locked). Both are HTTP-semantic correct.
             status = 409 if "observe-only" in str(exc) else 423
-            return flask.make_response(
-                flask.jsonify({"error": str(exc)}), status
-            )
+            return flask.make_response(flask.jsonify({"error": str(exc)}), status)
         except (ValueError, TypeError) as exc:
             return flask.make_response(flask.jsonify({"error": str(exc)}), 400)
         return flask.jsonify(self._controller.snapshot())
@@ -651,9 +645,7 @@ class PandabreathPlugin(
         elif command == "unlock":
             c.unlock()
         elif command == "emergency_stop":
-            self._logger.warning(
-                "PandaBreath: EMERGENCY STOP triggered via %s", source
-            )
+            self._logger.warning("PandaBreath: EMERGENCY STOP triggered via %s", source)
             c.emergency_stop(reason="navbar_estop")
         else:
             return False
@@ -684,9 +676,7 @@ class PandabreathPlugin(
                 )
                 return
         if not self._apply_control_command(action, data, source="mqtt"):
-            self._logger.warning(
-                "PandaBreath: unknown MQTT command '%s'", action
-            )
+            self._logger.warning("PandaBreath: unknown MQTT command '%s'", action)
 
     # ---- EventHandlerPlugin -----------------------------------------
 
@@ -819,9 +809,7 @@ class PandabreathPlugin(
             # missing/older method must not break command dispatch — treat
             # an unknown state as not-busy so we fail open on availability
             # (the frontend gate and the operator remain the backstop).
-            self._logger.debug(
-                "PandaBreath: printer-busy probe failed", exc_info=True
-            )
+            self._logger.debug("PandaBreath: printer-busy probe failed", exc_info=True)
             return False
 
     @staticmethod
@@ -838,7 +826,7 @@ class PandabreathPlugin(
         # we can re-attach the scheme that matches the current TLS toggle.
         for prefix in ("wss://", "ws://", "https://", "http://"):
             if host.lower().startswith(prefix):
-                host = host[len(prefix):]
+                host = host[len(prefix) :]
                 break
         # Separate path so we don't double the suffix.
         path = "/ws"
@@ -938,8 +926,7 @@ class PandabreathPlugin(
         host = (s.get(["mqtt_host"]) or "").strip()
         if not host:
             self._logger.warning(
-                "PandaBreath: mqtt_enabled but no broker host set"
-                " — bridge inactive"
+                "PandaBreath: mqtt_enabled but no broker host set" " — bridge inactive"
             )
             return
         fw = None
@@ -965,9 +952,7 @@ class PandabreathPlugin(
                 port=int(s.get(["mqtt_port"]) or 1883),
                 username=s.get(["mqtt_username"]) or None,
                 password=s.get(["mqtt_password"]) or None,
-                base_topic=(
-                    s.get(["mqtt_base_topic"]) or "octoprint/pandabreath"
-                ),
+                base_topic=(s.get(["mqtt_base_topic"]) or "octoprint/pandabreath"),
                 command_handler=self._on_mqtt_command,
                 allow_control=s.get_boolean(["mqtt_allow_control"]),
                 logger=self._logger,
@@ -980,9 +965,7 @@ class PandabreathPlugin(
                 # controller never sends those through the sink.
                 self._controller.set_control_sink(bridge.control_sink)
             self._mqtt_bridge = bridge
-            self._logger.info(
-                "PandaBreath: MQTT bridge started (control over MQTT)"
-            )
+            self._logger.info("PandaBreath: MQTT bridge started (control over MQTT)")
         except Exception:  # pylint: disable=broad-exception-caught
             self._logger.exception("PandaBreath: failed to start MQTT bridge")
             self._mqtt_bridge = None
@@ -1074,9 +1057,7 @@ class PandabreathPlugin(
         """Attach MQTT gate/state fields to a snapshot. Shared by GET+push."""
         snapshot["mqtt_enabled"] = self._settings.get_boolean(["mqtt_enabled"])
         snapshot["mqtt_active"] = self._mqtt_bridge is not None
-        snapshot["mqtt_supported"] = fw_supports_mqtt(
-            snapshot.get("fw_version")
-        )
+        snapshot["mqtt_supported"] = fw_supports_mqtt(snapshot.get("fw_version"))
 
     def _push_status(self, snapshot):
         snapshot["latest_fw_version"] = self._latest_fw_version
@@ -1130,15 +1111,11 @@ class PandabreathPlugin(
                     self._identifier, payload, permissions=[perm]
                 )
             else:
-                self._plugin_manager.send_plugin_message(
-                    self._identifier, payload
-                )
+                self._plugin_manager.send_plugin_message(self._identifier, payload)
         except Exception:  # pylint: disable=broad-exception-caught
             # OctoPrint's plugin_manager dispatches into the SockJS layer;
             # surfacing any failure there must not break controller updates.
-            self._logger.exception(
-                "PandaBreath: failed to broadcast plugin message"
-            )
+            self._logger.exception("PandaBreath: failed to broadcast plugin message")
 
     # ---- watchdog ---------------------------------------------------
 
