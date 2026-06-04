@@ -41,7 +41,9 @@ Homepage = "https://github.com/ajimaru/OctoPrint-PandaBreath"
 [project.optional-dependencies]
 develop = [
     "go-task-bin",
-    "Babel",
+    # Match OctoPrint's constraint (Babel<2.17) so locally generated message
+    # catalogs match the i18n CI and the OctoPrint test venvs.
+    "Babel>=2.16,<2.17",
     "polib",
     "pyyaml"
 ]

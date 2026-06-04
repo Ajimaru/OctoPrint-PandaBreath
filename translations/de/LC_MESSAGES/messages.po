@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-04 18:01+0200\n"
+"POT-Creation-Date: 2026-06-04 21:20+0200\n"
 "PO-Revision-Date: 2026-06-03 20:12+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.18.0\n"
+"Generated-By: Babel 2.16.0\n"
 
 #: octoprint_pandabreath/static/js/pandabreath.js:77
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:454
@@ -59,22 +59,22 @@ msgstr "Zugangscode"
 msgid "Access point"
 msgstr "Zugang"
 
-#: octoprint_pandabreath/__init__.py:379
+#: octoprint_pandabreath/__init__.py:377
 #, fuzzy
 msgid "Administer chamber lock"
 msgstr "Administer Kammerschloss"
 
-#: octoprint_pandabreath/__init__.py:371
+#: octoprint_pandabreath/__init__.py:368
 #, fuzzy
 msgid "Allows changing target, mode and heater state."
 msgstr "Ermöglicht das Ändern von Ziel-, Modus- und Heizzustand."
 
-#: octoprint_pandabreath/__init__.py:381
+#: octoprint_pandabreath/__init__.py:378
 #, fuzzy
 msgid "Allows locking/unlocking the safety interlock."
 msgstr "Ermöglicht die Verriegelung/Entriegelung der Sicherheitsverriegelung."
 
-#: octoprint_pandabreath/__init__.py:361
+#: octoprint_pandabreath/__init__.py:360
 #, fuzzy
 msgid "Allows reading Panda Breath chamber state."
 msgstr "Erlaubt das Lesen von Panda Breath Kammerzustand."
@@ -236,7 +236,7 @@ msgstr "Verbindung"
 msgid "Control chamber from M141/M191 in G-code"
 msgstr "Steuerkammer von M141/M191 in G-Code"
 
-#: octoprint_pandabreath/__init__.py:369
+#: octoprint_pandabreath/__init__.py:367
 #, fuzzy
 msgid "Control chamber heater"
 msgstr "Steuerkammerheizung"
