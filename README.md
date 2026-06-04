@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD041 MD033 -->
 <p align="center">
-  <img src="assets/img/pandabreath.svg" alt="OctoPrint PandaBreath Logo" width="96" />
+  <img src="assets/img/pandabreath.svg" alt="OctoPrint PandaBreath Logo" width="64" height="64" />
 </p>
 <h1 align="center">OctoPrint‑PandaBreath</h1>
 <!-- markdownlint-enable MD041 MD033 -->

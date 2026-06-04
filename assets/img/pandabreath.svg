@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="PandaBreath chamber heater">
+  <title>OctoPrint PandaBreath</title>
+  <defs>
+    <linearGradient id="pandabreathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0" stop-color="#ffb86b"/>
+      <stop offset="1" stop-color="#ff6b6b"/>
+    </linearGradient>
+    <linearGradient id="ambientGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="32" cy="32" r="30" fill="#0f172a" opacity="0.08"/>
+  <circle cx="32" cy="32" r="26" fill="#0f172a" stroke="url(#ambientGlow)" stroke-width="1.2"/>
+  <circle cx="32" cy="32" r="20" fill="#f8fafc"/>
+
+  <g transform="translate(32 32)">
+    <circle cx="0" cy="0" r="13.5" fill="#1f2937"/>
+    <circle cx="-7.5" cy="-10.5" r="4.2" fill="#1f2937"/>
+    <circle cx="7.5" cy="-10.5" r="4.2" fill="#1f2937"/>
+    <circle cx="0" cy="-1" r="9.6" fill="#f8fafc"/>
+    <circle cx="-3" cy="-1" r="1.1" fill="#0f172a"/>
+    <circle cx="3" cy="-1" r="1.1" fill="#0f172a"/>
+    <path d="M-1.4 2.2 C-0.3 3.2 0.3 3.2 1.4 2.2" fill="none" stroke="#0f172a" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M-4.8 4.2 C-2.4 7 2.4 7 4.8 4.2" fill="none" stroke="#0f172a" stroke-width="1.2" stroke-linecap="round"/>
+
+    <rect x="-1.8" y="6" width="3.6" height="10" rx="1.8" fill="#0f172a" opacity="0.92"/>
+    <rect x="-0.9" y="3.4" width="1.8" height="12.6" rx="0.9" fill="url(#pandabreathGradient)" transform="rotate(-10)"/>
+
+    <path d="M-15 -1 C-17 -6 -17 -10 -14 -14" fill="none" stroke="url(#ambientGlow)" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M15 -1 C17 -6 17 -10 14 -14" fill="none" stroke="url(#ambientGlow)" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M-12 11 C-15 13 -16 15 -16 18" fill="none" stroke="url(#pandabreathGradient)" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M12 11 C15 13 16 15 16 18" fill="none" stroke="url(#pandabreathGradient)" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <circle cx="47.5" cy="17.5" r="6.2" fill="#fff" stroke="#e2e8f0" stroke-width="0.8"/>
+  <g transform="translate(47.5 17.5)">
+    <path d="M-3.6 0.8 C-2.3 -2.4 2.3 -2.4 3.6 0.8" fill="none" stroke="url(#pandabreathGradient)" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M2.8 -1.9 L0.5 -3.1 L1.1 -0.6 Z" fill="url(#pandabreathGradient)"/>
+    <text x="0" y="1.7" font-family="Inter, Arial, sans-serif" font-size="5.2" text-anchor="middle" fill="#0f172a">PB</text>
+  </g>
+</svg>

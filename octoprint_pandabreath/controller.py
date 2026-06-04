@@ -399,7 +399,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         Auto-mode where the device acts on hotbed readings.
         """
         value = float(value)
-        if not (DEVICE_FILTER_THRESHOLD_MIN <= value <= DEVICE_FILTER_THRESHOLD_MAX):
+        if not DEVICE_FILTER_THRESHOLD_MIN <= value <= DEVICE_FILTER_THRESHOLD_MAX:
             raise ValueError(
                 f"filter threshold must be {DEVICE_FILTER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_FILTER_THRESHOLD_MAX:.0f}"
@@ -413,7 +413,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
     def set_heater_threshold(self, value):
         """Set the chamber-heater activation threshold (in °C)."""
         value = float(value)
-        if not (DEVICE_HEATER_THRESHOLD_MIN <= value <= DEVICE_HEATER_THRESHOLD_MAX):
+        if not DEVICE_HEATER_THRESHOLD_MIN <= value <= DEVICE_HEATER_THRESHOLD_MAX:
             raise ValueError(
                 f"heater threshold must be {DEVICE_HEATER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_HEATER_THRESHOLD_MAX:.0f}"
@@ -482,7 +482,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         # (reason='estop') stay engaged until the operator releases them.
         if self._locked and self._last_safety_reason == "timeout":
             self._log.info(
-                "ChamberController: data flow recovered, releasing " "watchdog lock"
+                "ChamberController: data flow recovered, releasing watchdog lock"
             )
             self.unlock()
         with self._lock:
@@ -585,7 +585,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             temp = self._chamber_temp
         if temp is not None and temp > self._max_temp:
             self._log.error(
-                "ChamberController: chamber %.1f exceeds " "hard limit %.1f — locking",
+                "ChamberController: chamber %.1f exceeds hard limit %.1f — locking",
                 temp,
                 self._max_temp,
             )

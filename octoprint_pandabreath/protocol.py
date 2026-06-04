@@ -707,7 +707,7 @@ class PandaProtocolAdapter:
     def _run_server(self):
         if websockets is None or asyncio is None:
             self._log.error(
-                "PandaProtocolAdapter: server mode needs the " "'websockets' package"
+                "PandaProtocolAdapter: server mode needs the 'websockets' package"
             )
             return
         while not self._stop_event.is_set():
@@ -990,7 +990,7 @@ class PandaProtocolAdapter:
         self._expecting_close = False
         if self._suppressed_error_count > 0:
             self._log.info(
-                "PandaProtocolAdapter: %s after %d suppressed error(s) " "('%s')",
+                "PandaProtocolAdapter: %s after %d suppressed error(s) ('%s')",
                 reason,
                 self._suppressed_error_count,
                 self._last_error_signature,
