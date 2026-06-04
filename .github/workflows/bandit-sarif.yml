@@ -22,11 +22,20 @@ jobs:
   bandit-security-scan:
     name: Bandit Security Scan (SARIF)
     runs-on: ubuntu-latest
+    env:
+      BANDIT_VERSION: "1.9.3"
 
     steps:
       - # Checkout repository code
         name: Checkout
         uses: actions/checkout@v6
+
+      - # Load central tool-version pins, overriding the env: fallbacks above.
+        name: Load tool versions
+        run: |
+          if [ -f .development/versions.env ]; then
+            grep -vE '^\s*(#|$)' .development/versions.env >> "$GITHUB_ENV"
+          fi
 
       - # Setup Python for Bandit scanning
         name: Set up Python
@@ -39,7 +48,7 @@ jobs:
         name: Install tools
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install "bandit==1.9.3" bandit-sarif-formatter
+          pip install "bandit==${{ env.BANDIT_VERSION }}" bandit-sarif-formatter
 
       - # Execute Bandit and emit SARIF
         name: Run Bandit (SARIF)

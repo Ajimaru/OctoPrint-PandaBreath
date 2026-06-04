@@ -38,12 +38,12 @@ repos:
         language_version: python3
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.2.0
+    rev: v10.3.0
     hooks:
       - id: eslint # JavaScript/TypeScript linter (ESLint)
         files: "(\\.js)$"
         exclude: ^(src/octoprint/vendor/|tests/static/js/lib|tests/util/_files|docs/|scripts/|translations/)
-        additional_dependencies: ["eslint@10.3.0", "globals@17.6.0"]
+        additional_dependencies: ["globals@17.6.0"]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -93,7 +93,7 @@ repos:
     hooks:
       - id: prettier-write
         name: Prettier (write)
-        entry: bash .githooks/prettier-hook.sh
+        entry: bash .development/.githooks/prettier-hook.sh
         language: system
         types_or: [javascript, css, markdown, json, yaml]
         pass_filenames: true
@@ -103,8 +103,8 @@ repos:
     hooks:
       - id: shellcheck # Requires local shellcheck >= 0.11.0 for consistent lint results
         name: ShellCheck
-        entry: .githooks/shellcheck-hook.sh
-        language: script
+        entry: bash .development/.githooks/shellcheck-hook.sh
+        language: system
         types: [shell]
         pass_filenames: true
 
@@ -127,6 +127,6 @@ repos:
     hooks:
       - id: check-translations
         name: Check translations are in sync with POT
-        entry: bash .githooks/check_translations_sync.sh
+        entry: bash .development/.githooks/check_translations_sync.sh
         language: system
         pass_filenames: false
