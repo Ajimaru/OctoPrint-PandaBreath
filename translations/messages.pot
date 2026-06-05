@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-05 11:18+0200\n"
+"POT-Creation-Date: 2026-06-05 15:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,19 +50,19 @@ msgstr ""
 msgid "Access point"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:382
+#: octoprint_pandabreath/__init__.py:407
 msgid "Administer chamber lock"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:373
+#: octoprint_pandabreath/__init__.py:398
 msgid "Allows changing target, mode and heater state."
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:383
+#: octoprint_pandabreath/__init__.py:408
 msgid "Allows locking/unlocking the safety interlock."
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:365
+#: octoprint_pandabreath/__init__.py:390
 msgid "Allows reading Panda Breath chamber state."
 msgstr ""
 
@@ -185,7 +185,7 @@ msgstr ""
 msgid "Control chamber from M141/M191 in G-code"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:372
+#: octoprint_pandabreath/__init__.py:397
 msgid "Control chamber heater"
 msgstr ""
 
@@ -912,7 +912,7 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:364
+#: octoprint_pandabreath/__init__.py:389
 msgid "View chamber status"
 msgstr ""
 
