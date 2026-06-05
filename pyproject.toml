@@ -107,6 +107,12 @@ add_ignore = "D212"
 # defects rather than environment gaps.
 reportMissingImports = "none"
 reportMissingModuleSource = "none"
+# OctoPrint's plugin mixins declare loose/``None`` return types in their stubs
+# that don't match the documented runtime API contract (e.g. SimpleApiPlugin
+# returning a Flask ``Response``, SettingsPlugin.on_settings_save returning
+# ``None``). Our overrides follow the real contract, so suppress the resulting
+# spurious incompatible-override reports.
+reportIncompatibleMethodOverride = "none"
 
 [tool.pylint.design]
 max-module-lines = 1500
