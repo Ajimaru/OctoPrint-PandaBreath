@@ -1,4 +1,5 @@
-"""MQTT control/telemetry bridge for Panda Breath firmware V1.0.4+.
+"""
+MQTT control/telemetry bridge for Panda Breath firmware V1.0.4+.
 
 Background and the full reverse-engineered protocol live in
 ``.ideas/ARCHITECTURE_mqtt_control.md`` and
@@ -61,7 +62,8 @@ def paho_available():
 
 
 class MqttBridge:
-    """Bridges a ChamberController to an MQTT broker.
+    """
+    Bridges a ChamberController to an MQTT broker.
 
     Lifecycle mirrors the protocol adapter: construct, :meth:`start`,
     :meth:`stop`. Safe to stop more than once. All broker I/O happens on
@@ -164,7 +166,8 @@ class MqttBridge:
     # ---- outbound: publish the plugin's controller snapshot ---------
 
     def publish_state(self, snapshot):
-        """Publish the controller snapshot to the plugin-owned state topic.
+        """
+        Publish the controller snapshot to the plugin-owned state topic.
 
         Wired as a ChamberController listener; called on every state
         change. Best-effort: a publish failure (broker down) must not
@@ -180,7 +183,8 @@ class MqttBridge:
     # ---- outbound: send a control command to the device -------------
 
     def send_device_command(self, payload):
-        """Publish a raw JSON command dict to the device command topic.
+        """
+        Publish a raw JSON command dict to the device command topic.
 
         ``payload`` is a dict using the device's own MQTT field names
         (e.g. ``{"target_temp": 45}``). No-op until the device id is known.
@@ -202,7 +206,8 @@ class MqttBridge:
     # ---- control sink: WS verb -> device MQTT command ---------------
 
     def control_sink(self, verb, **params):
-        """Translate a ChamberController verb to a device MQTT command.
+        """
+        Translate a ChamberController verb to a device MQTT command.
 
         Installed on the controller via ``set_control_sink``. Returns True
         if the command was translated and published to the device's native
@@ -224,7 +229,8 @@ class MqttBridge:
         return self.send_device_command(payload)
 
     def _verb_to_device_payload(self, verb, params):
-        """Map (verb, params) to a device MQTT command dict.
+        """
+        Map (verb, params) to a device MQTT command dict.
 
         Returns None for verbs with no MQTT equivalent (caller falls back
         to WS), or ``{}`` for recognised no-ops.
@@ -301,7 +307,8 @@ class MqttBridge:
     # ---- inbound command handling -----------------------------------
 
     def _handle_inbound_command(self, raw):
-        """Parse an inbound command and route it through the handler.
+        """
+        Parse an inbound command and route it through the handler.
 
         Accepts the plugin's controller-facing verb form::
 

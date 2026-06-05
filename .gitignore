@@ -21,3 +21,6 @@ tools/
 .coverage
 .DS_Store
 .ruff_cache/
+.agents/
+.github/copilot-instructions.md
+skills-lock.json

@@ -92,6 +92,22 @@ exclude_lines = [
 line-length = 88
 target-version = ["py39"]
 
+[tool.pydocstyle]
+# Multi-line docstrings put the summary on the second line (D213), matching
+# the convention Codacy's Prospector run enforces. D212 (summary on the first
+# line) is the mutually exclusive alternative, so it is disabled here.
+convention = "pep257"
+add_ignore = "D212"
+
+[tool.pyright]
+# OctoPrint (and its flask/babel stack) is a runtime dependency provided by
+# the host install, not pinned in ``dependencies`` — so it is absent from the
+# static-analysis sandbox and Pyright cannot resolve ``octoprint.*`` imports.
+# Downgrade unresolved imports from error to keep the report focused on real
+# defects rather than environment gaps.
+reportMissingImports = "none"
+reportMissingModuleSource = "none"
+
 [tool.pylint.design]
 max-module-lines = 1500
 

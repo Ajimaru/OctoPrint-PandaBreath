@@ -15,8 +15,7 @@
 # Full upstream LICENSE texts are reproduced under licenses/ in the
 # repository root (BIQU-Panda-Breath-Mod-LICENSE, chamber_control-LICENSE).
 """
-ChamberController — UI-side state + command dispatcher for the Panda
-Breath chamber heater.
+ChamberController — UI-side state + command dispatcher for the chamber heater.
 
 The mode names (auto/manual/dry/standby) and their integer encoding
 (1/2/3/0) are taken from the upstream projects referenced in the file
@@ -80,7 +79,8 @@ HISTORY_MAX_SAMPLES = 360
 
 
 class ChamberController:  # pylint: disable=too-many-instance-attributes
-    """Pass-through controller for the chamber heater.
+    """
+    Pass-through controller for the chamber heater.
 
     Sits between :class:`PandaProtocolAdapter` (the transport) and the
     plugin's UI/API layer. Forwards user actions (set target, set mode,
@@ -163,7 +163,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._listeners.append(callback)
 
     def set_control_sink(self, sink):
-        """Install (or clear with ``None``) the alternate command transport.
+        """
+        Install (or clear with ``None``) the alternate command transport.
 
         ``sink(verb, **params) -> bool``: return True if the send was
         handled, falsey to fall back to the WebSocket adapter. Used by the
@@ -173,7 +174,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._control_sink = sink
 
     def _send(self, verb, **params):
-        """Route an operational command through the sink, else the adapter.
+        """
+        Route an operational command through the sink, else the adapter.
 
         Falls back to the WebSocket adapter when no sink is installed, the
         sink declines (returns falsey), or the sink raises — so a broker
@@ -235,7 +237,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             }
 
     def _extrapolated_dry_remaining(self):
-        """Return ``_dry_remaining_s`` adjusted for wall-clock drift.
+        """
+        Return ``_dry_remaining_s`` adjusted for wall-clock drift.
 
         Must be called while ``self._lock`` is held. While a dry cycle
         runs the device only ships ``remaining_seconds`` in big snapshot
@@ -263,7 +266,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         return bool(getattr(self._adapter, "is_observe_only", lambda: False)())
 
     def set_target(self, value):
-        """Push a new target temperature to the device.
+        """
+        Push a new target temperature to the device.
 
         The Panda firmware has its own regulator (with the configured
         ``hotbedtemp`` / ``filtertemp`` thresholds in auto-mode); the
@@ -301,7 +305,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._notify()
 
     def _printer_link_ok(self):
-        """True when the paired printer link is safe for heating.
+        """
+        True when the paired printer link is safe for heating.
 
         Heating requires a bound printer (printer_state == 3). While the
         link is still binding (2) or the printer is unreachable (4), or
@@ -344,7 +349,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._notify()
 
     def emergency_stop(self, reason="estop"):
-        """Hard stop: shut down the heater regardless of observe-only.
+        """
+        Hard stop: shut down the heater regardless of observe-only.
 
         Matches the Panda WebUI's behaviour for its own "Work Mode off"
         toggle, which is the only stop mechanism the device firmware
@@ -380,7 +386,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._notify()
 
     def set_custom_dry(self, value, hours):
-        """Set both custom dry target and timer atomically + commit.
+        """
+        Set both custom dry target and timer atomically + commit.
 
         Sends ``filament_temp`` → ``filament_timer`` → ``commit_dry``
         in one transaction. Matches what the WebUI does when the user
@@ -424,7 +431,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._send("preset_petg")
 
     def set_filter_threshold(self, value):
-        """Set the filter-fan activation threshold (in °C).
+        """
+        Set the filter-fan activation threshold (in °C).
 
         The Panda turns its filter fan on once the paired printer's
         hotbed temperature crosses this value. Only meaningful in
@@ -457,7 +465,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._send("set_heater_threshold", value=value)
 
     def start_drying(self):
-        """Trigger the dry-mode timer / heater on the device.
+        """
+        Trigger the dry-mode timer / heater on the device.
 
         Mirrors the WebUI "Start Drying" button — a bare ``isrunning=1``
         write, no commit frame.
@@ -477,7 +486,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._send("stop_drying")
 
     def scan_printers(self):
-        """Ask the device to (re-)scan the LAN for printers.
+        """
+        Ask the device to (re-)scan the LAN for printers.
 
         Read-only from the heater's perspective — whitelisted in the
         adapter's observe-safe command set, so this works even with
@@ -486,7 +496,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._adapter.send_command("scan_printers")
 
     def refresh_settings(self):
-        """Force a fresh snapshot from the device.
+        """
+        Force a fresh snapshot from the device.
 
         Drops the WebSocket and lets the adapter reconnect — the device
         only emits a full settings payload right after connect, so a
@@ -625,7 +636,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._check_printer_link()
 
     def _check_printer_link(self):
-        """Force the heater off while the printer link is not bound.
+        """
+        Force the heater off while the printer link is not bound.
 
         When the device reports ``binding`` (2) or ``unreachable`` (4),
         the chamber must not heat. This engages a ``printer_link`` safety
@@ -659,7 +671,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             self.unlock()
 
     def _command_heater(self, on, safety=False):
-        """Send a heater on/off frame.
+        """
+        Send a heater on/off frame.
 
         ``safety=True`` (lock-driven heater-off) always goes straight to
         the WebSocket adapter — it must not depend on the MQTT broker.

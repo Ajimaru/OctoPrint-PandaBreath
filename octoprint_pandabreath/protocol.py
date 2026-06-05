@@ -90,7 +90,8 @@ _CODE_TO_MODE_NAME = {v: k for k, v in _MODE_NAME_TO_CODE.items()}
 
 
 class PandaProtocolAdapter:
-    """Transport + framing for the Panda Breath device.
+    """
+    Transport + framing for the Panda Breath device.
 
     The adapter owns a background thread. It surfaces inbound device state
     via ``on_status`` and accepts outbound commands via
@@ -197,7 +198,8 @@ class PandaProtocolAdapter:
         self._thread.start()
 
     def force_reconnect(self):
-        """Drop the active socket so the run-loop reconnects immediately.
+        """
+        Drop the active socket so the run-loop reconnects immediately.
 
         The Panda firmware only emits a full ``get_settings`` snapshot
         right after a fresh WebSocket connect — re-sending the request
@@ -228,7 +230,8 @@ class PandaProtocolAdapter:
         return self._connected
 
     def last_rx_timestamp(self):
-        """Time of the last decoded RX frame, or 0 if not connected.
+        """
+        Time of the last decoded RX frame, or 0 if not connected.
 
         Returning 0 while disconnected (or just after a forced
         reconnect) makes the controller-side watchdog skip its
@@ -259,7 +262,8 @@ class PandaProtocolAdapter:
 
     @classmethod
     def _redact_frame(cls, frame):
-        """Replace any password / access_code values in a JSON frame.
+        """
+        Replace any password / access_code values in a JSON frame.
 
         Operates on the string. If the frame is not parseable JSON we
         return it unchanged — better to keep raw text than to invent a
@@ -345,7 +349,8 @@ class PandaProtocolAdapter:
     # ---- outbound (high-level commands) -----------------------------
 
     def send_command(self, command, **params):
-        """Translate a high-level command into a Panda settings frame.
+        """
+        Translate a high-level command into a Panda settings frame.
 
         Returns True if the frame was handed to the socket without raising.
         Write commands are suppressed in observe-only mode; only ``bind``
@@ -505,7 +510,8 @@ class PandaProtocolAdapter:
             return None
 
     def _normalise_status(self, decoded):
-        """Project a Panda settings frame into a stable controller payload.
+        """
+        Project a Panda settings frame into a stable controller payload.
 
         Field names below come from BIQU-Panda-Breath-Mod (Panda.py) and
         chamber_control (chamber_control.py).
@@ -875,7 +881,8 @@ class PandaProtocolAdapter:
     _RECONNECT_BACKOFF_CAP = 60.0
 
     def _backoff_sleep(self):
-        """Sleep before the next reconnect, with exponential backoff.
+        """
+        Sleep before the next reconnect, with exponential backoff.
 
         Resets to the base ``reconnect_delay`` whenever a connect
         succeeds (handled by :meth:`_reset_error_log_state`). During a
@@ -920,7 +927,8 @@ class PandaProtocolAdapter:
 
     @classmethod
     def _classify_error(cls, exc):
-        """Bucket an exception into a stable category for log coalescing.
+        """
+        Bucket an exception into a stable category for log coalescing.
 
         Returns ``("unreachable", human_text)`` for any of the well-known
         network-reachability errnos, ``("timeout", text)`` for socket
@@ -941,7 +949,8 @@ class PandaProtocolAdapter:
         return type(exc).__name__, msg
 
     def _log_reconnect_error(self, exc):
-        """Log a reconnect-loop error, coalescing repeated buckets.
+        """
+        Log a reconnect-loop error, coalescing repeated buckets.
 
         First occurrence of a bucket is logged at WARNING with the full
         text. Subsequent failures in the same bucket are DEBUG-only and

@@ -1,4 +1,5 @@
-"""Persistent WebSocket frame logger with daily rotation.
+"""
+Persistent WebSocket frame logger with daily rotation.
 
 The protocol adapter already keeps a small in-memory ring buffer for the
 debug panel; this module persists every frame to disk so an operator can
@@ -19,7 +20,8 @@ LOG_FILENAME_SUFFIX = ".jsonl"
 
 
 class FrameLog:
-    """Daily-rotated JSONL writer for raw protocol frames.
+    """
+    Daily-rotated JSONL writer for raw protocol frames.
 
     Safe to call ``write()`` from any thread. ``close()`` releases the
     underlying file handle; subsequent ``write()`` calls re-open lazily.
@@ -90,7 +92,8 @@ class FrameLog:
         return self._dir
 
     def path_for(self, filename):
-        """Resolve ``filename`` against the log dir, guarding traversal.
+        """
+        Resolve ``filename`` against the log dir, guarding traversal.
 
         Defence in depth: any of these rejects with ``None``.
 

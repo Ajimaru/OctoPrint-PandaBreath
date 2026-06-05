@@ -43,7 +43,8 @@ PRINTER_HOT_THRESHOLD_C = 50.0
 
 
 def _parse_fw_version(raw):
-    """Parse a 'V1.0.4'/'1.0.4' string into a (1, 0, 4) tuple, or None.
+    """
+    Parse a 'V1.0.4'/'1.0.4' string into a (1, 0, 4) tuple, or None.
 
     Numeric tuple compare avoids the string-compare trap where
     'V1.0.10' < 'V1.0.4'.
@@ -59,7 +60,8 @@ def _parse_fw_version(raw):
 
 
 def fw_supports_mqtt(raw):
-    """True if the firmware string is known and >= MQTT_MIN_FW.
+    """
+    True if the firmware string is known and >= MQTT_MIN_FW.
 
     Returns False for unknown (None) versions — callers must distinguish
     'too old' from 'not yet known' themselves where it matters; for the
@@ -98,9 +100,12 @@ class PandabreathPlugin(
     octoprint.plugin.BlueprintPlugin,
     octoprint.plugin.EventHandlerPlugin,
 ):
-    """OctoPrint plugin wiring the Panda Breath protocol adapter and the
-    chamber controller into OctoPrint's lifecycle, settings, API, event
-    bus and GCODE-queuing hook."""
+    """
+    Wire the Panda Breath protocol adapter and chamber controller into OctoPrint.
+
+    Hooks into OctoPrint's lifecycle, settings, API, event bus and
+    GCODE-queuing hook.
+    """
 
     # OctoPrint injects these attributes after construction (see
     # ``Plugin.__init__`` in ``octoprint.plugin.core``, which sets them to
@@ -117,6 +122,7 @@ class PandabreathPlugin(
         _basefolder: str
 
     def __init__(self):
+        """Initialise plugin state; OctoPrint injects framework attributes later."""
         super().__init__()
         self._adapter = None
         self._controller = None
@@ -315,7 +321,8 @@ class PandabreathPlugin(
         }
 
     def get_template_configs(self):
-        """Declare sidebar, settings and navbar templates.
+        """
+        Declare sidebar, settings and navbar templates.
 
         The navbar entry is always registered; its visibility is bound to
         the ``navbar_estop_enabled`` setting via ``data_bind`` so toggling
@@ -352,7 +359,8 @@ class PandabreathPlugin(
 
     # pylint: disable-next=unused-argument
     def get_additional_permissions(self, *args, **kwargs):
-        """Register the plugin's STATUS / CONTROL / ADMIN permissions.
+        """
+        Register the plugin's STATUS / CONTROL / ADMIN permissions.
 
         ``*args, **kwargs`` are required by the
         ``octoprint.access.permissions`` hook contract — OctoPrint may
@@ -604,7 +612,8 @@ class PandabreathPlugin(
         return flask.jsonify(self._controller.snapshot())
 
     def _apply_control_command(self, command, data, source="api"):
-        """Map a control verb onto the controller. Shared by HTTP + MQTT.
+        """
+        Map a control verb onto the controller. Shared by HTTP + MQTT.
 
         Returns True if the command was recognised and dispatched, False
         for an unknown command. Raises ``ValueError``/``TypeError`` for bad
@@ -657,7 +666,8 @@ class PandabreathPlugin(
         return True
 
     def _on_mqtt_command(self, action, data):
-        """Inbound MQTT command handler passed to MqttBridge.
+        """
+        Inbound MQTT command handler passed to MqttBridge.
 
         Runs on paho's network thread. Routes through the same validated
         dispatch as the HTTP API so ranges, lock and observe-only all
@@ -727,16 +737,16 @@ class PandabreathPlugin(
         cmd_type,
         gcode,
         *args,
-        subcode=None,
-        tags=None,
         **kwargs,
     ):
-        """Intercept M141/M191 from the gcode stream and re-target the chamber.
+        """
+        Intercept M141/M191 from the gcode stream and re-target the chamber.
 
         The full signature is dictated by OctoPrint's
         ``octoprint.comm.protocol.gcode.queuing`` hook contract; all positional
         arguments must be accepted even when we only consume ``cmd`` and
-        ``gcode``.
+        ``gcode``. The optional ``subcode``/``tags`` keyword arguments are
+        absorbed by ``**kwargs`` since this hook does not use them.
         """
         if self._controller is None:
             return None
@@ -789,7 +799,8 @@ class PandabreathPlugin(
     # ---- internals --------------------------------------------------
 
     def _printer_is_busy(self):
-        """Return True while the OctoPrint printer is running a job OR heating.
+        """
+        Return True while the OctoPrint printer is running a job OR heating.
 
         Two conditions block arming a dry cycle:
 
@@ -827,7 +838,8 @@ class PandabreathPlugin(
         return self._printer_is_heating()
 
     def _printer_is_heating(self):
-        """Return True if any printer heater has a target set or is hot.
+        """
+        Return True if any printer heater has a target set or is hot.
 
         Reads ``get_current_temperatures()`` and inspects the bed and hotend
         (``tool*``) entries. The Panda's own ``chamber`` entry is ignored —
@@ -857,7 +869,8 @@ class PandabreathPlugin(
 
     @staticmethod
     def _build_client_url(host, tls_enabled):
-        """Assemble a ws:// or wss:// URL from a bare host or partial URL.
+        """
+        Assemble a ws:// or wss:// URL from a bare host or partial URL.
 
         Accepts plain IPs, host:port pairs, and full URLs — anything the
         user might paste. The scheme is forced to match tls_enabled, and
@@ -943,7 +956,8 @@ class PandabreathPlugin(
         self._start_mqtt_bridge()
 
     def _start_mqtt_bridge(self):
-        """Bring up the MQTT bridge if enabled and fw-supported.
+        """
+        Bring up the MQTT bridge if enabled and fw-supported.
 
         Deliberately gated three ways:
         * setting ``mqtt_enabled`` on,
@@ -1049,7 +1063,8 @@ class PandabreathPlugin(
         self._start_stack()
 
     def _refresh_frame_log(self):
-        """Open / close / re-open the on-disk frame log to match settings.
+        """
+        Open / close / re-open the on-disk frame log to match settings.
 
         Called on startup and on every settings save so the user can
         toggle the disk capture without restarting OctoPrint.
@@ -1213,7 +1228,7 @@ __plugin_implementation__ = None
 __plugin_hooks__ = None
 
 
-def __plugin_load__():
+def __plugin_load__():  # noqa: N807  (mandatory OctoPrint loader hook name)
     """OctoPrint plugin entry point — wires implementation and hooks."""
     # Set the module-level attributes that OctoPrint's plugin loader reads
     # after this function returns. Done via ``setattr`` on the module
