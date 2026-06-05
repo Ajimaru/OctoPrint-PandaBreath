@@ -308,12 +308,13 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         """
         True when the paired printer link is safe for heating.
 
-        Heating requires a bound printer (printer_state == 3). While the
-        link is still binding (2) or the printer is unreachable (4), or
-        the state is unknown (None), heating is unsafe. An unknown state
-        is treated as safe-by-default only when no printer_state has ever
-        been reported (older firmware that omits the field); once a real
-        binding/unreachable code has been seen it gates heating.
+        Heating requires a bound printer (printer_state == 3). A reported
+        binding (2) or unreachable (4) code gates heating (returns False).
+
+        A state of ``None`` means the firmware has never reported the field
+        (older firmware that omits it); this is treated as safe-by-default
+        and does NOT gate heating. Only an explicitly reported non-bound
+        code gates.
         """
         state = self._printer_state
         if state is None:
@@ -644,31 +645,50 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         lock (which forces the heater off) and auto-releases once the
         printer is bound again — mirroring the watchdog-timeout lock.
         """
+        # Decide AND apply the lock-state transition atomically under the
+        # lock, then run side effects (logging / heater_off / notify)
+        # afterwards. Reading the state, releasing the lock, and only then
+        # calling lock()/unlock() would race a concurrent manual lock/unlock:
+        # e.g. a user lock acquired in the gap could be clobbered by the
+        # printer_link lock, or wrongly cleared by the auto-release below.
+        engaged_link_lock = False
+        released_link_lock = False
         with self._lock:
             link_ok = self._printer_link_ok()
-            locked = self._locked
-            reason = self._last_safety_reason
             state = self._printer_state
-        if not link_ok:
-            # Engage the link lock only when not already locked. If another
-            # lock (user/estop/over-temp/timeout) is engaged it already
-            # keeps the heater off, and we must not clobber its reason —
-            # otherwise the auto-release below would wrongly free it.
-            if not locked:
-                self._log.warning(
-                    "ChamberController: printer link not bound "
-                    "(printer_state=%s) — locking and shutting heater off",
-                    state,
-                )
-                self.lock(reason="printer_link")
-        elif locked and reason == "printer_link":
-            # Link recovered: release our own lock (leave manual/estop/
-            # over-temp/timeout locks untouched).
+            if not link_ok:
+                # Engage the link lock only when not already locked. If
+                # another lock (user/estop/over-temp/timeout) is engaged it
+                # already keeps the heater off, and we must not clobber its
+                # reason — otherwise the auto-release below would wrongly
+                # free it.
+                if not self._locked:
+                    self._locked = True
+                    self._last_safety_reason = "printer_link"
+                    engaged_link_lock = True
+            elif self._locked and self._last_safety_reason == "printer_link":
+                # Link recovered: release our own lock (leave manual/estop/
+                # over-temp/timeout locks untouched).
+                self._locked = False
+                self._last_safety_reason = None
+                released_link_lock = True
+
+        if engaged_link_lock:
+            self._log.warning(
+                "ChamberController: printer link not bound "
+                "(printer_state=%s) — locking and shutting heater off",
+                state,
+            )
+            # Mirror lock(): force the heater off outside observe-only mode.
+            if not self._is_observe_only():
+                self._command_heater(False, safety=True)
+            self._notify()
+        elif released_link_lock:
             self._log.info(
                 "ChamberController: printer link bound again, "
                 "releasing printer-link lock"
             )
-            self.unlock()
+            self._notify()
 
     def _command_heater(self, on, safety=False):
         """

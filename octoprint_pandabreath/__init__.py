@@ -90,6 +90,22 @@ def _plugin_permission(key):
     return getattr(Permissions, "PLUGIN_PANDABREATH_" + key, None)
 
 
+def _safe_error_message(exc):
+    """
+    Reduce an exception to a single short line safe to return to a client.
+
+    The controller raises ``ValueError``/``PermissionError`` with our own,
+    deliberately user-facing validation strings (e.g. ``"observe-only mode"``,
+    ``"target exceeds max 60.0"``). Passing the full ``str(exc)`` straight into
+    an HTTP response would, for any other exception, risk leaking internal
+    detail (CodeQL: "Information exposure through an exception"). Take only the
+    first line and cap the length so nothing beyond the intended message —
+    multi-line stack/repr text — can reach the user.
+    """
+    text = str(exc).splitlines()[0] if str(exc) else exc.__class__.__name__
+    return text[:200]
+
+
 class PandabreathPlugin(
     octoprint.plugin.StartupPlugin,
     octoprint.plugin.ShutdownPlugin,
@@ -516,9 +532,14 @@ class PandabreathPlugin(
             return flask.abort(404)
         try:
             os.remove(path)
-        except OSError as exc:
+        except OSError:
+            # Don't leak filesystem details (paths, errno text) to the client;
+            # the full error goes to the server log instead.
+            self._logger.exception(
+                "PandaBreath: failed to delete frame log '%s'", filename
+            )
             return flask.make_response(
-                flask.jsonify({"error": str(exc)}),
+                flask.jsonify({"error": "could not delete frame log"}),
                 500,
             )
         return flask.jsonify(self._frame_log_status())
@@ -551,8 +572,13 @@ class PandabreathPlugin(
             try:
                 os.remove(path)
                 deleted += 1
-            except OSError as exc:
-                errors.append({"name": name, "error": str(exc)})
+            except OSError:
+                # See blueprint_delete_frame_log: keep filesystem error
+                # detail out of the response, log it server-side.
+                self._logger.exception(
+                    "PandaBreath: failed to delete frame log '%s'", name
+                )
+                errors.append({"name": name, "error": "could not delete"})
         return flask.jsonify(
             {
                 "deleted": deleted,
@@ -605,10 +631,13 @@ class PandabreathPlugin(
         except PermissionError as exc:
             # 409 for observe-only (configuration conflict), 423 for safety
             # lock (resource is locked). Both are HTTP-semantic correct.
-            status = 409 if "observe-only" in str(exc) else 423
-            return flask.make_response(flask.jsonify({"error": str(exc)}), status)
+            message = _safe_error_message(exc)
+            status = 409 if "observe-only" in message else 423
+            return flask.make_response(flask.jsonify({"error": message}), status)
         except (ValueError, TypeError) as exc:
-            return flask.make_response(flask.jsonify({"error": str(exc)}), 400)
+            return flask.make_response(
+                flask.jsonify({"error": _safe_error_message(exc)}), 400
+            )
         return flask.jsonify(self._controller.snapshot())
 
     def _apply_control_command(self, command, data, source="api"):
