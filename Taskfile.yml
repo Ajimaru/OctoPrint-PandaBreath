@@ -19,6 +19,11 @@ tasks:
     cmds:
       - python -m pytest
 
+  test-cobertura:
+    desc: Generate Cobertura coverage report for Codacy/Codecov
+    cmds:
+      - python -m pytest --cov=octoprint_pandabreath --cov-branch --cov-report=xml:cobertura.xml
+
   ### Build related
 
   build:
