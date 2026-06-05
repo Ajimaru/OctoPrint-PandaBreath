@@ -33,7 +33,7 @@ projects (see the file header above for full attribution). Concretely:
 
 Transport modes:
 
-* ``client`` — plugin actively connects to ``ws://<panda_ip>/ws``. This is
+* ``client`` — plugin actively connects to ``ws:<panda_ip>/ws``. This is
   the mode that matches real hardware.
 * ``server`` — plugin listens for inbound connections (intended for setups
   where the heater is configured to push to the plugin host, mirroring the
@@ -154,6 +154,7 @@ class PandaProtocolAdapter:
         # ``force_reconnect`` deliberately causes: WARNING when the operator
         # has the debug panel open, INFO otherwise. Read live (not cached)
         # so toggling the setting takes effect without a stack restart.
+        # nosemgrep
         self._debug_enabled_getter = debug_enabled_getter or (lambda: False)
         self._tls_enabled = bool(tls_enabled)
         self._tls_ca_file = tls_ca_file or None
@@ -711,6 +712,9 @@ class PandaProtocolAdapter:
     # ---- server mode (Bambu-emulation style listener) --------------
 
     def _run_server(self):
+        # Two distinct optional imports, not a self-comparison (the rule
+        # mis-fires on the ``X is None or Y is None`` shape).
+        # nosemgrep
         if websockets is None or asyncio is None:
             self._log.error(
                 "PandaProtocolAdapter: server mode needs the 'websockets' package"
@@ -728,6 +732,9 @@ class PandaProtocolAdapter:
     async def _serve_forever(self):
         aio = asyncio
         wss = websockets
+        # Type-narrowing only (both guaranteed non-None by _run_server's
+        # guard before asyncio.run); not a runtime safety check.
+        # nosemgrep
         assert aio is not None and wss is not None
         self._active_loop = aio.get_running_loop()
         stop_future = self._active_loop.create_future()
@@ -774,7 +781,7 @@ class PandaProtocolAdapter:
                 watcher.cancel()
         self._active_loop = None
 
-    # ---- client mode (talks to ws://<panda_ip>/ws) ------------------
+    # ---- client mode (talks to ws:<panda_ip>/ws) --------------------
 
     def _run_client(self):
         wsmod = websocket

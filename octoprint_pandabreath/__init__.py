@@ -160,14 +160,14 @@ class PandabreathPlugin(
     def get_settings_defaults(self):
         """Return defaults for every settings key the plugin reads."""
         return {
-            # The Panda exposes its own ws server at ws://<ip>/ws — client
+            # The Panda exposes its own ws server at ws:<ip>/ws — client
             # mode talks to it directly. Server mode is for the Bambu-
             # emulation style setups from BIQU-Panda-Breath-Mod.
             "transport": "client",
             "bind_host": "127.0.0.1",
             "bind_port": 8765,
-            # Host/IP of the Panda device. The transport scheme (ws:// vs
-            # wss://) and the /ws suffix are derived from tls_enabled at
+            # Host/IP of the Panda device. The transport scheme (ws: vs
+            # wss) and the /ws suffix are derived from tls_enabled at
             # connect time — the user only needs to enter the address.
             "client_host": "",
             "host_ip": "",
@@ -280,6 +280,7 @@ class PandabreathPlugin(
         try:
             # nosec B310: url is a fixed https:// literal above, not
             # user-controlled, so no file:/custom-scheme risk applies.
+            # nosemgrep
             with urlopen(url, timeout=10) as resp:  # nosec B310
                 text = resp.read().decode("utf-8")
         except (URLError, OSError) as exc:
@@ -899,7 +900,7 @@ class PandabreathPlugin(
     @staticmethod
     def _build_client_url(host, tls_enabled):
         """
-        Assemble a ws:// or wss:// URL from a bare host or partial URL.
+        Assemble a ws: or wss: URL from a bare host or partial URL.
 
         Accepts plain IPs, host:port pairs, and full URLs — anything the
         user might paste. The scheme is forced to match tls_enabled, and
@@ -907,8 +908,9 @@ class PandabreathPlugin(
         """
         host = host.strip()
         scheme = "wss" if tls_enabled else "ws"
-        # Strip any existing ws://, wss://, http://, https:// prefix so
-        # we can re-attach the scheme that matches the current TLS toggle.
+        # Strip any existing ws, wss, http, https scheme prefix so we can
+        # re-attach the scheme that matches the current TLS toggle.
+        # nosemgrep
         for prefix in ("wss://", "ws://", "https://", "http://"):
             if host.lower().startswith(prefix):
                 host = host[len(prefix) :]

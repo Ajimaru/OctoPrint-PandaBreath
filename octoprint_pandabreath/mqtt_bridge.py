@@ -119,6 +119,9 @@ class MqttBridge:
             # guard above), so ``mqtt`` is not None here — bind it to a
             # local so the static checker stops treating it as Optional.
             paho = mqtt
+            # Type-narrowing only (mqtt is guaranteed non-None by the
+            # paho_available() guard above); not a runtime safety check.
+            # nosemgrep
             assert paho is not None
             self._client = paho.Client(
                 callback_api_version=paho.CallbackAPIVersion.VERSION2
