@@ -20,4 +20,3 @@ build/
 tools/
 .coverage
 .DS_Store
-.githooks/
