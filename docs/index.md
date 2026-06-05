@@ -17,6 +17,22 @@ OctoPrint PandaBreath provides direct control and status monitoring for the BIQU
 4. Verify status updates and frame flow.
 5. Enable write control when validation is complete.
 
+The full walkthrough is on the [Installation & Setup](installation.md) page.
+
+!!! warning "Read the safety page first"
+    This plugin controls a heater. Before enabling write control, read
+    [Safety](safety.md) to understand observe-only mode, the safety lock,
+    emergency stop, and the printer-link barrier.
+
+## Documentation
+
+- **[Installation & Setup](installation.md)** — install and validate safely
+- **[Configuration](configuration.md)** — every setting, G-code, and the API
+- **[Safety](safety.md)** — locks, emergency stop, and protective barriers
+- **[MQTT](mqtt.md)** — optional broker-based control
+- **[Troubleshooting](troubleshooting.md)** — diagnosing common problems
+- **[Development](development.md)** — building the docs and contributing
+
 ## Links
 
 - [Project README](https://github.com/Ajimaru/OctoPrint-PandaBreath#readme)

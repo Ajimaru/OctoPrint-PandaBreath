@@ -9,8 +9,11 @@ theme:
 
 nav:
   - Home: index.md
+  - Installation & Setup: installation.md
   - Configuration: configuration.md
+  - Safety: safety.md
   - MQTT: mqtt.md
+  - Troubleshooting: troubleshooting.md
   - Development: development.md
 
 markdown_extensions:

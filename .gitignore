@@ -20,3 +20,4 @@ build/
 tools/
 .coverage
 .DS_Store
+.ruff_cache/
