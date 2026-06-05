@@ -228,7 +228,7 @@ Summary: this project exposes many status and quality badges (CI, linting, cover
 [![Coverage Diff](https://codecov.io/gh/Ajimaru/OctoPrint-PandaBreath/branch/main/graph/badge.svg?flag=patch)](https://codecov.io/gh/Ajimaru/OctoPrint-PandaBreath)
 [![Pylint Score](https://img.shields.io/badge/pylint-10.0-green.svg)](https://www.pylint.org/)
 [![Bandit Security](https://img.shields.io/badge/bandit-security-green.svg)](https://bandit.readthedocs.io/en/latest/)
-[![Depfu](https://img.shields.io/badge/dependencies-managed%20by%20Depfu-blue)](https://depfu.com/repos/github/Ajimaru/OctoPrint-PandaBreath)
+[![Depfu](https://badges.depfu.com/badges/4082d9117ad23681e381205c3efa5029/status.svg)](https://depfu.com)
 [![Known Vulnerabilities](https://snyk.io/test/github/Ajimaru/OctoPrint-PandaBreath/badge.svg)](https://snyk.io/test/github/Ajimaru/OctoPrint-PandaBreath)
 
 ### 🔄 3. CI/CD & Release
