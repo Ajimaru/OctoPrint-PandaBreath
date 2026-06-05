@@ -218,7 +218,7 @@ def test_normalise_work_on_zero_is_false(adapter):
 
 
 def test_normalise_invalid_temp_skipped(adapter):
-    # An unparseable temperature is dropped; with nothing else useful in
+    # An unparsable temperature is dropped; with nothing else useful in
     # the frame the normaliser returns None (only the "type" key remained).
     out = adapter._normalise_status({"settings": {"warehouse_temper": "not-a-number"}})
     assert out is None
