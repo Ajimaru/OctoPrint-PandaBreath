@@ -387,6 +387,86 @@ def test_on_status_keeps_user_lock(controller):
     assert controller.is_locked() is True
 
 
+# ---- printer-link safety barrier ----------------------------------------
+
+
+def test_set_heater_on_blocked_while_binding(controller):
+    # printer_state 2 = binding: heating must be refused.
+    controller.on_status({"printer_state": 2})
+    with pytest.raises(PermissionError):
+        controller.set_heater(True)
+
+
+def test_set_heater_on_blocked_while_unreachable(controller):
+    # printer_state 4 = unreachable: heating must be refused.
+    controller.on_status({"printer_state": 4})
+    with pytest.raises(PermissionError):
+        controller.set_heater(True)
+
+
+def test_set_heater_on_allowed_when_bound(controller, adapter):
+    # printer_state 3 = bound: heating is permitted.
+    controller.on_status({"printer_state": 3})
+    controller.set_heater(True)
+    assert controller.snapshot()["heater_on"] is True
+
+
+def test_set_heater_on_allowed_when_state_unreported(controller, adapter):
+    # Older firmware never sends printer_state; do not gate heating.
+    controller.set_heater(True)
+    assert controller.snapshot()["heater_on"] is True
+
+
+def test_set_heater_off_allowed_while_unreachable(controller):
+    # Turning OFF must always be possible, even with a bad link.
+    controller.on_status({"printer_state": 4})
+    controller.set_heater(False)
+    assert controller.snapshot()["heater_on"] is False
+
+
+def test_status_binding_locks_and_forces_heater_off(controller, adapter):
+    # Heat while bound, then the link goes to binding: forced off + locked.
+    controller.on_status({"printer_state": 3})
+    controller.set_heater(True)
+    adapter.commands.clear()
+    controller.on_status({"printer_state": 2})
+    snap = controller.snapshot()
+    assert snap["locked"] is True
+    assert snap["last_safety_reason"] == "printer_link"
+    assert snap["heater_on"] is False
+    assert ("heater_off", {}) in adapter.commands
+
+
+def test_status_unreachable_locks_and_forces_heater_off(controller, adapter):
+    controller.on_status({"printer_state": 3})
+    controller.set_heater(True)
+    adapter.commands.clear()
+    controller.on_status({"printer_state": 4})
+    snap = controller.snapshot()
+    assert snap["locked"] is True
+    assert snap["last_safety_reason"] == "printer_link"
+    assert snap["heater_on"] is False
+
+
+def test_printer_link_lock_auto_releases_when_bound(controller):
+    # Unreachable engages the link lock; becoming bound releases it.
+    controller.on_status({"printer_state": 4})
+    assert controller.is_locked() is True
+    assert controller.snapshot()["last_safety_reason"] == "printer_link"
+    controller.on_status({"printer_state": 3})
+    assert controller.is_locked() is False
+
+
+def test_printer_link_lock_does_not_override_user_lock(controller):
+    # A manual lock must survive even after the link recovers.
+    controller.lock(reason="user")
+    controller.on_status({"printer_state": 4})
+    controller.on_status({"printer_state": 3})
+    # The link auto-release only clears its own reason, not a user lock.
+    assert controller.is_locked() is True
+    assert controller.snapshot()["last_safety_reason"] == "user"
+
+
 # ---- dry-remaining extrapolation ----------------------------------------
 
 

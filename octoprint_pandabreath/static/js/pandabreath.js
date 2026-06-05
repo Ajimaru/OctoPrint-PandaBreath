@@ -399,11 +399,22 @@ $(function () {
         // 'connected' status push.
         self.reconnectPending = ko.observable(false);
 
+        // The chamber may only heat while the paired printer is bound
+        // (printer_state === 3). While binding (2) or unreachable (4) the
+        // backend forces a safety lock and refuses power-on; mirror that
+        // here so the UI explains why the power control is disabled. An
+        // unreported state (null, older firmware) is treated as ready.
+        self.printerLinkReady = ko.pureComputed(function () {
+            var v = self.printerState();
+            if (v === null || v === undefined) return true;
+            return v === 3;
+        });
         self.controlsEnabled = ko.pureComputed(function () {
             return (
                 !self.locked() &&
                 !self.observeOnly() &&
-                !self.reconnectPending()
+                !self.reconnectPending() &&
+                self.printerLinkReady()
             );
         });
         // Heater-OFF is a write frame, so it stays disabled under

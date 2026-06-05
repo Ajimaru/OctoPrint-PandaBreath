@@ -103,7 +103,13 @@
                         {{ _("OFF") }}
                     </button>
                 </div>
-                <span class="help-block" data-bind="visible: !heaterOn()">
+                <span class="help-block text-error"
+                      data-bind="visible: !printerLinkReady()">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    {{ _("Power is disabled until the paired printer is connected. The chamber cannot heat while the printer link is binding or unreachable.") }}
+                </span>
+                <span class="help-block"
+                      data-bind="visible: printerLinkReady() && !heaterOn()">
                     {{ _("Turn power on to choose a mode and configure the chamber.") }}
                 </span>
             </div>

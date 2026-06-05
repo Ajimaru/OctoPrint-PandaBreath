@@ -43,6 +43,17 @@ MODE_DRY = "dry"
 MODE_STANDBY = "standby"
 VALID_MODES = (MODE_AUTO, MODE_MANUAL, MODE_DRY, MODE_STANDBY)
 
+# Device ``printer_state`` codes (from the WebSocket status frame):
+#   2 = binding   — the Panda Breath is still establishing the link
+#   3 = bound     — link established / printer reachable
+#   4 = unreachable — the paired printer cannot be reached
+# Heating is only safe while the printer is bound (3): when binding (2) or
+# unreachable (4) the chamber must not heat, because the device cannot
+# coordinate with the printer it is paired to.
+PRINTER_STATE_BINDING = 2
+PRINTER_STATE_BOUND = 3
+PRINTER_STATE_UNREACHABLE = 4
+
 # Device-enforced input ranges, reverse-engineered from the V1.0.4 Home
 # Assistant MQTT discovery configs (and confirmed by WebUI clamping). The
 # firmware rejects / clamps out-of-range values on its own; we mirror the
@@ -289,10 +300,31 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._send("set_mode", mode=mode)
         self._notify()
 
+    def _printer_link_ok(self):
+        """True when the paired printer link is safe for heating.
+
+        Heating requires a bound printer (printer_state == 3). While the
+        link is still binding (2) or the printer is unreachable (4), or
+        the state is unknown (None), heating is unsafe. An unknown state
+        is treated as safe-by-default only when no printer_state has ever
+        been reported (older firmware that omits the field); once a real
+        binding/unreachable code has been seen it gates heating.
+        """
+        state = self._printer_state
+        if state is None:
+            # Field never reported (older firmware) — do not gate.
+            return True
+        return state == PRINTER_STATE_BOUND
+
     def set_heater(self, on):
         """Turn the heater on or off, honouring lock and observe-only."""
-        if self._locked and on:
+        if on and self._locked:
             raise PermissionError("system locked")
+        if on and not self._printer_link_ok():
+            # Refuse to power the chamber while the printer link is
+            # binding/unreachable — the same guarantee the status loop
+            # enforces by forcing the heater off.
+            raise PermissionError("printer link not ready")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._command_heater(bool(on))
@@ -590,6 +622,41 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 self._max_temp,
             )
             self.lock(reason="over_temp")
+        self._check_printer_link()
+
+    def _check_printer_link(self):
+        """Force the heater off while the printer link is not bound.
+
+        When the device reports ``binding`` (2) or ``unreachable`` (4),
+        the chamber must not heat. This engages a ``printer_link`` safety
+        lock (which forces the heater off) and auto-releases once the
+        printer is bound again — mirroring the watchdog-timeout lock.
+        """
+        with self._lock:
+            link_ok = self._printer_link_ok()
+            locked = self._locked
+            reason = self._last_safety_reason
+            state = self._printer_state
+        if not link_ok:
+            # Engage the link lock only when not already locked. If another
+            # lock (user/estop/over-temp/timeout) is engaged it already
+            # keeps the heater off, and we must not clobber its reason —
+            # otherwise the auto-release below would wrongly free it.
+            if not locked:
+                self._log.warning(
+                    "ChamberController: printer link not bound "
+                    "(printer_state=%s) — locking and shutting heater off",
+                    state,
+                )
+                self.lock(reason="printer_link")
+        elif locked and reason == "printer_link":
+            # Link recovered: release our own lock (leave manual/estop/
+            # over-temp/timeout locks untouched).
+            self._log.info(
+                "ChamberController: printer link bound again, "
+                "releasing printer-link lock"
+            )
+            self.unlock()
 
     def _command_heater(self, on, safety=False):
         """Send a heater on/off frame.
