@@ -28,12 +28,12 @@ $(function () {
             var ps = self.octoprintState;
             if (!ps) return false;
             return !!(
-                ko.unwrap(ps.isPrinting)
-                || ko.unwrap(ps.isStarting)
-                || ko.unwrap(ps.isPausing)
-                || ko.unwrap(ps.isPaused)
-                || ko.unwrap(ps.isResuming)
-                || ko.unwrap(ps.isCancelling)
+                ko.unwrap(ps.isPrinting) ||
+                ko.unwrap(ps.isStarting) ||
+                ko.unwrap(ps.isPausing) ||
+                ko.unwrap(ps.isPaused) ||
+                ko.unwrap(ps.isResuming) ||
+                ko.unwrap(ps.isCancelling)
             );
         });
 
@@ -61,11 +61,15 @@ $(function () {
             if (el) el.textContent = value || gettext("not reported");
             self._updateSettingsFwBadge();
         });
-        self.latestFwVersion.subscribe(function () { self._updateSettingsFwBadge(); });
+        self.latestFwVersion.subscribe(function () {
+            self._updateSettingsFwBadge();
+        });
 
         // Strip leading "V"/"v" for comparison so "1.0.3" == "V1.0.3".
         // Exposed on self so Knockout data-bind expressions can call it.
-        var _normFw = function (v) { return v ? v.replace(/^[Vv]/, "") : ""; };
+        var _normFw = function (v) {
+            return v ? v.replace(/^[Vv]/, "") : "";
+        };
         self._normFw = _normFw;
 
         self._updateSettingsFwBadge = function () {
@@ -98,7 +102,7 @@ $(function () {
         // reports (from the WS `ha` block) for the auto-prefill.
         self.mqttSupported = ko.observable(false);
         self.mqttActive = ko.observable(false);
-        self.mqttDeviceBroker = ko.observable(null);  // {ip,port,user} | null
+        self.mqttDeviceBroker = ko.observable(null); // {ip,port,user} | null
 
         self._updateMqttSettingsDom = function () {
             var supported = self.mqttSupported();
@@ -106,12 +110,18 @@ $(function () {
             if (cb) cb.disabled = !supported;
             var warn = document.getElementById("pandabreath_mqtt_unsupported");
             if (warn) warn.style.display = supported ? "none" : "";
-            var hintEl = document.getElementById("pandabreath_mqtt_broker_hint");
+            var hintEl = document.getElementById(
+                "pandabreath_mqtt_broker_hint",
+            );
             if (hintEl) {
                 var b = self.mqttDeviceBroker();
                 if (b && b.ip) {
-                    hintEl.innerHTML = "Device is bound to broker <code>"
-                        + b.ip + ":" + (b.port || 1883) + "</code>.";
+                    hintEl.innerHTML =
+                        "Device is bound to broker <code>" +
+                        b.ip +
+                        ":" +
+                        (b.port || 1883) +
+                        "</code>.";
                     hintEl.style.display = "inline-block";
                 } else {
                     hintEl.style.display = "none";
@@ -124,9 +134,11 @@ $(function () {
         self.mqttDeviceBroker.subscribe(self._updateMqttSettingsDom);
 
         var pbSettings = function () {
-            var s = self.settings && self.settings.settings
-                && self.settings.settings.plugins
-                && self.settings.settings.plugins.pandabreath;
+            var s =
+                self.settings &&
+                self.settings.settings &&
+                self.settings.settings.plugins &&
+                self.settings.settings.plugins.pandabreath;
             return s || null;
         };
         var readPbSetting = function (name) {
@@ -150,7 +162,7 @@ $(function () {
             return {
                 "label-success": self.mqttSupported(),
                 "label-warning": !self.mqttSupported() && !!self.fwVersion(),
-                "label-info": !self.fwVersion()
+                "label-info": !self.fwVersion(),
             };
         });
         self.mqttBridgeBadgeCss = ko.pureComputed(function () {
@@ -158,7 +170,7 @@ $(function () {
             return {
                 "label-success": enabled && self.mqttActive(),
                 "label-warning": enabled && !self.mqttActive(),
-                "label-info": !enabled
+                "label-info": !enabled,
             };
         });
         self.mqttConfiguredBrokerDisplay = ko.pureComputed(function () {
@@ -202,8 +214,8 @@ $(function () {
             if (v === null || v === undefined) return "—";
             // Common ESP-IDF station states: 3=connected, 2=connecting,
             // 0=idle. Surface raw + label when known.
-            var labels = {0: "idle", 2: "connecting", 3: "connected"};
-            return labels[v] ? (v + " (" + labels[v] + ")") : String(v);
+            var labels = { 0: "idle", 2: "connecting", 3: "connected" };
+            return labels[v] ? v + " (" + labels[v] + ")" : String(v);
         });
         self.netApOnDisplay = ko.pureComputed(function () {
             var v = self.diagnostics().net_ap_on;
@@ -216,8 +228,9 @@ $(function () {
         self.pairedPrinterDisplay = ko.pureComputed(function () {
             var d = self.diagnostics();
             if (!d.printer_name && !d.printer_host) return "—";
-            var hostport = (d.printer_host || "?")
-                + (d.printer_port ? ":" + d.printer_port : "");
+            var hostport =
+                (d.printer_host || "?") +
+                (d.printer_port ? ":" + d.printer_port : "");
             return (d.printer_name || "?") + " @ " + hostport;
         });
         // Mirror the bound-printer summary into the Settings dialog the
@@ -226,7 +239,7 @@ $(function () {
         // wiring a second Knockout root.
         self.pairedPrinterDisplay.subscribe(function (value) {
             var el = document.getElementById(
-                "pandabreath_paired_printer_inline"
+                "pandabreath_paired_printer_inline",
             );
             if (el) el.textContent = value || gettext("not bound");
         });
@@ -288,10 +301,10 @@ $(function () {
             var labels = {
                 0: gettext("idle"),
                 1: gettext("scanning…"),
-                2: gettext("complete")
+                2: gettext("complete"),
             };
             var label = labels[v];
-            return label ? (v + " (" + label + ")") : String(v);
+            return label ? v + " (" + label + ")" : String(v);
         });
         self.printerScanBadgeCss = ko.pureComputed(function () {
             var v = self.printerScanRaw();
@@ -361,16 +374,22 @@ $(function () {
                 while (n.length < (w || 2)) n = "0" + n;
                 return n;
             };
-            return pad(d.getHours()) + ":" + pad(d.getMinutes()) +
-                   ":" + pad(d.getSeconds()) +
-                   "." + pad(d.getMilliseconds(), 3);
+            return (
+                pad(d.getHours()) +
+                ":" +
+                pad(d.getMinutes()) +
+                ":" +
+                pad(d.getSeconds()) +
+                "." +
+                pad(d.getMilliseconds(), 3)
+            );
         };
         var withDisplay = function (entry) {
             return {
                 ts: entry.ts,
                 dir: entry.dir,
                 frame: entry.frame,
-                tsDisplay: formatTs(entry.ts)
+                tsDisplay: formatTs(entry.ts),
             };
         };
 
@@ -381,9 +400,11 @@ $(function () {
         self.reconnectPending = ko.observable(false);
 
         self.controlsEnabled = ko.pureComputed(function () {
-            return !self.locked()
-                && !self.observeOnly()
-                && !self.reconnectPending();
+            return (
+                !self.locked() &&
+                !self.observeOnly() &&
+                !self.reconnectPending()
+            );
         });
         // Heater-OFF is a write frame, so it stays disabled under
         // observe-only even though it is otherwise lock-bypass-safe.
@@ -416,7 +437,9 @@ $(function () {
             var h = Math.floor(s / 3600);
             var m = Math.floor((s % 3600) / 60);
             var sec = Math.floor(s % 60);
-            var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
+            var pad = function (n) {
+                return n < 10 ? "0" + n : "" + n;
+            };
             return h + "h " + pad(m) + "m " + pad(sec) + "s";
         });
         var intDisplay = function (obs, unit) {
@@ -441,10 +464,10 @@ $(function () {
             var labels = {
                 2: gettext("binding"),
                 3: gettext("connected / idle"),
-                4: gettext("unreachable / error")
+                4: gettext("unreachable / error"),
             };
             var label = labels[v];
-            return label ? (v + " (" + label + ")") : String(v);
+            return label ? v + " (" + label + ")" : String(v);
         });
         self.isRunningDisplay = ko.pureComputed(function () {
             var v = self.isRunning();
@@ -500,8 +523,11 @@ $(function () {
                 // Edge: reconnect just completed (offline → online again).
                 // Release the apply-button lockout that scheduleAutoRefresh
                 // set so the user can resume issuing writes.
-                if (!wasConnected && state.connected
-                        && self.reconnectPending()) {
+                if (
+                    !wasConnected &&
+                    state.connected &&
+                    self.reconnectPending()
+                ) {
                     self.reconnectPending(false);
                 }
             }
@@ -513,15 +539,21 @@ $(function () {
                 self.latestFwVersionUrl(state.latest_fw_url);
             if ("dry_target" in state) {
                 self.dryTarget(state.dry_target);
-                if (syncInputs && state.dry_target != null
-                        && !self.dryTargetInputFocused()) {
+                if (
+                    syncInputs &&
+                    state.dry_target != null &&
+                    !self.dryTargetInputFocused()
+                ) {
                     self.dryTargetInput(state.dry_target);
                 }
             }
             if ("dry_timer_hours" in state) {
                 self.dryTimerHours(state.dry_timer_hours);
-                if (syncInputs && state.dry_timer_hours != null
-                        && !self.dryTimerInputFocused()) {
+                if (
+                    syncInputs &&
+                    state.dry_timer_hours != null &&
+                    !self.dryTimerInputFocused()
+                ) {
                     self.dryTimerInput(state.dry_timer_hours);
                 }
             }
@@ -540,22 +572,32 @@ $(function () {
                 // a running cycle.
                 var incoming = state.dry_remaining_s;
                 var current = self.dryRemainingS();
-                if (current === null || current === undefined
-                        || incoming === null || incoming === undefined
-                        || !self.dryingActive()
-                        || incoming < current
-                        || Math.abs(current - incoming) > 120) {
+                if (
+                    current === null ||
+                    current === undefined ||
+                    incoming === null ||
+                    incoming === undefined ||
+                    !self.dryingActive() ||
+                    incoming < current ||
+                    Math.abs(current - incoming) > 120
+                ) {
                     self.dryRemainingS(incoming);
                 }
             }
             if ("printer_type" in state) self.printerType(state.printer_type);
-            if ("printer_state" in state) self.printerState(state.printer_state);
-            if ("mqtt_supported" in state) self.mqttSupported(!!state.mqtt_supported);
+            if ("printer_state" in state)
+                self.printerState(state.printer_state);
+            if ("mqtt_supported" in state)
+                self.mqttSupported(!!state.mqtt_supported);
             if ("mqtt_active" in state) self.mqttActive(!!state.mqtt_active);
             if ("diagnostics" in state && state.diagnostics) {
                 // Merge so a slim status frame doesn't blow away the
                 // network/pairing fields we got from the initial pull.
-                var merged = $.extend({}, self.diagnostics(), state.diagnostics);
+                var merged = $.extend(
+                    {},
+                    self.diagnostics(),
+                    state.diagnostics,
+                );
                 self.diagnostics(merged);
                 // Surface the broker the device itself reports (ha_* keys
                 // from the WS snapshot) for the MQTT settings auto-prefill.
@@ -563,35 +605,42 @@ $(function () {
                     self.mqttDeviceBroker({
                         ip: merged.ha_ip,
                         port: merged.ha_port || 1883,
-                        user: merged.ha_user || ""
+                        user: merged.ha_user || "",
                     });
                 }
             }
             if ("responses" in state && Array.isArray(state.responses)) {
                 // The controller maintains the ring; we just decorate
                 // each entry with a display-friendly timestamp.
-                self.responses(state.responses.map(function (r) {
-                    return $.extend({}, r, {
-                        tsDisplay: r.ts
-                            ? new Date(r.ts * 1000).toLocaleTimeString()
-                            : "—",
-                        okDisplay: r.ok === 1
-                            ? "OK"
-                            : (r.ok === 0 ? "FAIL" : "—")
-                    });
-                }));
+                self.responses(
+                    state.responses.map(function (r) {
+                        return $.extend({}, r, {
+                            tsDisplay: r.ts
+                                ? new Date(r.ts * 1000).toLocaleTimeString()
+                                : "—",
+                            okDisplay:
+                                r.ok === 1 ? "OK" : r.ok === 0 ? "FAIL" : "—",
+                        });
+                    }),
+                );
             }
             if ("bed_temp_limit" in state) {
                 self.bedTempLimit(state.bed_temp_limit);
-                if (syncInputs && state.bed_temp_limit != null
-                        && !self.heaterThresholdInputFocused()) {
+                if (
+                    syncInputs &&
+                    state.bed_temp_limit != null &&
+                    !self.heaterThresholdInputFocused()
+                ) {
                     self.heaterThresholdInput(state.bed_temp_limit);
                 }
             }
             if ("filter_threshold" in state) {
                 self.filterThreshold(state.filter_threshold);
-                if (syncInputs && state.filter_threshold != null
-                        && !self.filterThresholdInputFocused()) {
+                if (
+                    syncInputs &&
+                    state.filter_threshold != null &&
+                    !self.filterThresholdInputFocused()
+                ) {
                     self.filterThresholdInput(state.filter_threshold);
                 }
             }
@@ -627,7 +676,7 @@ $(function () {
                 mtimeDisplay: fmtMtime(entry.mtime),
                 downloadUrl:
                     "plugin/pandabreath/frame_logs/" +
-                    encodeURIComponent(entry.name)
+                    encodeURIComponent(entry.name),
             };
         };
         self.applyFrameLogStatus = function (status) {
@@ -637,15 +686,17 @@ $(function () {
             self.frameLogFiles(files);
         };
         self.refreshFrameLog = function () {
-            $.get("plugin/pandabreath/frame_logs")
-                .done(self.applyFrameLogStatus);
+            $.get("plugin/pandabreath/frame_logs").done(
+                self.applyFrameLogStatus,
+            );
         };
         self.deleteFrameLog = function (file) {
             if (!window.confirm(gettext("Delete ") + file.name + "?")) return;
             $.ajax({
-                url: "plugin/pandabreath/frame_logs/" +
-                     encodeURIComponent(file.name),
-                method: "DELETE"
+                url:
+                    "plugin/pandabreath/frame_logs/" +
+                    encodeURIComponent(file.name),
+                method: "DELETE",
             }).done(self.applyFrameLogStatus);
         };
 
@@ -654,9 +705,11 @@ $(function () {
         // device redacts it, so the user must (re-)enter it.
         self.prefillMqttFromDevice = function () {
             var b = self.mqttDeviceBroker();
-            var s = self.settings && self.settings.settings
-                && self.settings.settings.plugins
-                && self.settings.settings.plugins.pandabreath;
+            var s =
+                self.settings &&
+                self.settings.settings &&
+                self.settings.settings.plugins &&
+                self.settings.settings.plugins.pandabreath;
             if (!b || !b.ip || !s) return;
             s.mqtt_host(b.ip);
             if (b.port) s.mqtt_port(b.port);
@@ -667,12 +720,14 @@ $(function () {
             var withDebug = self.debugPanelEnabled();
             var url = "plugin/pandabreath";
             if (withDebug) url += "?debug=1";
-            $.get(OctoPrint.getSimpleApiUrl
-                  ? OctoPrint.getSimpleApiUrl("pandabreath") +
-                    (withDebug ? "?debug=1" : "")
-                  : "/api/" + url).done(function (data) {
-                      self.applyState(data, { syncInputs: true });
-                  });
+            $.get(
+                OctoPrint.getSimpleApiUrl
+                    ? OctoPrint.getSimpleApiUrl("pandabreath") +
+                          (withDebug ? "?debug=1" : "")
+                    : "/api/" + url,
+            ).done(function (data) {
+                self.applyState(data, { syncInputs: true });
+            });
         };
 
         self.onStartupComplete = function () {
@@ -702,14 +757,18 @@ $(function () {
         $(document).on(
             "shown",
             'a[href="#pandabreath_sub_status"]',
-            function () { self.renderChart(); }
+            function () {
+                self.renderChart();
+            },
         );
         // Pull the frame-log file list when the user opens the Debug tab,
         // so it reflects new daily files without a full status refresh.
         $(document).on(
             "shown",
             'a[href="#pandabreath_sub_debug"]',
-            function () { self.refreshFrameLog(); }
+            function () {
+                self.refreshFrameLog();
+            },
         );
 
         // Cap on client-side incremental history. Matches the backend
@@ -724,13 +783,15 @@ $(function () {
                 // Push messages don't carry the full history (would be
                 // wasteful per tick). Append a single sample from this
                 // snapshot when we have a fresh chamber reading.
-                if (snap.chamber_temp !== null
-                        && snap.chamber_temp !== undefined) {
+                if (
+                    snap.chamber_temp !== null &&
+                    snap.chamber_temp !== undefined
+                ) {
                     var arr = self.history();
                     arr.push([
                         Date.now() / 1000,
                         snap.chamber_temp,
-                        snap.target_temp || 0
+                        snap.target_temp || 0,
                     ]);
                     if (arr.length > MAX_UI_HISTORY) {
                         arr = arr.slice(-MAX_UI_HISTORY);
@@ -738,14 +799,16 @@ $(function () {
                     self.history(arr);
                 }
             } else if (message.kind === "latest_fw") {
-                if (message.latest_fw_version) self.latestFwVersion(message.latest_fw_version);
-                if (message.latest_fw_url) self.latestFwVersionUrl(message.latest_fw_url);
+                if (message.latest_fw_version)
+                    self.latestFwVersion(message.latest_fw_version);
+                if (message.latest_fw_url)
+                    self.latestFwVersionUrl(message.latest_fw_url);
             } else if (message.kind === "frame") {
                 if (!self.debugPanelEnabled()) return;
                 var entry = withDisplay({
                     ts: message.ts,
                     dir: message.dir,
-                    frame: message.frame
+                    frame: message.frame,
                 });
                 var arr = self.frames();
                 arr.push(entry);
@@ -774,30 +837,40 @@ $(function () {
                     self.filterThresholdInputFocused(false);
                     self.dryTargetInputFocused(false);
                     self.dryTimerInputFocused(false);
-                    if (self.targetTemp() !== null
-                            && self.targetTemp() !== undefined) {
+                    if (
+                        self.targetTemp() !== null &&
+                        self.targetTemp() !== undefined
+                    ) {
                         self.targetInput(self.targetTemp());
                     }
-                    if (self.filterThreshold() !== null
-                            && self.filterThreshold() !== undefined) {
+                    if (
+                        self.filterThreshold() !== null &&
+                        self.filterThreshold() !== undefined
+                    ) {
                         self.filterThresholdInput(self.filterThreshold());
                     }
-                    if (self.bedTempLimit() !== null
-                            && self.bedTempLimit() !== undefined) {
+                    if (
+                        self.bedTempLimit() !== null &&
+                        self.bedTempLimit() !== undefined
+                    ) {
                         self.heaterThresholdInput(self.bedTempLimit());
                     }
-                    if (self.dryTarget() !== null
-                            && self.dryTarget() !== undefined) {
+                    if (
+                        self.dryTarget() !== null &&
+                        self.dryTarget() !== undefined
+                    ) {
                         self.dryTargetInput(self.dryTarget());
                     }
-                    if (self.dryTimerHours() !== null
-                            && self.dryTimerHours() !== undefined) {
+                    if (
+                        self.dryTimerHours() !== null &&
+                        self.dryTimerHours() !== undefined
+                    ) {
                         self.dryTimerInput(self.dryTimerHours());
                     }
                     new PNotify({
                         title: "Panda Breath",
                         text: self._errorText(xhr),
-                        type: "error"
+                        type: "error",
                     });
                 });
         };
@@ -831,21 +904,27 @@ $(function () {
             // and forcing one defeats the point of the MQTT path. Keep a
             // lightweight REST refresh as a backstop for UI sync only.
             if (self.mqttActive()) {
-                setTimeout(function () { self.refresh(); }, 1500);
+                setTimeout(function () {
+                    self.refresh();
+                }, 1500);
                 return;
             }
             if (self.reconnectPending()) return;
             self.reconnectPending(true);
             setTimeout(function () {
                 OctoPrint.simpleApiCommand(
-                    "pandabreath", "refresh_settings", {}
+                    "pandabreath",
+                    "refresh_settings",
+                    {},
                 );
             }, 1000);
             // After the reconnect has had time to land a fresh snapshot
             // in the controller, pull it via REST with syncInputs=true
             // so the editor fields take the device's authoritative
             // post-write value instead of whatever the user just typed.
-            setTimeout(function () { self.refresh(); }, 8000);
+            setTimeout(function () {
+                self.refresh();
+            }, 8000);
             // Backstop in case the reconnect never produces a 'connected'
             // push (network swallow, adapter idle, etc.) — release the
             // lockout after a generous window so the user is never stuck.
@@ -855,19 +934,23 @@ $(function () {
         };
 
         self.applyTarget = function () {
-            post("set_target",
+            post(
+                "set_target",
                 { value: parseFloat(self.targetInput()) },
-                { autoRefresh: true });
+                { autoRefresh: true },
+            );
         };
         // Combined Custom apply — sends target + timer + commit in one
         // transaction so the user only pays one reconnect cycle.
         self.applyCustomDry = function () {
-            post("set_custom_dry",
+            post(
+                "set_custom_dry",
                 {
                     value: parseFloat(self.dryTargetInput()),
-                    hours: parseInt(self.dryTimerInput(), 10)
+                    hours: parseInt(self.dryTimerInput(), 10),
                 },
-                { autoRefresh: true });
+                { autoRefresh: true },
+            );
         };
         self.selectPresetPla = function () {
             self.dryPreset("pla");
@@ -878,14 +961,18 @@ $(function () {
             post("preset_petg", {}, { autoRefresh: true });
         };
         self.applyFilterThreshold = function () {
-            post("set_filter_threshold",
+            post(
+                "set_filter_threshold",
                 { value: parseFloat(self.filterThresholdInput()) },
-                { autoRefresh: true });
+                { autoRefresh: true },
+            );
         };
         self.applyHeaterThreshold = function () {
-            post("set_heater_threshold",
+            post(
+                "set_heater_threshold",
                 { value: parseFloat(self.heaterThresholdInput()) },
-                { autoRefresh: true });
+                { autoRefresh: true },
+            );
         };
         self.startDrying = function () {
             post("start_drying", {}, { autoRefresh: true });
@@ -903,11 +990,13 @@ $(function () {
         // — otherwise the button silently sends a frame the firmware
         // discards.
         self.canStartDrying = ko.pureComputed(function () {
-            return self.controlsEnabled()
-                && !self.octoprintBusy()
-                && !self.dryingActive()
-                && self.mode() === "dry"
-                && !!self.heaterOn();
+            return (
+                self.controlsEnabled() &&
+                !self.octoprintBusy() &&
+                !self.dryingActive() &&
+                self.mode() === "dry" &&
+                !!self.heaterOn()
+            );
         });
         self.canStopDrying = ko.pureComputed(function () {
             return self.controlsEnabled() && self.dryingActive();
@@ -918,10 +1007,12 @@ $(function () {
         // dry writes outside dry mode and would reset the remaining
         // timer if commit fired during a running cycle.
         self.dryEditEnabled = ko.pureComputed(function () {
-            return self.controlsEnabled()
-                && !self.octoprintBusy()
-                && self.mode() === "dry"
-                && !self.dryingActive();
+            return (
+                self.controlsEnabled() &&
+                !self.octoprintBusy() &&
+                self.mode() === "dry" &&
+                !self.dryingActive()
+            );
         });
         // Gate the Dry-mode button in the Chamber tab: switching the
         // device into dry-mode is the entry point to a dry cycle, so it is
@@ -944,8 +1035,10 @@ $(function () {
             post("scan_printers");
             new PNotify({
                 title: "Panda Breath",
-                text: gettext("Printer scan triggered — refresh in a few seconds."),
-                type: "info"
+                text: gettext(
+                    "Printer scan triggered — refresh in a few seconds.",
+                ),
+                type: "info",
             });
         };
         self.refreshSettings = function () {
@@ -953,14 +1046,16 @@ $(function () {
             // Pull the fresh snapshot a few seconds after the reconnect
             // has had time to land so the editor inputs catch the
             // device's authoritative current values.
-            setTimeout(function () { self.refresh(); }, 8000);
+            setTimeout(function () {
+                self.refresh();
+            }, 8000);
             new PNotify({
                 title: "Panda Breath",
                 text: gettext(
                     "Forcing a reconnect — sidebar will blip offline " +
-                    "briefly while a fresh snapshot is pulled."
+                        "briefly while a fresh snapshot is pulled.",
                 ),
-                type: "info"
+                type: "info",
             });
         };
 
@@ -969,47 +1064,62 @@ $(function () {
         // click bindings on $root would point at the wrong VM. Wire the
         // plain DOM click events from here instead. ``one`` so a reopen
         // of the dialog doesn't stack handlers.
-        $(document).on("click", "#pandabreath_btn_scan_printers",
-            function () { self.scanPrinters(); });
-        $(document).on("click", "#pandabreath_btn_refresh_settings",
-            function () { self.refreshSettings(); });
-        $(document).on("click", "#pandabreath_mqtt_prefill",
-            function () { self.prefillMqttFromDevice(); });
-        $(document).on("click", "#pandabreath_btn_delete_frame_logs",
+        $(document).on("click", "#pandabreath_btn_scan_printers", function () {
+            self.scanPrinters();
+        });
+        $(document).on(
+            "click",
+            "#pandabreath_btn_refresh_settings",
             function () {
-                if (!window.confirm(gettext(
-                        "Delete all persistent frame logs?"))) {
+                self.refreshSettings();
+            },
+        );
+        $(document).on("click", "#pandabreath_mqtt_prefill", function () {
+            self.prefillMqttFromDevice();
+        });
+        $(document).on(
+            "click",
+            "#pandabreath_btn_delete_frame_logs",
+            function () {
+                if (
+                    !window.confirm(
+                        gettext("Delete all persistent frame logs?"),
+                    )
+                ) {
                     return;
                 }
                 $.ajax({
                     url: "plugin/pandabreath/frame_logs",
-                    method: "DELETE"
-                }).done(function (data) {
-                    if (data && data.status) {
-                        self.applyFrameLogStatus(data.status);
-                    } else {
-                        self.refreshFrameLog();
-                    }
-                    new PNotify({
-                        title: "Panda Breath",
-                        text: gettext("Deleted ") + (data.deleted || 0)
-                              + gettext(" frame log file(s)."),
-                        type: "success"
+                    method: "DELETE",
+                })
+                    .done(function (data) {
+                        if (data && data.status) {
+                            self.applyFrameLogStatus(data.status);
+                        } else {
+                            self.refreshFrameLog();
+                        }
+                        new PNotify({
+                            title: "Panda Breath",
+                            text:
+                                gettext("Deleted ") +
+                                (data.deleted || 0) +
+                                gettext(" frame log file(s)."),
+                            type: "success",
+                        });
+                    })
+                    .fail(function (xhr) {
+                        new PNotify({
+                            title: "Panda Breath",
+                            text: xhr.responseText || gettext("Delete failed"),
+                            type: "error",
+                        });
                     });
-                }).fail(function (xhr) {
-                    new PNotify({
-                        title: "Panda Breath",
-                        text: xhr.responseText || gettext("Delete failed"),
-                        type: "error"
-                    });
-                });
-            });
+            },
+        );
         // Mirror the frame-log file count into the Settings dialog's
         // summary span, same DOM-subscribe pattern as the firmware row.
         self.frameLogFiles.subscribe(function (files) {
-            var el = document.getElementById(
-                "pandabreath_framelog_summary"
-            );
+            var el = document.getElementById("pandabreath_framelog_summary");
             if (!el) return;
             if (!files || files.length === 0) {
                 el.textContent = gettext("no log files");
@@ -1057,21 +1167,33 @@ $(function () {
                 // resolve to "Kammer" / "Soll" in German). These strings
                 // live in our own translations/messages.pot and are
                 // translated separately by the plugin.
-                $.plot(el, [
-                    { label: gettext("Chamber temperature"),
-                      data: chamberSeries,
-                      color: "#d9534f",
-                      lines: { show: true, lineWidth: 2 } },
-                    { label: gettext("Chamber target"),
-                      data: targetSeries,
-                      color: "#5bc0de",
-                      lines: { show: true, lineWidth: 1, dashes: { show: true } } }
-                ], {
-                    xaxis: { mode: "time", timezone: "browser" },
-                    yaxis: { min: 0 },
-                    grid:  { borderWidth: 1, hoverable: true },
-                    legend: { position: "nw" }
-                });
+                $.plot(
+                    el,
+                    [
+                        {
+                            label: gettext("Chamber temperature"),
+                            data: chamberSeries,
+                            color: "#d9534f",
+                            lines: { show: true, lineWidth: 2 },
+                        },
+                        {
+                            label: gettext("Chamber target"),
+                            data: targetSeries,
+                            color: "#5bc0de",
+                            lines: {
+                                show: true,
+                                lineWidth: 1,
+                                dashes: { show: true },
+                            },
+                        },
+                    ],
+                    {
+                        xaxis: { mode: "time", timezone: "browser" },
+                        yaxis: { min: 0 },
+                        grid: { borderWidth: 1, hoverable: true },
+                        legend: { position: "nw" },
+                    },
+                );
             } catch (e) {
                 // Flot may throw if the element is hidden or sized 0 —
                 // a later render call will succeed once the tab is shown.
@@ -1088,19 +1210,20 @@ $(function () {
         });
 
         self.confirmEmergencyStop = function () {
-            var message =
-                gettext("Trigger Panda Breath emergency stop?\n\n" +
-                        "This switches the device power off and engages " +
-                        "the safety lock — even in observe-only mode. " +
-                        "The Panda Breath firmware stops any running dry cycle " +
-                        "on its own.");
+            var message = gettext(
+                "Trigger Panda Breath emergency stop?\n\n" +
+                    "This switches the device power off and engages " +
+                    "the safety lock — even in observe-only mode. " +
+                    "The Panda Breath firmware stops any running dry cycle " +
+                    "on its own.",
+            );
             if (!window.confirm(message)) return;
             post("emergency_stop");
             new PNotify({
                 title: "Panda Breath",
                 text: gettext("Emergency stop sent."),
                 type: "error",
-                hide: false
+                hide: false,
             });
         };
     }
@@ -1110,12 +1233,12 @@ $(function () {
         dependencies: [
             "loginStateViewModel",
             "settingsViewModel",
-            "printerStateViewModel"
+            "printerStateViewModel",
         ],
         elements: [
             "#tab_plugin_pandabreath",
             "#sidebar_plugin_pandabreath",
-            "#navbar_plugin_pandabreath"
+            "#navbar_plugin_pandabreath",
             // NB: #settings_plugin_pandabreath is intentionally NOT in
             // this list. Its template uses `custom_bindings: False`, so
             // OctoPrint binds it with the SettingsViewModel; adding it
@@ -1124,6 +1247,6 @@ $(function () {
             // few PandaBreath-specific bits in that template
             // (firmware-version row, Scan/Refresh buttons) are wired
             // via direct DOM access from this VM instead.
-        ]
+        ],
     });
 });

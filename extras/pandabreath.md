@@ -5,7 +5,7 @@ id: pandabreath
 title: OctoPrint-PandaBreath
 description: PandaBreath plugin for OctoPrint
 authors:
-- ajimaru
+  - ajimaru
 license: MIT
 
 date: 2016-05-03
@@ -20,14 +20,14 @@ archive: https://github.com/ajimaru/OctoPrint-PandaBreath/archive/main.zip
 #follow_dependency_links: false
 
 tags:
-- Chamber heater
-- Panda Breath
+  - Chamber heater
+  - Panda Breath
 
 # When registering a plugin on plugins.octoprint.org, all screenshots should be uploaded not linked from external sites.
 screenshots:
-- url: /assets/img/main_screen.png
-  alt: Main Screen
-  caption: Main Screen of the PandaBreath plugin
+  - url: /assets/img/main_screen.png
+    alt: Main Screen
+    caption: Main Screen of the PandaBreath plugin
 
 featuredimage: /assets/img/featured_image.png
 
@@ -37,10 +37,9 @@ featuredimage: /assets/img/featured_image.png
 # "compatibility" block if this is not the case.
 
 compatibility:
-
   # List of compatible versions
   #
-  # A single version number will be interpretated as a minimum version requirement,
+  # A single version number will be interpreted as a minimum version requirement,
   # e.g. "1.3.1" will show the plugin as compatible to OctoPrint versions 1.3.1 and up.
   # More sophisticated version requirements can be modelled too by using PEP440
   # compatible version specifiers.
@@ -49,7 +48,7 @@ compatibility:
   # OctoPrint versions being supported.
 
   octoprint:
-  - 1.10.0
+    - 1.10.0
 
   # List of compatible operating systems
   #
@@ -69,9 +68,9 @@ compatibility:
   # operating systems being supported.
 
   os:
-  - linux
-  - windows
-  - macos
+    - linux
+    - windows
+    - macos
 
   # Compatible Python version
   #
@@ -90,7 +89,6 @@ attributes:
 #  - cloud  # if your plugin requires access to a cloud to function
 #  - commercial  # if your plugin has a commercial aspect to it
 #  - free-tier  # if your plugin has a free tier
-
 ---
 
 **TODO**: Longer description of your plugin, configuration examples etc.

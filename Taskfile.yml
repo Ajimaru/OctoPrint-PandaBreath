@@ -3,9 +3,8 @@
 version: "3"
 
 env:
-  LOCALES: []  # list your included locales here, e.g. ["de", "fr"]
-  TRANSLATIONS: octoprint_pandabreath/translations  # translations folder, do not touch
-
+  LOCALES: [] # list your included locales here, e.g. ["de", "fr"]
+  TRANSLATIONS: octoprint_pandabreath/translations # translations folder, do not touch
 
 tasks:
   install:

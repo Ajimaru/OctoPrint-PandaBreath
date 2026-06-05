@@ -68,9 +68,9 @@ Access plugin settings via **OctoPrint Settings → Plugins → PandaBreath**.
 
 ### Step 1 — Connect to the Panda Breath
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **Transport** | `client` | `client` connects to the Panda Breath's own WS server. Use `server` only for Bambu-emulation setups. |
+| Setting                    | Default   | Description                                                                                                                                                                            |
+| -------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Transport**              | `client`  | `client` connects to the Panda Breath's own WS server. Use `server` only for Bambu-emulation setups.                                                                                   |
 | **Panda Breath IP / host** | _(empty)_ | IP or hostname of the device, e.g. `192.168.1.50`. The `ws://` (or `wss://` when TLS is on) prefix and `/ws` path are added automatically. The adapter stays idle while this is blank. |
 
 For `server` transport (Bambu-emulation), the **Pairing** section appears with `Bind Host`, `Bind Port`, `Host IP`, `Serial Number` and `Access Code` — fill these from your emulation config. In `client` mode against real hardware these are not needed.
@@ -95,45 +95,45 @@ Once you trust the connection:
 
 ### Safety Settings
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **Observe-Only** | ✅ enabled | Suppresses every write frame. Safe default — disable consciously. |
-| **Max Temperature** | `70.0 °C` | Hard ceiling. Targets above this are rejected. |
-| **Timeout** | `15.0 s` | Watchdog timeout — locks the controller if no status arrives in this window (auto-released on the next received frame). |
-| **Reconnect Delay** | `5.0 s` | Base wait between reconnect attempts on WS drop (exponential backoff up to 60 s). |
+| Setting             | Default    | Description                                                                                                             |
+| ------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Observe-Only**    | ✅ enabled | Suppresses every write frame. Safe default — disable consciously.                                                       |
+| **Max Temperature** | `70.0 °C`  | Hard ceiling. Targets above this are rejected.                                                                          |
+| **Timeout**         | `15.0 s`   | Watchdog timeout — locks the controller if no status arrives in this window (auto-released on the next received frame). |
+| **Reconnect Delay** | `5.0 s`    | Base wait between reconnect attempts on WS drop (exponential backoff up to 60 s).                                       |
 
 ### MQTT Control (optional, firmware V1.0.4+)
 
 Enable this if your Panda Breath is already bound to an MQTT broker (for example via the device's **Bind a Broker** menu).
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **MQTT Enabled** | ⬜ disabled | Routes operational control through MQTT when available. |
-| **Broker Host / Port** | _(empty)_ / `1883` | Broker endpoint the plugin connects to. |
-| **Allow MQTT Control** | ✅ enabled | Accepts inbound MQTT commands from the broker topic handler. |
+| Setting                | Default            | Description                                                  |
+| ---------------------- | ------------------ | ------------------------------------------------------------ |
+| **MQTT Enabled**       | ⬜ disabled        | Routes operational control through MQTT when available.      |
+| **Broker Host / Port** | _(empty)_ / `1883` | Broker endpoint the plugin connects to.                      |
+| **Allow MQTT Control** | ✅ enabled         | Accepts inbound MQTT commands from the broker topic handler. |
 
 When the MQTT bridge is active, chamber control writes are sent over MQTT; WebSocket remains active for setup/safety functions and status capture.
 
 ### Print Integration
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **GCODE Integration** | ✅ enabled | Intercept `M141` / `M191` from the print stream and re-target the chamber. |
-| **Auto-On at Print Start** | ⬜ disabled | Switch to AUTO mode and apply the start target when a print begins. |
-| **Print-Start Target** | `40.0 °C` | Target temperature applied when auto-on triggers. |
-| **Auto-Off at Print End** | ✅ enabled | Set target to 0 and turn the heater off on print done / cancel / fail. |
-| **Navbar E-Stop** | ✅ enabled | Show the emergency-stop button in the OctoPrint navbar. |
+| Setting                    | Default     | Description                                                                |
+| -------------------------- | ----------- | -------------------------------------------------------------------------- |
+| **GCODE Integration**      | ✅ enabled  | Intercept `M141` / `M191` from the print stream and re-target the chamber. |
+| **Auto-On at Print Start** | ⬜ disabled | Switch to AUTO mode and apply the start target when a print begins.        |
+| **Print-Start Target**     | `40.0 °C`   | Target temperature applied when auto-on triggers.                          |
+| **Auto-Off at Print End**  | ✅ enabled  | Set target to 0 and turn the heater off on print done / cancel / fail.     |
+| **Navbar E-Stop**          | ✅ enabled  | Show the emergency-stop button in the OctoPrint navbar.                    |
 
 ### TLS (optional)
 
 Only relevant if your device or network policy requires `wss://`.
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **TLS Enabled** | ⬜ disabled | Switch the client to `wss://`. |
-| **CA File** | _(empty)_ | Path to a custom CA bundle. Admin-only. |
-| **Client Cert / Key** | _(empty)_ | Mutual-TLS material. Admin-only. |
-| **TLS Insecure** | ⬜ disabled | Skip certificate verification — diagnostics only, **do not leave on**. |
+| Setting               | Default     | Description                                                            |
+| --------------------- | ----------- | ---------------------------------------------------------------------- |
+| **TLS Enabled**       | ⬜ disabled | Switch the client to `wss://`.                                         |
+| **CA File**           | _(empty)_   | Path to a custom CA bundle. Admin-only.                                |
+| **Client Cert / Key** | _(empty)_   | Mutual-TLS material. Admin-only.                                       |
+| **TLS Insecure**      | ⬜ disabled | Skip certificate verification — diagnostics only, **do not leave on**. |
 
 ### Permissions
 
