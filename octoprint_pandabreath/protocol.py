@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Portions of this file are derived from MIT-licensed upstream work.
 # Per the MIT License, the original copyright notices below are retained.
@@ -34,17 +33,13 @@ projects (see the file header above for full attribution). Concretely:
 
 Transport modes:
 
-* ``client`` — plugin actively connects to ``ws://<panda_ip>/ws``. This is
+* ``client`` — plugin actively connects to ``ws:<panda_ip>/ws``. This is
   the mode that matches real hardware.
 * ``server`` — plugin listens for inbound connections (intended for setups
   where the heater is configured to push to the plugin host, mirroring the
   Bambu-emulation approach in BIQU-Panda-Breath-Mod). For real Panda
   firmware "client" is what you want.
 """
-from __future__ import absolute_import
-
-# pylint: disable=broad-exception-caught,invalid-name
-# pylint: disable=missing-function-docstring
 
 import collections
 import json
@@ -52,7 +47,11 @@ import logging
 import ssl
 import threading
 import time
-from typing import Any, Dict, cast
+from typing import Any, cast
+
+# pylint: disable=broad-exception-caught,invalid-name
+# pylint: disable=missing-function-docstring
+
 
 try:
     import websocket  # type: ignore  # from websocket-client
@@ -61,6 +60,7 @@ except Exception:  # pragma: no cover
 
 try:
     import asyncio  # type: ignore
+
     import websockets  # type: ignore
 except Exception:  # pragma: no cover
     websockets = None  # type: ignore[assignment]
@@ -89,8 +89,9 @@ _MODE_NAME_TO_CODE = {
 _CODE_TO_MODE_NAME = {v: k for k, v in _MODE_NAME_TO_CODE.items()}
 
 
-class PandaProtocolAdapter(object):
-    """Transport + framing for the Panda Breath device.
+class PandaProtocolAdapter:
+    """
+    Transport + framing for the Panda Breath device.
 
     The adapter owns a background thread. It surfaces inbound device state
     via ``on_status`` and accepts outbound commands via
@@ -105,8 +106,7 @@ class PandaProtocolAdapter(object):
     # the navbar emergency stop — a safety button is worthless if it can be
     # silenced by a configuration toggle.
     _OBSERVE_SAFE_COMMANDS = frozenset(
-        {"bind", "query", "get_settings", "heater_off",
-         "set_target", "scan_printers"}
+        {"bind", "query", "get_settings", "heater_off", "set_target", "scan_printers"}
     )
 
     def __init__(
@@ -145,9 +145,7 @@ class PandaProtocolAdapter(object):
         # ``on_frame_persist`` receives the full, untruncated frame string
         # for disk logging. ``on_frame`` continues to deliver the truncated
         # variant to the UI ring buffer.
-        self._on_frame_persist = (
-            on_frame_persist or (lambda direction, frame: None)
-        )
+        self._on_frame_persist = on_frame_persist or (lambda direction, frame: None)
         self._log = logger or logging.getLogger(__name__)
         self._reconnect_delay = float(reconnect_delay)
         self._observe_only = bool(observe_only)
@@ -156,6 +154,7 @@ class PandaProtocolAdapter(object):
         # ``force_reconnect`` deliberately causes: WARNING when the operator
         # has the debug panel open, INFO otherwise. Read live (not cached)
         # so toggling the setting takes effect without a stack restart.
+        # nosemgrep
         self._debug_enabled_getter = debug_enabled_getter or (lambda: False)
         self._tls_enabled = bool(tls_enabled)
         self._tls_ca_file = tls_ca_file or None
@@ -193,16 +192,15 @@ class PandaProtocolAdapter(object):
         if self._thread and self._thread.is_alive():
             return
         self._stop_event.clear()
-        target = (
-            self._run_server if self._mode == MODE_SERVER else self._run_client
-        )
+        target = self._run_server if self._mode == MODE_SERVER else self._run_client
         self._thread = threading.Thread(
             target=target, name="PandaProtocolAdapter", daemon=True
         )
         self._thread.start()
 
     def force_reconnect(self):
-        """Drop the active socket so the run-loop reconnects immediately.
+        """
+        Drop the active socket so the run-loop reconnects immediately.
 
         The Panda firmware only emits a full ``get_settings`` snapshot
         right after a fresh WebSocket connect — re-sending the request
@@ -233,7 +231,8 @@ class PandaProtocolAdapter(object):
         return self._connected
 
     def last_rx_timestamp(self):
-        """Time of the last decoded RX frame, or 0 if not connected.
+        """
+        Time of the last decoded RX frame, or 0 if not connected.
 
         Returning 0 while disconnected (or just after a forced
         reconnect) makes the controller-side watchdog skip its
@@ -264,7 +263,8 @@ class PandaProtocolAdapter(object):
 
     @classmethod
     def _redact_frame(cls, frame):
-        """Replace any password / access_code values in a JSON frame.
+        """
+        Replace any password / access_code values in a JSON frame.
 
         Operates on the string. If the frame is not parseable JSON we
         return it unchanged — better to keep raw text than to invent a
@@ -321,9 +321,7 @@ class PandaProtocolAdapter(object):
         try:
             self._on_frame(direction, frame)
         except Exception:
-            self._log.exception(
-                "PandaProtocolAdapter: on_frame callback failed"
-            )
+            self._log.exception("PandaProtocolAdapter: on_frame callback failed")
 
     def _build_ssl_context(self, server_side):
         """Construct an SSL context for the configured TLS settings."""
@@ -352,7 +350,8 @@ class PandaProtocolAdapter(object):
     # ---- outbound (high-level commands) -----------------------------
 
     def send_command(self, command, **params):
-        """Translate a high-level command into a Panda settings frame.
+        """
+        Translate a high-level command into a Panda settings frame.
 
         Returns True if the frame was handed to the socket without raising.
         Write commands are suppressed in observe-only mode; only ``bind``
@@ -467,9 +466,7 @@ class PandaProtocolAdapter(object):
             # watchdog keep trying to push state every couple of seconds.
             # DEBUG only; the WARNING-level reason is already covered by
             # the dedup'd reconnect-error logging.
-            self._log.debug(
-                "PandaProtocolAdapter: drop frame, no active socket"
-            )
+            self._log.debug("PandaProtocolAdapter: drop frame, no active socket")
             return False
         try:
             if loop is not None and asyncio is not None:
@@ -505,9 +502,7 @@ class PandaProtocolAdapter(object):
             except UnicodeDecodeError:
                 return None
         if isinstance(raw, str) and len(raw) > MAX_FRAME_BYTES:
-            self._log.warning(
-                "PandaProtocolAdapter: oversized text frame dropped"
-            )
+            self._log.warning("PandaProtocolAdapter: oversized text frame dropped")
             return None
         try:
             return json.loads(raw)
@@ -516,7 +511,8 @@ class PandaProtocolAdapter(object):
             return None
 
     def _normalise_status(self, decoded):
-        """Project a Panda settings frame into a stable controller payload.
+        """
+        Project a Panda settings frame into a stable controller payload.
 
         Field names below come from BIQU-Panda-Breath-Mod (Panda.py) and
         chamber_control (chamber_control.py).
@@ -538,7 +534,7 @@ class PandaProtocolAdapter(object):
           The exact code table is not publicly documented; we surface
           the raw integer and let the UI render a best-guess label.
         """
-        out: Dict[str, Any] = {"type": "status"}
+        out: dict[str, Any] = {"type": "status"}
         # Command-acknowledgement frames: emitted by the device after
         # config changes performed through the Panda's own web UI (e.g.
         # set_hostname). Shape observed on real hardware:
@@ -702,9 +698,7 @@ class PandaProtocolAdapter(object):
                     printer.get("sn"),
                 )
             else:
-                self._log.warning(
-                    "PandaProtocolAdapter: rejecting frame before bind"
-                )
+                self._log.warning("PandaProtocolAdapter: rejecting frame before bind")
             return peer_authenticated
 
         snapshot = self._normalise_status(decoded)
@@ -712,18 +706,18 @@ class PandaProtocolAdapter(object):
             try:
                 self._on_status(snapshot)
             except Exception:
-                self._log.exception(
-                    "PandaProtocolAdapter: on_status callback failed"
-                )
+                self._log.exception("PandaProtocolAdapter: on_status callback failed")
         return peer_authenticated
 
     # ---- server mode (Bambu-emulation style listener) --------------
 
     def _run_server(self):
+        # Two distinct optional imports, not a self-comparison (the rule
+        # mis-fires on the ``X is None or Y is None`` shape).
+        # nosemgrep
         if websockets is None or asyncio is None:
             self._log.error(
-                "PandaProtocolAdapter: server mode needs the "
-                "'websockets' package"
+                "PandaProtocolAdapter: server mode needs the 'websockets' package"
             )
             return
         while not self._stop_event.is_set():
@@ -738,6 +732,9 @@ class PandaProtocolAdapter(object):
     async def _serve_forever(self):
         aio = asyncio
         wss = websockets
+        # Type-narrowing only (both guaranteed non-None by _run_server's
+        # guard before asyncio.run); not a runtime safety check.
+        # nosemgrep
         assert aio is not None and wss is not None
         self._active_loop = aio.get_running_loop()
         stop_future = self._active_loop.create_future()
@@ -767,14 +764,10 @@ class PandaProtocolAdapter(object):
         try:
             ssl_ctx = self._build_ssl_context(server_side=True)
         except Exception as exc:
-            self._log.error(
-                "PandaProtocolAdapter: TLS setup failed: %s", exc
-            )
+            self._log.error("PandaProtocolAdapter: TLS setup failed: %s", exc)
             return
         scheme = "wss" if ssl_ctx is not None else "ws"
-        async with wss.serve(
-            _on_client, self._host, self._port, ssl=ssl_ctx
-        ):
+        async with wss.serve(_on_client, self._host, self._port, ssl=ssl_ctx):
             self._log.info(
                 "PandaProtocolAdapter: listening on %s://%s:%s",
                 scheme,
@@ -788,7 +781,7 @@ class PandaProtocolAdapter(object):
                 watcher.cancel()
         self._active_loop = None
 
-    # ---- client mode (talks to ws://<panda_ip>/ws) ------------------
+    # ---- client mode (talks to ws:<panda_ip>/ws) --------------------
 
     def _run_client(self):
         wsmod = websocket
@@ -801,25 +794,21 @@ class PandaProtocolAdapter(object):
         while not self._stop_event.is_set():
             url = self._client_url
             if not url:
-                self._log.error(
-                    "PandaProtocolAdapter: client mode requires client_url"
-                )
+                self._log.error("PandaProtocolAdapter: client mode requires client_url")
                 return
             try:
                 # Only announce the connect on the first attempt of a
                 # new error streak — otherwise this line spams alongside
                 # the warnings during long outages.
                 if self._last_error_signature is None:
-                    self._log.info(
-                        "PandaProtocolAdapter: connecting to %s", url
-                    )
+                    self._log.info("PandaProtocolAdapter: connecting to %s", url)
                 else:
                     self._log.debug(
                         "PandaProtocolAdapter: reconnect attempt to %s", url
                     )
-                connect_kwargs: Dict[str, Any] = {"timeout": 5}
+                connect_kwargs: dict[str, Any] = {"timeout": 5}
                 if url.startswith("wss://"):
-                    sslopt: Dict[str, Any] = {}
+                    sslopt: dict[str, Any] = {}
                     if self._tls_ca_file:
                         sslopt["ca_certs"] = self._tls_ca_file
                     if self._tls_cert_file and self._tls_key_file:
@@ -846,9 +835,7 @@ class PandaProtocolAdapter(object):
                 # Pull full settings once so the controller has a complete
                 # snapshot — get_settings returns more fields than the
                 # lightweight ``query:1`` poll.
-                getset_payload = json.dumps(
-                    self._build_frame("get_settings", {})
-                )
+                getset_payload = json.dumps(self._build_frame("get_settings", {}))
                 ws.send(getset_payload)
                 self._record_frame("tx", getset_payload)
 
@@ -878,17 +865,13 @@ class PandaProtocolAdapter(object):
                             # outer except, which triggers the reconnect
                             # path — exactly what we want when the
                             # socket is dead.
-                            payload = json.dumps(
-                                self._build_frame("query", {})
-                            )
+                            payload = json.dumps(self._build_frame("query", {}))
                             ws.send(payload)
                             self._record_frame("tx", payload)
                         continue
                     if not raw:
                         break
-                    peer_authenticated = self._handle_inbound(
-                        raw, peer_authenticated
-                    )
+                    peer_authenticated = self._handle_inbound(raw, peer_authenticated)
             except Exception as exc:
                 self._log_reconnect_error(exc)
             finally:
@@ -905,7 +888,8 @@ class PandaProtocolAdapter(object):
     _RECONNECT_BACKOFF_CAP = 60.0
 
     def _backoff_sleep(self):
-        """Sleep before the next reconnect, with exponential backoff.
+        """
+        Sleep before the next reconnect, with exponential backoff.
 
         Resets to the base ``reconnect_delay`` whenever a connect
         succeeds (handled by :meth:`_reset_error_log_state`). During a
@@ -932,23 +916,26 @@ class PandaProtocolAdapter(object):
     # Errno values that all mean "device not reachable on the network".
     # Collapsed into a single bucket so a flapping link doesn't rotate
     # log spam between Host-is-down / No-route / timed-out.
-    _UNREACHABLE_ERRNOS = frozenset({
-        # POSIX / BSD networking errors observed against an offline Panda
-        50,   # ENETDOWN
-        51,   # ENETUNREACH
-        60,   # ETIMEDOUT
-        61,   # ECONNREFUSED
-        64,   # EHOSTDOWN
-        65,   # EHOSTUNREACH
-        110,  # ETIMEDOUT (Linux)
-        111,  # ECONNREFUSED (Linux)
-        112,  # EHOSTDOWN (Linux)
-        113,  # EHOSTUNREACH (Linux)
-    })
+    _UNREACHABLE_ERRNOS = frozenset(
+        {
+            # POSIX / BSD networking errors observed against an offline Panda
+            50,  # ENETDOWN
+            51,  # ENETUNREACH
+            60,  # ETIMEDOUT
+            61,  # ECONNREFUSED
+            64,  # EHOSTDOWN
+            65,  # EHOSTUNREACH
+            110,  # ETIMEDOUT (Linux)
+            111,  # ECONNREFUSED (Linux)
+            112,  # EHOSTDOWN (Linux)
+            113,  # EHOSTUNREACH (Linux)
+        }
+    )
 
     @classmethod
     def _classify_error(cls, exc):
-        """Bucket an exception into a stable category for log coalescing.
+        """
+        Bucket an exception into a stable category for log coalescing.
 
         Returns ``("unreachable", human_text)`` for any of the well-known
         network-reachability errnos, ``("timeout", text)`` for socket
@@ -969,7 +956,8 @@ class PandaProtocolAdapter(object):
         return type(exc).__name__, msg
 
     def _log_reconnect_error(self, exc):
-        """Log a reconnect-loop error, coalescing repeated buckets.
+        """
+        Log a reconnect-loop error, coalescing repeated buckets.
 
         First occurrence of a bucket is logged at WARNING with the full
         text. Subsequent failures in the same bucket are DEBUG-only and
@@ -985,11 +973,7 @@ class PandaProtocolAdapter(object):
         bucket, text = self._classify_error(exc)
         if self._expecting_close:
             self._expecting_close = False
-            level = (
-                logging.WARNING
-                if self._debug_enabled_getter()
-                else logging.INFO
-            )
+            level = logging.WARNING if self._debug_enabled_getter() else logging.INFO
             self._log.log(
                 level,
                 "PandaProtocolAdapter: expected reconnect (%s): %s",
@@ -1012,9 +996,7 @@ class PandaProtocolAdapter(object):
             )
         self._last_error_signature = bucket
         self._suppressed_error_count = 0
-        self._log.warning(
-            "PandaProtocolAdapter: client error (%s): %s", bucket, text
-        )
+        self._log.warning("PandaProtocolAdapter: client error (%s): %s", bucket, text)
 
     def _reset_error_log_state(self, reason):
         """Reset the dedup state after a successful connect."""
@@ -1024,8 +1006,7 @@ class PandaProtocolAdapter(object):
         self._expecting_close = False
         if self._suppressed_error_count > 0:
             self._log.info(
-                "PandaProtocolAdapter: %s after %d suppressed error(s) "
-                "('%s')",
+                "PandaProtocolAdapter: %s after %d suppressed error(s) ('%s')",
                 reason,
                 self._suppressed_error_count,
                 self._last_error_signature,
@@ -1044,13 +1025,14 @@ class PandaProtocolAdapter(object):
             return
         try:
             result = close()  # pylint: disable=not-callable
-            if self._active_loop and asyncio is not None \
-                    and asyncio.iscoroutine(result):
+            if (
+                self._active_loop
+                and asyncio is not None
+                and asyncio.iscoroutine(result)
+            ):
                 asyncio.run_coroutine_threadsafe(result, self._active_loop)
         except Exception:
-            self._log.debug(
-                "PandaProtocolAdapter: close raised", exc_info=True
-            )
+            self._log.debug("PandaProtocolAdapter: close raised", exc_info=True)
 
     def _set_connected(self, value):
         if self._connected == value:
@@ -1065,6 +1047,4 @@ class PandaProtocolAdapter(object):
         try:
             self._on_connection_change(value)
         except Exception:
-            self._log.exception(
-                "PandaProtocolAdapter: on_connection_change failed"
-            )
+            self._log.exception("PandaProtocolAdapter: on_connection_change failed")

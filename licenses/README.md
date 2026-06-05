@@ -42,5 +42,5 @@ upstream LICENSE files:
 
 This plugin **does not** use MQTT or Home Assistant. The upstream
 `Panda.py` additionally uses MQTT to bridge into Home Assistant; the
-*WebSocket protocol toward the Panda Breath heater itself* is plain JSON over
+_WebSocket protocol toward the Panda Breath heater itself_ is plain JSON over
 `ws://<panda>/ws`, and only that direct-protocol part has been adopted.

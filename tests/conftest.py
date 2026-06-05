@@ -1,4 +1,3 @@
-# coding=utf-8
 """Shared pytest fixtures and lightweight test doubles.
 
 The plugin's two pure-logic modules (``protocol`` and ``controller``)
@@ -8,7 +7,6 @@ care about for unit testing is reachable without touching the network.
 controller can be exercised in isolation, recording the high-level
 commands it would have sent to the device.
 """
-from __future__ import absolute_import
 
 import sys
 import types
@@ -30,6 +28,7 @@ def _install_octoprint_stubs():
     Real installs are unaffected — these stubs only ever load under pytest,
     and only when the real packages are absent.
     """
+
     def _module(name):
         mod = sys.modules.get(name)
         if mod is None:
@@ -56,9 +55,14 @@ def _install_octoprint_stubs():
         # The plugin class multiply-inherits from these mixins; empty
         # classes are enough for the module to import.
         for mixin in (
-            "StartupPlugin", "ShutdownPlugin", "SettingsPlugin",
-            "AssetPlugin", "TemplatePlugin", "SimpleApiPlugin",
-            "EventHandlerPlugin", "WizardPlugin",
+            "StartupPlugin",
+            "ShutdownPlugin",
+            "SettingsPlugin",
+            "AssetPlugin",
+            "TemplatePlugin",
+            "SimpleApiPlugin",
+            "EventHandlerPlugin",
+            "WizardPlugin",
             "RestartNeedingPlugin",
         ):
             setattr(plugin, mixin, type(mixin, (object,), {}))
@@ -68,11 +72,15 @@ def _install_octoprint_stubs():
         def _route(*_a, **_k):
             return lambda fn: fn
 
-        setattr(plugin, "BlueprintPlugin", type(
+        setattr(
+            plugin,
             "BlueprintPlugin",
-            (object,),
-            {"route": staticmethod(_route)},
-        ))
+            type(
+                "BlueprintPlugin",
+                (object,),
+                {"route": staticmethod(_route)},
+            ),
+        )
         setattr(octoprint, "plugin", plugin)
 
         access = _module("octoprint.access")

@@ -1,5 +1,5 @@
-# coding=utf-8
-"""MQTT control/telemetry bridge for Panda Breath firmware V1.0.4+.
+"""
+MQTT control/telemetry bridge for Panda Breath firmware V1.0.4+.
 
 Background and the full reverse-engineered protocol live in
 ``.ideas/ARCHITECTURE_mqtt_control.md`` and
@@ -28,7 +28,6 @@ telemetry only.
 paho-mqtt is a required runtime dependency and pinned to v2 because v1 is
 unmaintained and uses an incompatible callback API.
 """
-from __future__ import absolute_import
 
 import json
 import logging
@@ -36,6 +35,7 @@ import threading
 
 try:
     import paho.mqtt.client as mqtt  # type: ignore[import-not-found]
+
     # We pin paho v2 (see pyproject) which changed the callback API; guard
     # the version too so a stray v1 install fails loudly rather than at the
     # first callback.
@@ -61,8 +61,9 @@ def paho_available():
     return _HAVE_PAHO
 
 
-class MqttBridge(object):
-    """Bridges a ChamberController to an MQTT broker.
+class MqttBridge:
+    """
+    Bridges a ChamberController to an MQTT broker.
 
     Lifecycle mirrors the protocol adapter: construct, :meth:`start`,
     :meth:`stop`. Safe to stop more than once. All broker I/O happens on
@@ -95,9 +96,7 @@ class MqttBridge(object):
         client_factory=None,
     ):
         if not paho_available() and client_factory is None:
-            raise RuntimeError(
-                "paho-mqtt v2 not installed"
-            )
+            raise RuntimeError("paho-mqtt v2 not installed")
         self._host = host
         self._port = int(port)
         self._username = username or None
@@ -120,6 +119,9 @@ class MqttBridge(object):
             # guard above), so ``mqtt`` is not None here — bind it to a
             # local so the static checker stops treating it as Optional.
             paho = mqtt
+            # Type-narrowing only (mqtt is guaranteed non-None by the
+            # paho_available() guard above); not a runtime safety check.
+            # nosemgrep
             assert paho is not None
             self._client = paho.Client(
                 callback_api_version=paho.CallbackAPIVersion.VERSION2
@@ -144,7 +146,9 @@ class MqttBridge(object):
         self._client.loop_start()
         self._log.info(
             "MqttBridge: connecting to %s:%s (control=%s)",
-            self._host, self._port, self._allow_control,
+            self._host,
+            self._port,
+            self._allow_control,
         )
 
     def stop(self):
@@ -165,7 +169,8 @@ class MqttBridge(object):
     # ---- outbound: publish the plugin's controller snapshot ---------
 
     def publish_state(self, snapshot):
-        """Publish the controller snapshot to the plugin-owned state topic.
+        """
+        Publish the controller snapshot to the plugin-owned state topic.
 
         Wired as a ChamberController listener; called on every state
         change. Best-effort: a publish failure (broker down) must not
@@ -181,7 +186,8 @@ class MqttBridge(object):
     # ---- outbound: send a control command to the device -------------
 
     def send_device_command(self, payload):
-        """Publish a raw JSON command dict to the device command topic.
+        """
+        Publish a raw JSON command dict to the device command topic.
 
         ``payload`` is a dict using the device's own MQTT field names
         (e.g. ``{"target_temp": 45}``). No-op until the device id is known.
@@ -203,7 +209,8 @@ class MqttBridge(object):
     # ---- control sink: WS verb -> device MQTT command ---------------
 
     def control_sink(self, verb, **params):
-        """Translate a ChamberController verb to a device MQTT command.
+        """
+        Translate a ChamberController verb to a device MQTT command.
 
         Installed on the controller via ``set_control_sink``. Returns True
         if the command was translated and published to the device's native
@@ -225,7 +232,8 @@ class MqttBridge(object):
         return self.send_device_command(payload)
 
     def _verb_to_device_payload(self, verb, params):
-        """Map (verb, params) to a device MQTT command dict.
+        """
+        Map (verb, params) to a device MQTT command dict.
 
         Returns None for verbs with no MQTT equivalent (caller falls back
         to WS), or ``{}`` for recognised no-ops.
@@ -294,9 +302,7 @@ class MqttBridge(object):
                 with self._lock:
                     if self._device_id != parts[1]:
                         self._device_id = parts[1]
-                        self._log.info(
-                            "MqttBridge: discovered device id %s", parts[1]
-                        )
+                        self._log.info("MqttBridge: discovered device id %s", parts[1])
             return
         if topic == self._base_topic + "/command":
             self._handle_inbound_command(msg.payload)
@@ -304,7 +310,8 @@ class MqttBridge(object):
     # ---- inbound command handling -----------------------------------
 
     def _handle_inbound_command(self, raw):
-        """Parse an inbound command and route it through the handler.
+        """
+        Parse an inbound command and route it through the handler.
 
         Accepts the plugin's controller-facing verb form::
 

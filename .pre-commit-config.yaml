@@ -38,11 +38,13 @@ repos:
         language_version: python3
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.2.0
+    rev: v10.3.0
     hooks:
       - id: eslint # JavaScript/TypeScript linter (ESLint)
         files: "(\\.js)$"
         exclude: ^(src/octoprint/vendor/|tests/static/js/lib|tests/util/_files|docs/|scripts/|translations/)
+        # mirrors-eslint bundles no eslint itself; it must be pinned here
+        # alongside the rev, or CI fails with "Executable eslint not found".
         additional_dependencies: ["eslint@10.3.0", "globals@17.6.0"]
 
   - repo: https://github.com/pycqa/isort
@@ -103,8 +105,8 @@ repos:
     hooks:
       - id: shellcheck # Requires local shellcheck >= 0.11.0 for consistent lint results
         name: ShellCheck
-        entry: .githooks/shellcheck-hook.sh
-        language: script
+        entry: bash .githooks/shellcheck-hook.sh
+        language: system
         types: [shell]
         pass_filenames: true
 

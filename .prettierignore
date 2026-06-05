@@ -1,0 +1,5 @@
+# MkDocs documentation uses Markdown extensions (admonitions, content
+# tabs, etc.) whose required indentation Prettier strips, breaking how
+# they render. Keep Prettier away from the docs tree; format it by the
+# MkDocs/Material conventions instead.
+docs/

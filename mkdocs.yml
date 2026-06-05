@@ -1,0 +1,22 @@
+site_name: OctoPrint PandaBreath
+site_description: Control and monitor the BIQU Panda Breath chamber heater from OctoPrint.
+site_url: https://ajimaru.github.io/OctoPrint-PandaBreath/
+repo_url: https://github.com/Ajimaru/OctoPrint-PandaBreath
+repo_name: Ajimaru/OctoPrint-PandaBreath
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Installation & Setup: installation.md
+  - Configuration: configuration.md
+  - Safety: safety.md
+  - MQTT: mqtt.md
+  - Troubleshooting: troubleshooting.md
+  - Development: development.md
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true

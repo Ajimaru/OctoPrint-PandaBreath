@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD041 MD033 -->
 <p align="center">
-  <img src="assets/img/pandabreath.svg" alt="OctoPrint PandaBreath Logo" width="96" />
+  <img src="assets/img/pandabreath.svg" alt="OctoPrint PandaBreath Logo" width="64" height="64" />
 </p>
 <h1 align="center">OctoPrint‑PandaBreath</h1>
 <!-- markdownlint-enable MD041 MD033 -->
@@ -12,7 +12,7 @@
 [![Downloads](https://img.shields.io/github/downloads/Ajimaru/OctoPrint-PandaBreath/total.svg)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
 [![Made with Love](https://img.shields.io/badge/made_with-❤️-ff69b4)](https://github.com/Ajimaru/OctoPrint-PandaBreath)
 
-### Direct WebSocket control of the BIQU Panda Breath chamber heater from OctoPrint
+### Direct control of the BIQU Panda Breath chamber heater from OctoPrint
 
 <!-- markdownlint-disable MD033-->
 <img src="assets/img/main_screen.png" alt="OctoPrint PandaBreath Main Screen" width="666" />
@@ -68,9 +68,9 @@ Access plugin settings via **OctoPrint Settings → Plugins → PandaBreath**.
 
 ### Step 1 — Connect to the Panda Breath
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **Transport** | `client` | `client` connects to the Panda Breath's own WS server. Use `server` only for Bambu-emulation setups. |
+| Setting                    | Default   | Description                                                                                                                                                                            |
+| -------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Transport**              | `client`  | `client` connects to the Panda Breath's own WS server. Use `server` only for Bambu-emulation setups.                                                                                   |
 | **Panda Breath IP / host** | _(empty)_ | IP or hostname of the device, e.g. `192.168.1.50`. The `ws://` (or `wss://` when TLS is on) prefix and `/ws` path are added automatically. The adapter stays idle while this is blank. |
 
 For `server` transport (Bambu-emulation), the **Pairing** section appears with `Bind Host`, `Bind Port`, `Host IP`, `Serial Number` and `Access Code` — fill these from your emulation config. In `client` mode against real hardware these are not needed.
@@ -95,45 +95,45 @@ Once you trust the connection:
 
 ### Safety Settings
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **Observe-Only** | ✅ enabled | Suppresses every write frame. Safe default — disable consciously. |
-| **Max Temperature** | `70.0 °C` | Hard ceiling. Targets above this are rejected. |
-| **Timeout** | `15.0 s` | Watchdog timeout — locks the controller if no status arrives in this window (auto-released on the next received frame). |
-| **Reconnect Delay** | `5.0 s` | Base wait between reconnect attempts on WS drop (exponential backoff up to 60 s). |
+| Setting             | Default    | Description                                                                                                             |
+| ------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Observe-Only**    | ✅ enabled | Suppresses every write frame. Safe default — disable consciously.                                                       |
+| **Max Temperature** | `70.0 °C`  | Hard ceiling. Targets above this are rejected.                                                                          |
+| **Timeout**         | `15.0 s`   | Watchdog timeout — locks the controller if no status arrives in this window (auto-released on the next received frame). |
+| **Reconnect Delay** | `5.0 s`    | Base wait between reconnect attempts on WS drop (exponential backoff up to 60 s).                                       |
 
 ### MQTT Control (optional, firmware V1.0.4+)
 
 Enable this if your Panda Breath is already bound to an MQTT broker (for example via the device's **Bind a Broker** menu).
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **MQTT Enabled** | ⬜ disabled | Routes operational control through MQTT when available. |
-| **Broker Host / Port** | _(empty)_ / `1883` | Broker endpoint the plugin connects to. |
-| **Allow MQTT Control** | ✅ enabled | Accepts inbound MQTT commands from the broker topic handler. |
+| Setting                | Default            | Description                                                  |
+| ---------------------- | ------------------ | ------------------------------------------------------------ |
+| **MQTT Enabled**       | ⬜ disabled        | Routes operational control through MQTT when available.      |
+| **Broker Host / Port** | _(empty)_ / `1883` | Broker endpoint the plugin connects to.                      |
+| **Allow MQTT Control** | ✅ enabled         | Accepts inbound MQTT commands from the broker topic handler. |
 
 When the MQTT bridge is active, chamber control writes are sent over MQTT; WebSocket remains active for setup/safety functions and status capture.
 
 ### Print Integration
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **GCODE Integration** | ✅ enabled | Intercept `M141` / `M191` from the print stream and re-target the chamber. |
-| **Auto-On at Print Start** | ⬜ disabled | Switch to AUTO mode and apply the start target when a print begins. |
-| **Print-Start Target** | `40.0 °C` | Target temperature applied when auto-on triggers. |
-| **Auto-Off at Print End** | ✅ enabled | Set target to 0 and turn the heater off on print done / cancel / fail. |
-| **Navbar E-Stop** | ✅ enabled | Show the emergency-stop button in the OctoPrint navbar. |
+| Setting                    | Default     | Description                                                                |
+| -------------------------- | ----------- | -------------------------------------------------------------------------- |
+| **GCODE Integration**      | ✅ enabled  | Intercept `M141` / `M191` from the print stream and re-target the chamber. |
+| **Auto-On at Print Start** | ⬜ disabled | Switch to AUTO mode and apply the start target when a print begins.        |
+| **Print-Start Target**     | `40.0 °C`   | Target temperature applied when auto-on triggers.                          |
+| **Auto-Off at Print End**  | ✅ enabled  | Set target to 0 and turn the heater off on print done / cancel / fail.     |
+| **Navbar E-Stop**          | ✅ enabled  | Show the emergency-stop button in the OctoPrint navbar.                    |
 
 ### TLS (optional)
 
 Only relevant if your device or network policy requires `wss://`.
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **TLS Enabled** | ⬜ disabled | Switch the client to `wss://`. |
-| **CA File** | _(empty)_ | Path to a custom CA bundle. Admin-only. |
-| **Client Cert / Key** | _(empty)_ | Mutual-TLS material. Admin-only. |
-| **TLS Insecure** | ⬜ disabled | Skip certificate verification — diagnostics only, **do not leave on**. |
+| Setting               | Default     | Description                                                            |
+| --------------------- | ----------- | ---------------------------------------------------------------------- |
+| **TLS Enabled**       | ⬜ disabled | Switch the client to `wss://`.                                         |
+| **CA File**           | _(empty)_   | Path to a custom CA bundle. Admin-only.                                |
+| **Client Cert / Key** | _(empty)_   | Mutual-TLS material. Admin-only.                                       |
+| **TLS Insecure**      | ⬜ disabled | Skip certificate verification — diagnostics only, **do not leave on**. |
 
 ### Permissions
 
@@ -228,7 +228,7 @@ Summary: this project exposes many status and quality badges (CI, linting, cover
 [![Coverage Diff](https://codecov.io/gh/Ajimaru/OctoPrint-PandaBreath/branch/main/graph/badge.svg?flag=patch)](https://codecov.io/gh/Ajimaru/OctoPrint-PandaBreath)
 [![Pylint Score](https://img.shields.io/badge/pylint-10.0-green.svg)](https://www.pylint.org/)
 [![Bandit Security](https://img.shields.io/badge/bandit-security-green.svg)](https://bandit.readthedocs.io/en/latest/)
-[![Depfu](https://img.shields.io/badge/dependencies-managed%20by%20Depfu-blue)](https://depfu.com/repos/github/Ajimaru/OctoPrint-PandaBreath)
+[![Depfu](https://badges.depfu.com/badges/4082d9117ad23681e381205c3efa5029/status.svg)](https://depfu.com)
 [![Known Vulnerabilities](https://snyk.io/test/github/Ajimaru/OctoPrint-PandaBreath/badge.svg)](https://snyk.io/test/github/Ajimaru/OctoPrint-PandaBreath)
 
 ### 🔄 3. CI/CD & Release

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "OctoPrint-PandaBreath"
-version = "0.1.1dev36+d411dd6"
+version = "0.1.1rc3+b437e7a"
 description = "PandaBreath plugin for OctoPrint"
 authors = [
     {name = "ajimaru", email = "ajimaru_gdr@pm.me"}
@@ -41,7 +41,9 @@ Homepage = "https://github.com/ajimaru/OctoPrint-PandaBreath"
 [project.optional-dependencies]
 develop = [
     "go-task-bin",
-    "Babel",
+    # Match OctoPrint's constraint (Babel<2.17) so locally generated message
+    # catalogs match the i18n CI and the OctoPrint test venvs.
+    "Babel>=2.16,<2.17",
     "polib",
     "pyyaml"
 ]
@@ -85,6 +87,35 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "raise NotImplementedError",
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+
+[tool.pydocstyle]
+# Multi-line docstrings put the summary on the second line (D213), matching
+# the convention Codacy's Prospector run enforces. D212 (summary on the first
+# line) is the mutually exclusive alternative, so it is disabled here.
+convention = "pep257"
+add_ignore = "D212"
+
+[tool.pyright]
+# OctoPrint (and its flask/babel stack) is a runtime dependency provided by
+# the host install, not pinned in ``dependencies`` — so it is absent from the
+# static-analysis sandbox and Pyright cannot resolve ``octoprint.*`` imports.
+# Downgrade unresolved imports from error to keep the report focused on real
+# defects rather than environment gaps.
+reportMissingImports = "none"
+reportMissingModuleSource = "none"
+# OctoPrint's plugin mixins declare loose/``None`` return types in their stubs
+# that don't match the documented runtime API contract (e.g. SimpleApiPlugin
+# returning a Flask ``Response``, SettingsPlugin.on_settings_save returning
+# ``None``). Our overrides follow the real contract, so suppress the resulting
+# spurious incompatible-override reports.
+reportIncompatibleMethodOverride = "none"
+
+[tool.pylint.design]
+max-module-lines = 1500
 
 [tool.pylint.main]
 # Skip non-source trees: the editable OctoPrint checkout under .cache, the

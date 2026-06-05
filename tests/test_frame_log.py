@@ -1,6 +1,4 @@
-# coding=utf-8
 """Tests for the daily-rotated JSONL frame logger."""
-from __future__ import absolute_import
 
 import datetime
 import json
@@ -9,9 +7,9 @@ import os
 import pytest
 
 from octoprint_pandabreath.frame_log import (
-    FrameLog,
     LOG_FILENAME_PREFIX,
     LOG_FILENAME_SUFFIX,
+    FrameLog,
 )
 
 
