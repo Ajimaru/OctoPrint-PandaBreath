@@ -139,7 +139,7 @@
                              Dry by Panda Breath firmware V1.0.3 — button omitted. -->
                     </div>
                     <span class="help-block text-warning" data-bind="visible: octoprintBusy">
-                        {{ _("Dry mode is disabled while the printer is running a job — the chamber is needed for printing, not filament drying.") }}
+                        {{ _("Dry mode is disabled while the printer is running a job or heating — the chamber is needed for printing, not filament drying.") }}
                     </span>
                 </div>
                 <!-- Manual mode: just a target temperature -->
@@ -353,7 +353,7 @@
                             </button>
                         </div>
                         <span class="help-block text-warning" data-bind="visible: octoprintBusy">
-                            {{ _("Drying is disabled while the printer is running a job — the chamber is needed for printing, not filament drying.") }}
+                            {{ _("Drying is disabled while the printer is running a job or heating — the chamber is needed for printing, not filament drying.") }}
                         </span>
                         <span class="help-block"
                               data-bind="visible: !octoprintBusy() && !canStartDrying() && !dryingActive()">

@@ -36,6 +36,11 @@ from .protocol import PandaProtocolAdapter
 # Minimum device firmware that exposes the MQTT control interface.
 MQTT_MIN_FW = (1, 0, 4)
 
+# A printer heater (bed/hotend) at or above this actual temperature counts
+# as "still hot" for the drying interlock, even with no target set — so a
+# dry cycle cannot be armed while the printer is heating up or cooling down.
+PRINTER_HOT_THRESHOLD_C = 50.0
+
 
 def _parse_fw_version(raw):
     """Parse a 'V1.0.4'/'1.0.4' string into a (1, 0, 4) tuple, or None.
@@ -578,7 +583,7 @@ class PandabreathPlugin(
                         {
                             "error": (
                                 "Cannot start drying while the printer is "
-                                "running a job."
+                                "running a job or heating."
                             )
                         }
                     ),
@@ -784,33 +789,71 @@ class PandabreathPlugin(
     # ---- internals --------------------------------------------------
 
     def _printer_is_busy(self):
-        """Return True while the OctoPrint printer is running a job.
+        """Return True while the OctoPrint printer is running a job OR heating.
 
-        Covers the whole active window — from print start (including the
-        transient starting/resuming phases) through pausing/cancelling and
-        a held pause — so a dry cycle can never be armed while the chamber
-        is needed for a print. ``self._printer`` is injected by OctoPrint;
-        guard defensively in case it isn't available yet.
+        Two conditions block arming a dry cycle:
+
+        * An active job — the whole window from print start (including the
+          transient starting/resuming phases) through pausing/cancelling and
+          a held pause.
+        * The printer is heating or still hot — any bed/hotend heater with a
+          target above 0 °C, or an actual temperature at/above
+          ``PRINTER_HOT_THRESHOLD_C`` (covers manual preheat and cool-down,
+          not just printing).
+
+        Dry-mode is for drying filament; it must not run while the chamber is
+        needed for a print or while the printer is hot. ``self._printer`` is
+        injected by OctoPrint; guard defensively in case it isn't ready yet.
         """
         printer = getattr(self, "_printer", None)
         if printer is None:
             return False
         try:
-            return bool(
+            if (
                 printer.is_printing()
                 or printer.is_starting()
                 or printer.is_pausing()
                 or printer.is_paused()
                 or printer.is_resuming()
                 or printer.is_cancelling()
-            )
+            ):
+                return True
         except Exception:  # pylint: disable=broad-exception-caught
             # The PrinterInterface predicates should never raise, but a
             # missing/older method must not break command dispatch — treat
             # an unknown state as not-busy so we fail open on availability
             # (the frontend gate and the operator remain the backstop).
             self._logger.debug("PandaBreath: printer-busy probe failed", exc_info=True)
+        return self._printer_is_heating()
+
+    def _printer_is_heating(self):
+        """Return True if any printer heater has a target set or is hot.
+
+        Reads ``get_current_temperatures()`` and inspects the bed and hotend
+        (``tool*``) entries. The Panda's own ``chamber`` entry is ignored —
+        only the paired printer's heaters gate drying. Fails open (returns
+        False) if temperatures are unavailable.
+        """
+        printer = getattr(self, "_printer", None)
+        if printer is None:
             return False
+        try:
+            temps = printer.get_current_temperatures() or {}
+        except Exception:  # pylint: disable=broad-exception-caught
+            self._logger.debug("PandaBreath: temperature probe failed", exc_info=True)
+            return False
+        for name, entry in temps.items():
+            # Only the paired printer's heaters count; skip the Panda chamber.
+            if name == "chamber" or not isinstance(entry, dict):
+                continue
+            target = entry.get("target") or 0
+            actual = entry.get("actual") or 0
+            try:
+                if float(target) > 0 or float(actual) >= PRINTER_HOT_THRESHOLD_C:
+                    return True
+            except (TypeError, ValueError):
+                continue
+        return False
 
     @staticmethod
     def _build_client_url(host, tls_enabled):

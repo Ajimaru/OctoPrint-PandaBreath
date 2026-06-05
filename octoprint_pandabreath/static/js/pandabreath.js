@@ -15,26 +15,68 @@ $(function () {
         // internal printer_state code (binding/reachability). Same word, two very
         // different sources; do not merge them.
         self.octoprintState = parameters[2];
+        // OctoPrint's temperatureViewModel — used to detect when the paired
+        // printer's bed/hotend is heating or still hot, so dry-mode can be
+        // gated the same way the backend gates it.
+        self.octoprintTemps = parameters[3];
 
-        // True while the OctoPrint printer this Panda is paired with is
-        // running a job (or starting/pausing/cancelling/paused). The
-        // chamber's dry-mode is for drying filament, not printing, so we
-        // disable dry-mode and Start Drying for the whole active window.
-        // The printerStateViewModel observables are reactive, so the
-        // buttons re-enable on their own once the print finishes. The
-        // backend enforces the same rule (409) in case of a direct API
-        // call — this is purely the UX gate.
+        // A bed/hotend at or above this actual temperature counts as "hot".
+        // Mirrors PRINTER_HOT_THRESHOLD_C in the backend.
+        var PRINTER_HOT_THRESHOLD_C = 50.0;
+
+        // True if the paired printer's bed or any hotend has a target set or
+        // is still hot — mirrors the backend's _printer_is_heating(). The
+        // temperatureViewModel exposes a `temperatures` observable keyed by
+        // tool0/bed/... each with `actual`/`target` arrays (latest sample
+        // last); fall back to plain numbers defensively.
+        self.octoprintHeating = ko.pureComputed(function () {
+            var tv = self.octoprintTemps;
+            if (!tv || !tv.temperatures) return false;
+            var temps = ko.unwrap(tv.temperatures) || {};
+            var latest = function (series) {
+                var v = ko.unwrap(series);
+                if (Array.isArray(v)) {
+                    var last = v[v.length - 1];
+                    // Samples are usually {x: time, y: value} pairs.
+                    if (last && typeof last === "object") return last.y;
+                    return last;
+                }
+                return v;
+            };
+            for (var name in temps) {
+                if (!Object.prototype.hasOwnProperty.call(temps, name))
+                    continue;
+                if (name === "chamber") continue; // Panda chamber, not printer
+                var entry = temps[name];
+                if (!entry) continue;
+                var target = latest(entry.target) || 0;
+                var actual = latest(entry.actual) || 0;
+                if (target > 0 || actual >= PRINTER_HOT_THRESHOLD_C) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        // True while the paired OctoPrint printer is running a job OR
+        // heating/hot. Dry-mode is for drying filament, not printing, so we
+        // disable dry-mode and Start Drying for the whole window. The
+        // observables are reactive, so the buttons re-enable on their own
+        // once the print finishes and the printer cools. The backend enforces
+        // the same rule (409) on a direct API call — this is the UX gate.
         self.octoprintBusy = ko.pureComputed(function () {
             var ps = self.octoprintState;
-            if (!ps) return false;
-            return !!(
-                ko.unwrap(ps.isPrinting) ||
-                ko.unwrap(ps.isStarting) ||
-                ko.unwrap(ps.isPausing) ||
-                ko.unwrap(ps.isPaused) ||
-                ko.unwrap(ps.isResuming) ||
-                ko.unwrap(ps.isCancelling)
-            );
+            var jobActive =
+                ps &&
+                !!(
+                    ko.unwrap(ps.isPrinting) ||
+                    ko.unwrap(ps.isStarting) ||
+                    ko.unwrap(ps.isPausing) ||
+                    ko.unwrap(ps.isPaused) ||
+                    ko.unwrap(ps.isResuming) ||
+                    ko.unwrap(ps.isCancelling)
+                );
+            return !!jobActive || self.octoprintHeating();
         });
 
         self.chamberTemp = ko.observable(null);
@@ -1245,6 +1287,7 @@ $(function () {
             "loginStateViewModel",
             "settingsViewModel",
             "printerStateViewModel",
+            "temperatureViewModel",
         ],
         elements: [
             "#tab_plugin_pandabreath",
