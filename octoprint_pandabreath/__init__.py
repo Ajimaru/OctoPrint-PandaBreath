@@ -926,7 +926,7 @@ class PandabreathPlugin(
         host = (s.get(["mqtt_host"]) or "").strip()
         if not host:
             self._logger.warning(
-                "PandaBreath: mqtt_enabled but no broker host set" " — bridge inactive"
+                "PandaBreath: mqtt_enabled but no broker host set — bridge inactive"
             )
             return
         fw = None
