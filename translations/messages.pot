@@ -1,5 +1,5 @@
 # Translations template for PROJECT.
-# Copyright (C) 2026 ORGANIZATION
+# Copyright (C) 2026 The OctoPrint Project
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-05 15:16+0200\n"
+"Report-Msgid-Bugs-To: i18n@octoprint.org\n"
+"POT-Creation-Date: 2026-06-06 22:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,862 +17,254 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
+#: build/lib/octoprint_pandabreath/__init__.py:389
+#: octoprint_pandabreath/__init__.py:393
+msgid "View chamber status"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/__init__.py:390
+#: octoprint_pandabreath/__init__.py:394
+msgid "Allows reading Panda Breath chamber state."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/__init__.py:397
+#: octoprint_pandabreath/__init__.py:401
+msgid "Control chamber heater"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/__init__.py:398
+#: octoprint_pandabreath/__init__.py:402
+msgid "Allows changing target, mode and heater state."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/__init__.py:407
+#: octoprint_pandabreath/__init__.py:411
+msgid "Administer chamber lock"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/__init__.py:408
+#: octoprint_pandabreath/__init__.py:412
+msgid "Allows locking/unlocking the safety interlock."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:103
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:355
+#: octoprint_pandabreath/static/js/pandabreath.js:103
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:369
+msgid "not reported"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:123
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:460
 #: octoprint_pandabreath/static/js/pandabreath.js:123
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:460
 msgid " available"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1180
-msgid " file(s)"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:192
+#: octoprint_pandabreath/static/js/pandabreath.js:192
+msgid "waiting for device status"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1159
-msgid " frame log file(s)."
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:194
+#: octoprint_pandabreath/static/js/pandabreath.js:194
+msgid "supported"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:440
-msgid "AP IP"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:195
+#: octoprint_pandabreath/static/js/pandabreath.js:195
+msgid "requires firmware V1.0.4+"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:436
-msgid "AP SSID"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:198
+#: octoprint_pandabreath/static/js/pandabreath.js:198
+msgid "disabled"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:307
-msgid "Accept inbound commands over MQTT"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:200
+#: octoprint_pandabreath/static/js/pandabreath.js:200
+msgid "active"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:164
-msgid "Access code"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:201
+#: octoprint_pandabreath/static/js/pandabreath.js:201
+msgid "enabled, waiting"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:432
-msgid "Access point"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:265
+#: octoprint_pandabreath/static/js/pandabreath.js:285
+msgid "on"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:407
-msgid "Administer chamber lock"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:265
+#: octoprint_pandabreath/static/js/pandabreath.js:285
+msgid "off"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:398
-msgid "Allows changing target, mode and heater state."
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:286
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:66
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:28
+#: octoprint_pandabreath/static/js/pandabreath.js:306
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:66
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:28
+msgid "not bound"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:408
-msgid "Allows locking/unlocking the safety interlock."
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:305
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:322
+#: octoprint_pandabreath/static/js/pandabreath.js:325
+#: octoprint_pandabreath/static/js/pandabreath.js:342
+msgid "unknown"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:390
-msgid "Allows reading Panda Breath chamber state."
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:306
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:324
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:518
+#: octoprint_pandabreath/static/js/pandabreath.js:326
+#: octoprint_pandabreath/static/js/pandabreath.js:344
+#: octoprint_pandabreath/static/js/pandabreath.js:538
+msgid "binding"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:157
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:180
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:194
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:211
-msgid "Apply"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:307
+#: octoprint_pandabreath/static/js/pandabreath.js:327
+msgid "bound"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:319
-msgid "Apply Custom"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:308
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:325
+#: octoprint_pandabreath/static/js/pandabreath.js:328
+#: octoprint_pandabreath/static/js/pandabreath.js:345
+msgid "unreachable"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:128
-msgid "Auto"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:309
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:326
+#: octoprint_pandabreath/static/js/pandabreath.js:329
+#: octoprint_pandabreath/static/js/pandabreath.js:346
+msgid "state "
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:53
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:165
-msgid "Auto mode"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:323
+#: octoprint_pandabreath/static/js/pandabreath.js:343
+msgid "reachable"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:140
-msgid ""
-"Bambu-emulation setups (server mode) need these credentials so the Panda "
-"Breath accepts the bind frame. Leave them empty for any other use."
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:344
+#: octoprint_pandabreath/static/js/pandabreath.js:364
+msgid "idle"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:292
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:496
-msgid "Base topic"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:345
+#: octoprint_pandabreath/static/js/pandabreath.js:365
+msgid "scanning…"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:41
-msgid "Bind host"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:346
+#: octoprint_pandabreath/static/js/pandabreath.js:366
+msgid "complete"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:48
-msgid "Bind port"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:64
-msgid "Bound printer"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:485
-msgid "Bridge"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:253
-msgid "Broker host"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:268
-msgid "Broker port"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:103
-msgid "CA file"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:7
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:11
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:34
-msgid "Chamber"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:215
-msgid ""
-"Chamber heater (and filter fan) switch on when the printer hotbed crosses"
-" this temperature — typically set higher than the filter threshold to "
-"limit heating to materials that need it (e.g. ABS, PETG)."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:159
-msgid "Chamber heats to this temperature regardless of the paired printer state."
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1233
-msgid "Chamber target"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1227
-msgid "Chamber temperature"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:33
-msgid "Client (OctoPrint connects to ws://<panda>/ws)"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:111
-msgid "Client cert file"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:119
-msgid "Client key file"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:511
-msgid "Command acknowledgements from the Panda Breath (set_hostname, scan, etc.)."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:224
-msgid ""
-"Configure filament presets, custom target/timer and start/stop the dry "
-"cycle in the Drying tab."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:492
-msgid "Configured broker"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:19
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:52
-msgid "Connection"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:195
-msgid "Control chamber from M141/M191 in G-code"
-msgstr ""
-
-#: octoprint_pandabreath/__init__.py:397
-msgid "Control chamber heater"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:211
-msgid "Cool down when print ends"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:329
-msgid "Current dry target"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:337
-msgid "Currently drying"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:378
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:378
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:284
+#: octoprint_pandabreath/static/js/pandabreath.js:398
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:284
 msgid "Custom"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:315
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:23
-msgid "Debug"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:519
+#: octoprint_pandabreath/static/js/pandabreath.js:539
+msgid "connected / idle"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:582
-msgid "Delete"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:520
+#: octoprint_pandabreath/static/js/pandabreath.js:540
+msgid "unreachable / error"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:747
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:534
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:103
+#: octoprint_pandabreath/static/js/pandabreath.js:554
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:103
+msgid "OFF"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:535
+#: octoprint_pandabreath/static/js/pandabreath.js:555
+msgid "HEATING"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:536
+#: octoprint_pandabreath/static/js/pandabreath.js:556
+msgid "ON (idle)"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:747
+#: octoprint_pandabreath/static/js/pandabreath.js:767
 msgid "Delete "
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:376
-msgid "Delete all"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:946
+#: octoprint_pandabreath/static/js/pandabreath.js:966
+msgid "Request failed"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1139
-msgid "Delete all persistent frame logs?"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1091
+#: octoprint_pandabreath/static/js/pandabreath.js:1111
+msgid "Printer scan triggered — refresh in a few seconds."
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1166
-msgid "Delete failed"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1157
-msgid "Deleted "
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:502
-msgid "Device broker"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:555
-msgid ""
-"Disabled — enable \"Persist WS frames to disk\" in plugin settings to "
-"capture long sessions."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:580
-msgid "Download"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:136
-msgid "Dry"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:72
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:222
-msgid "Dry mode"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:142
-msgid ""
-"Dry mode is disabled while the printer is running a job or heating — the "
-"chamber is needed for printing, not filament drying."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:300
-msgid "Dry target"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:308
-msgid "Dry timer"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:14
-msgid "Drying"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:344
-msgid "Drying control"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:356
-msgid ""
-"Drying is disabled while the printer is running a job or heating — the "
-"chamber is needed for printing, not filament drying."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:326
-msgid "Drying status"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_navbar.jinja2:6
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:114
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:251
-msgid "E-STOP"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:246
-msgid "Emergency stop"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1277
-msgid "Emergency stop sent."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:234
-msgid "Enable MQTT control bridge"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:94
-msgid "Enable TLS (wss://) for the WebSocket transport"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:324
-msgid ""
-"Enable only when troubleshooting protocol issues — broadcasts are rate-"
-"limited but still add noise to the plugin-message channel."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:379
-msgid "Endpoint"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:97
-msgid "Engage safety lock"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:272
-msgid "Filament preset"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:565
-msgid "File"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:559
-msgid "Files in"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:198
-msgid ""
-"Filter fan switches on when the printer hotbed crosses this temperature —"
-" useful for filament odour control at lower bed temperatures (e.g. PLA)."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:60
-msgid "Filter on"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:185
-msgid "Filter-fan activation threshold"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:353
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:449
-msgid "Firmware"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:363
-msgid ""
-"Firmware string reported by the Panda Breath. Empty until the device "
-"sends its first status frame."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:478
-msgid "Firmware support"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1107
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1107
+#: octoprint_pandabreath/static/js/pandabreath.js:1127
 msgid ""
 "Forcing a reconnect — sidebar will blip offline briefly while a fresh "
 "snapshot is pulled."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:368
-msgid "Frame logs on disk"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1139
+#: octoprint_pandabreath/static/js/pandabreath.js:1159
+msgid "Delete all persistent frame logs?"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:535
-msgid "HEATING"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1157
+#: octoprint_pandabreath/static/js/pandabreath.js:1177
+msgid "Deleted "
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:203
-msgid "Heat chamber when print starts"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1159
+#: octoprint_pandabreath/static/js/pandabreath.js:1179
+msgid " frame log file(s)."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:202
-msgid "Heater activation threshold"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1166
+#: octoprint_pandabreath/static/js/pandabreath.js:1186
+msgid "Delete failed"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:64
-msgid "Heater on"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1178
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:370
+#: octoprint_pandabreath/static/js/pandabreath.js:1198
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:384
+msgid "no log files"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:145
-msgid "Host IP"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1180
+#: octoprint_pandabreath/static/js/pandabreath.js:1200
+msgid " file(s)"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:416
-msgid "Hostname"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1227
+#: octoprint_pandabreath/static/js/pandabreath.js:1247
+msgid "Chamber temperature"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:399
-msgid "IP"
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1233
+#: octoprint_pandabreath/static/js/pandabreath.js:1253
+msgid "Chamber target"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:151
-msgid ""
-"IP of this OctoPrint host, echoed back to the Panda Breath in the bind "
-"frame."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:420
-msgid "LAN IP"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:32
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:69
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:261
-msgid "LOCKED"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:465
-msgid "Language"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:172
-msgid "Limits"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:542
-msgid "Live ring buffer of WebSocket frames exchanged with the device."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:31
-msgid "Live status"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:100
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:238
-msgid "Lock"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:242
-msgid "Locks all write commands. Unlock when ready to issue commands again."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:475
-msgid "MQTT"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:227
-msgid "MQTT control (firmware V1.0.4+)"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:237
-msgid ""
-"MQTT control + status via your broker. WebSocket remains for "
-"safety/setup. Requires firmware V1.0.4+. Bind the Panda to the same "
-"broker in its \"Bind a Broker\" menu."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:132
-msgid "Manual"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:42
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:148
-msgid "Manual mode"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:174
-msgid "Max temperature"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:314
-msgid "Minimum 2 h — the device firmware silently rejects shorter values."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:364
-msgid "Mirrors the Start/Stop buttons in the Panda Breath WebUI."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:29
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:15
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:48
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:124
-msgid "Mode"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:567
-msgid "Modified"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:398
-msgid "Name"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:20
-msgid "Network"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:551
-msgid "No frames yet."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:588
-msgid "No log files yet — frames will land here on the next received status."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:170
-msgid ""
-"No paired printer bound — the device cannot read a hotbed temperature, so"
-" auto-mode will not trigger. Bind a printer in the Network tab first."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:82
-msgid "No samples yet — history starts as soon as the device sends status frames."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:4
-msgid "No write frames are sent to the device."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:3
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:3
-msgid "OBSERVE-ONLY"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:534
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:103
-msgid "OFF"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:99
-msgid "ON"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:536
-msgid "ON (idle)"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:8
-msgid "Observe-only mode"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:58
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:376
-msgid "Paired printer"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:136
-msgid "Pairing (server mode)"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:73
-msgid "Pairing actions"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:56
-msgid "Panda Breath IP / host"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_navbar.jinja2:3
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:111
-msgid "Panda Breath emergency stop"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:413
-msgid "Panda Breath network"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:285
-msgid "Password"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:334
-msgid "Persist WS frames to disk"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:553
-msgid "Persistent frame log"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:298
-msgid ""
-"Plugin-owned topic namespace: status is published to <base>/state, and "
-"inbound commands are read from <base>/command."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:400
-msgid "Port"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:11
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:42
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:95
-msgid "Power"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:109
-msgid ""
-"Power is disabled until the paired printer is connected. The chamber "
-"cannot heat while the printer link is binding or unreachable."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:75
-msgid "Preset"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:288
-msgid ""
-"Presets load device-internal defaults for the chosen filament. Switch to "
-"Custom to set target & timer manually."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:189
-msgid "Print integration"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:220
-msgid "Print-start target"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:23
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:27
-msgid "Printer"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1091
-msgid "Printer scan triggered — refresh in a few seconds."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:469
-msgid "Printer type"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:383
-msgid "Reachability"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:97
-msgid ""
-"Real Panda Breath firmware does not require TLS on its /ws endpoint. Only"
-" enable this if your network policy or a custom firmware needs it."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:510
-msgid "Recent device responses"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:541
-msgid "Recent frames"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:11
-msgid ""
-"Recommended until validated on your hardware. The plugin still connects, "
-"binds and reads status, but blocks write commands over WebSocket, HTTP "
-"API and MQTT."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:590
-msgid "Refresh"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:81
-msgid "Refresh from device"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:104
-msgid "Release safety lock"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:83
-msgid "Remaining"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:379
-msgid ""
-"Removes every persistent frame log file in the plugin data folder. A "
-"fresh file will be created on the next received frame if persistence is "
-"enabled."
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:946
-msgid "Request failed"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:337
-msgid ""
-"Requires the debug panel above. One JSONL file per day in the plugin data"
-" folder. Older files are removed automatically based on the retention "
-"setting."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:517
-msgid "Result"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:343
-msgid "Retention"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:428
-msgid "STA state"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:2
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:17
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:66
-msgid "Safety"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:234
-msgid "Safety lock"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:77
-msgid "Scan for printers"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:393
-msgid "Scan list"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:84
-msgid ""
-"Scan starts a new LAN discovery (2-3 min; see Scan badge in Diagnostics)."
-" Refresh reconnects the WebSocket and may briefly show offline in the "
-"sidebar."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:387
-msgid "Scan status"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:121
-msgid "See BIQU documentation"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:321
-msgid "Sends target + timer + commit in one transaction (single reconnect)."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:156
-msgid "Serial number"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:35
-msgid "Server (Bambu-emulation; Panda Breath connects to us)"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:45
-msgid "Setpoint"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:182
-msgid ""
-"Setpoint the chamber heats to once activated by the heater threshold "
-"below."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:321
-msgid "Show debug panel in plugin tab"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:20
-msgid "Show emergency-stop button in navbar"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:566
-msgid "Size"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:131
-msgid "Skip certificate verification (debug only)"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:348
-msgid "Start drying"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:8
-msgid "Status"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:352
-msgid "Stop drying"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:295
-msgid "Stop the current drying cycle to change preset or values."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:292
-msgid "Switch to Dry mode in the Chamber tab to edit these values."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:255
-msgid ""
-"Switches the device power off and engages the safety lock — even in "
-"observe-only mode. The Panda Breath firmware stops any running dry cycle "
-"on its own."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:88
-msgid "TLS"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:56
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:79
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:38
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:150
-msgid "Target"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:173
-msgid "Target chamber temperature"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:76
-msgid "Temperature history"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:263
-msgid ""
-"The broker the plugin connects to. If the Panda is already bound to a "
-"broker, \"Use device broker\" fills host/port/user from what the device "
-"reports (you still enter the password)."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:247
-msgid ""
-"The connected device does not report firmware V1.0.4+ (or has not "
-"connected yet). MQTT stays disabled until it does."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:167
-msgid ""
-"The device monitors the bound printer's hotbed temperature and engages "
-"the filter fan and heater independently once their respective thresholds "
-"are crossed."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:68
-msgid ""
-"The printer the Panda Breath is currently bound to (read from its last "
-"status snapshot)."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:515
-msgid "Time"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:182
-msgid "Timeout"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:333
-msgid "Timer remaining"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:360
-msgid ""
-"To start drying: switch to Dry mode and turn Power on in the Chamber tab "
-"first."
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:27
-msgid "Transport"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:1266
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1266
+#: octoprint_pandabreath/static/js/pandabreath.js:1286
 msgid ""
 "Trigger Panda Breath emergency stop?\n"
 "\n"
@@ -881,60 +273,243 @@ msgid ""
 "on its own."
 msgstr ""
 
+#: build/lib/octoprint_pandabreath/static/js/pandabreath.js:1277
+#: octoprint_pandabreath/static/js/pandabreath.js:1297
+msgid "Emergency stop sent."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_navbar.jinja2:3
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:111
+#: octoprint_pandabreath/templates/pandabreath_navbar.jinja2:3
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:111
+msgid "Panda Breath emergency stop"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_navbar.jinja2:6
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:114
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:251
+#: octoprint_pandabreath/templates/pandabreath_navbar.jinja2:6
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:114
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:251
+msgid "E-STOP"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:2
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:17
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:66
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:2
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:17
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:66
+msgid "Safety"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:8
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:8
+msgid "Observe-only mode"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:11
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:11
+msgid ""
+"Recommended until validated on your hardware. The plugin still connects, "
+"binds and reads status, but blocks write commands over WebSocket, HTTP "
+"API and MQTT."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:20
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:20
+msgid "Show emergency-stop button in navbar"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:23
 #: octoprint_pandabreath/templates/pandabreath_settings.jinja2:23
 msgid ""
 "Triggers a confirmation dialog, then forces target=0, heater OFF and "
 "safety lock — even in observe-only mode."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:113
-msgid "Turn power on to choose a mode and configure the chamber."
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:27
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:27
+msgid "Transport"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:516
-msgid "Type"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:29
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:15
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:48
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:124
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:29
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:15
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:48
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:124
+msgid "Mode"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:107
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:240
-msgid "Unlock"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:33
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:33
+msgid "Client (OctoPrint connects to ws://<panda>/ws)"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:261
-msgid "Use device broker"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:35
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:35
+msgid "Server (Bambu-emulation; Panda Breath connects to us)"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:278
-msgid "Username"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:41
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:41
+msgid "Bind host"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:452
-msgid "Version"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:48
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:48
+msgid "Bind port"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:389
-msgid "View chamber status"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:56
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:56
+msgid "Panda Breath IP / host"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:214
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:64
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:64
+msgid "Bound printer"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:68
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:68
 msgid ""
-"When a print finishes, is cancelled or fails, set the chamber target to 0"
-" °C and switch the heater off."
+"The printer the Panda Breath is currently bound to (read from its last "
+"status snapshot)."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:206
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:73
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:73
+msgid "Pairing actions"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:77
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:77
+msgid "Scan for printers"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:81
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:81
+msgid "Refresh from device"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:84
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:84
 msgid ""
-"When a print starts, switch the Panda Breath to auto mode and heat to the"
-" print-start target below."
+"Scan starts a new LAN discovery (2-3 min; see Scan badge in Diagnostics)."
+" Refresh reconnects the WebSocket and may briefly show offline in the "
+"sidebar."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:310
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:88
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:88
+msgid "TLS"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:94
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:94
+msgid "Enable TLS (wss://) for the WebSocket transport"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:97
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:97
 msgid ""
-"When off, the bridge is telemetry-only (publishes status, ignores "
-"commands on <base>/command). Emergency stop is never accepted over MQTT "
-"regardless of this setting."
+"Real Panda Breath firmware does not require TLS on its /ws endpoint. Only"
+" enable this if your network policy or a custom firmware needs it."
 msgstr ""
 
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:103
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:103
+msgid "CA file"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:111
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:111
+msgid "Client cert file"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:119
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:119
+msgid "Client key file"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:131
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:131
+msgid "Skip certificate verification (debug only)"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:136
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:136
+msgid "Pairing (server mode)"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:140
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:140
+msgid ""
+"Bambu-emulation setups (server mode) need these credentials so the Panda "
+"Breath accepts the bind frame. Leave them empty for any other use."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:145
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:145
+msgid "Host IP"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:148
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:159
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:167
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:148
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:159
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:167
+msgid "leave empty to skip"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:151
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:151
+msgid ""
+"IP of this OctoPrint host, echoed back to the Panda Breath in the bind "
+"frame."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:156
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:156
+msgid "Serial number"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:164
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:164
+msgid "Access code"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:172
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:172
+msgid "Limits"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:174
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:174
+msgid "Max temperature"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:182
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:182
+msgid "Timeout"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:189
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:189
+msgid "Print integration"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:195
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:195
+msgid "Control chamber from M141/M191 in G-code"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:198
 #: octoprint_pandabreath/templates/pandabreath_settings.jinja2:198
 msgid ""
 "When your slicer or G-code sets a chamber temperature with M141/M191, "
@@ -942,140 +517,861 @@ msgid ""
 " (most firmware rejects it)."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:424
-msgid "WiFi SSID"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:203
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:203
+msgid "Heat chamber when print starts"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:200
-msgid "active"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:206
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:206
+msgid ""
+"When a print starts, switch the Panda Breath to auto mode and heat to the"
+" print-start target below."
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:306
-#: octoprint_pandabreath/static/js/pandabreath.js:324
-#: octoprint_pandabreath/static/js/pandabreath.js:518
-msgid "binding"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:211
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:211
+msgid "Cool down when print ends"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:307
-msgid "bound"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:214
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:214
+msgid ""
+"When a print finishes, is cancelled or fails, set the chamber target to 0"
+" °C and switch the heater off."
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:346
-msgid "complete"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:220
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:220
+msgid "Print-start target"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:519
-msgid "connected / idle"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:227
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:227
+msgid "MQTT control (firmware V1.0.4+)"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:343
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:234
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:234
+msgid "Enable MQTT control bridge"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:237
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:237
+msgid ""
+"MQTT control + status via your broker. WebSocket remains for "
+"safety/setup. Requires firmware V1.0.4+. Bind the Panda to the same "
+"broker in its \"Bind a Broker\" menu."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:247
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:247
+msgid ""
+"The connected device does not report firmware V1.0.4+ (or has not "
+"connected yet). MQTT stays disabled until it does."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:253
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:253
+msgid "Broker host"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:261
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:261
+msgid "Use device broker"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:263
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:263
+msgid ""
+"The broker the plugin connects to. If the Panda is already bound to a "
+"broker, \"Use device broker\" fills host/port/user from what the device "
+"reports (you still enter the password)."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:268
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:268
+msgid "Broker port"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:278
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:278
+msgid "Username"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:285
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:285
+msgid "Password"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:292
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:496
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:292
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:496
+msgid "Base topic"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:298
+msgid ""
+"Plugin-owned topic namespace: status is published to <base>/state, and "
+"inbound commands are read from <base>/command. When set to the default, "
+"the OctoPrint instance name (Appearance → Title) is appended "
+"automatically so multiple instances stay separate."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:307
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:321
+msgid "Accept inbound commands over MQTT"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:310
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:324
+msgid ""
+"When off, the bridge is telemetry-only (publishes status, ignores "
+"commands on <base>/command). Emergency stop is never accepted over MQTT "
+"regardless of this setting."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:315
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:23
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:329
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:23
+msgid "Debug"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:321
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:335
+msgid "Show debug panel in plugin tab"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:324
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:338
+msgid ""
+"Enable only when troubleshooting protocol issues — broadcasts are rate-"
+"limited but still add noise to the plugin-message channel."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:334
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:348
+msgid "Persist WS frames to disk"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:337
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:351
+msgid ""
+"Requires the debug panel above. One JSONL file per day in the plugin data"
+" folder. Older files are removed automatically based on the retention "
+"setting."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:343
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:357
+msgid "Retention"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:343
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:357
 msgid "days"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:198
-msgid "disabled"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:353
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:449
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:367
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:449
+msgid "Firmware"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:87
-msgid "drying"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:363
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:377
+msgid ""
+"Firmware string reported by the Panda Breath. Empty until the device "
+"sends its first status frame."
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:201
-msgid "enabled, waiting"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:368
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:382
+msgid "Frame logs on disk"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:308
-msgid "hours"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:376
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:390
+msgid "Delete all"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:344
-msgid "idle"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_settings.jinja2:379
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:393
+msgid ""
+"Removes every persistent frame log file in the plugin data folder. A "
+"fresh file will be created on the next received frame if persistence is "
+"enabled."
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:148
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:159
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:167
-msgid "leave empty to skip"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:3
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:3
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:3
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:3
+msgid "OBSERVE-ONLY"
 msgstr ""
 
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:339
-msgid "no"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:7
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:11
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:34
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:7
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:11
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:34
+msgid "Chamber"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1178
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:370
-msgid "no log files"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:11
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:42
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:95
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:11
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:42
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:95
+msgid "Power"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:286
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:66
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:28
-msgid "not bound"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:19
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:52
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:19
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:52
+msgid "Connection"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:103
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:355
-msgid "not reported"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:265
-msgid "off"
-msgstr ""
-
-#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:20
-#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:54
-msgid "offline"
-msgstr ""
-
-#: octoprint_pandabreath/static/js/pandabreath.js:265
-msgid "on"
-msgstr ""
-
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:20
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:54
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:20
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:54
 msgid "online"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:323
-msgid "reachable"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:20
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:54
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:20
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:54
+msgid "offline"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:195
-msgid "requires firmware V1.0.4+"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:23
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:27
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:23
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:27
+msgid "Printer"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:345
-msgid "scanning…"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:32
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:69
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:261
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:32
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:69
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:261
+msgid "LOCKED"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:309
-#: octoprint_pandabreath/static/js/pandabreath.js:326
-msgid "state "
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:42
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:148
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:42
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:148
+msgid "Manual mode"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:194
-msgid "supported"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:45
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:45
+msgid "Setpoint"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:305
-#: octoprint_pandabreath/static/js/pandabreath.js:322
-msgid "unknown"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:53
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:165
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:53
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:165
+msgid "Auto mode"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:308
-#: octoprint_pandabreath/static/js/pandabreath.js:325
-msgid "unreachable"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:56
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:79
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:38
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:150
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:56
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:79
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:38
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:150
+msgid "Target"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:520
-msgid "unreachable / error"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:60
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:60
+msgid "Filter on"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:192
-msgid "waiting for device status"
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:64
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:64
+msgid "Heater on"
 msgstr ""
 
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:72
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:222
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:72
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:222
+msgid "Dry mode"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:75
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:75
+msgid "Preset"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:83
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:83
+msgid "Remaining"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:87
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:87
+msgid "drying"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:97
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:97
+msgid "Engage safety lock"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:100
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:238
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:100
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:238
+msgid "Lock"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:104
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:104
+msgid "Release safety lock"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:107
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:240
+#: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:107
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:240
+msgid "Unlock"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:4
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:4
+msgid "No write frames are sent to the device."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:8
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:8
+msgid "Status"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:14
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:14
+msgid "Drying"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:20
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:20
+msgid "Network"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:31
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:31
+msgid "Live status"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:58
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:376
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:58
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:376
+msgid "Paired printer"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:76
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:76
+msgid "Temperature history"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:82
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:82
+msgid "No samples yet — history starts as soon as the device sends status frames."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:99
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:99
+msgid "ON"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:109
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:109
+msgid ""
+"Power is disabled until the paired printer is connected. The chamber "
+"cannot heat while the printer link is binding or unreachable."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:113
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:113
+msgid "Turn power on to choose a mode and configure the chamber."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:121
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:121
+msgid "See BIQU documentation"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:128
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:128
+msgid "Auto"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:132
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:132
+msgid "Manual"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:136
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:136
+msgid "Dry"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:142
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:142
+msgid ""
+"Dry mode is disabled while the printer is running a job or heating — the "
+"chamber is needed for printing, not filament drying."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:157
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:180
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:194
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:211
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:157
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:180
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:194
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:211
+msgid "Apply"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:159
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:159
+msgid "Chamber heats to this temperature regardless of the paired printer state."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:167
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:167
+msgid ""
+"The device monitors the bound printer's hotbed temperature and engages "
+"the filter fan and heater independently once their respective thresholds "
+"are crossed."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:170
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:170
+msgid ""
+"No paired printer bound — the device cannot read a hotbed temperature, so"
+" auto-mode will not trigger. Bind a printer in the Network tab first."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:173
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:173
+msgid "Target chamber temperature"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:182
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:182
+msgid ""
+"Setpoint the chamber heats to once activated by the heater threshold "
+"below."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:185
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:185
+msgid "Filter-fan activation threshold"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:198
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:198
+msgid ""
+"Filter fan switches on when the printer hotbed crosses this temperature —"
+" useful for filament odour control at lower bed temperatures (e.g. PLA)."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:202
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:202
+msgid "Heater activation threshold"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:215
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:215
+msgid ""
+"Chamber heater (and filter fan) switch on when the printer hotbed crosses"
+" this temperature — typically set higher than the filter threshold to "
+"limit heating to materials that need it (e.g. ABS, PETG)."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:224
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:224
+msgid ""
+"Configure filament presets, custom target/timer and start/stop the dry "
+"cycle in the Drying tab."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:234
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:234
+msgid "Safety lock"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:242
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:242
+msgid "Locks all write commands. Unlock when ready to issue commands again."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:246
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:246
+msgid "Emergency stop"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:255
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:255
+msgid ""
+"Switches the device power off and engages the safety lock — even in "
+"observe-only mode. The Panda Breath firmware stops any running dry cycle "
+"on its own."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:272
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:272
+msgid "Filament preset"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:288
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:288
+msgid ""
+"Presets load device-internal defaults for the chosen filament. Switch to "
+"Custom to set target & timer manually."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:292
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:292
+msgid "Switch to Dry mode in the Chamber tab to edit these values."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:295
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:295
+msgid "Stop the current drying cycle to change preset or values."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:300
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:300
+msgid "Dry target"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:308
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:308
+msgid "Dry timer"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:308
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:308
+msgid "hours"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:314
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:314
+msgid "Minimum 2 h — the device firmware silently rejects shorter values."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:319
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:319
+msgid "Apply Custom"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:321
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:321
+msgid "Sends target + timer + commit in one transaction (single reconnect)."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:326
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:326
+msgid "Drying status"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:329
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:329
+msgid "Current dry target"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:333
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:333
+msgid "Timer remaining"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:337
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:337
+msgid "Currently drying"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:339
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:339
 msgid "yes"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:339
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:339
+msgid "no"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:344
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:344
+msgid "Drying control"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:348
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:348
+msgid "Start drying"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:352
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:352
+msgid "Stop drying"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:356
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:356
+msgid ""
+"Drying is disabled while the printer is running a job or heating — the "
+"chamber is needed for printing, not filament drying."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:360
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:360
+msgid ""
+"To start drying: switch to Dry mode and turn Power on in the Chamber tab "
+"first."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:364
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:364
+msgid "Mirrors the Start/Stop buttons in the Panda Breath WebUI."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:379
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:379
+msgid "Endpoint"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:383
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:383
+msgid "Reachability"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:387
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:387
+msgid "Scan status"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:393
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:393
+msgid "Scan list"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:398
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:398
+msgid "Name"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:399
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:399
+msgid "IP"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:400
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:400
+msgid "Port"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:413
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:413
+msgid "Panda Breath network"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:416
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:416
+msgid "Hostname"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:420
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:420
+msgid "LAN IP"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:424
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:424
+msgid "WiFi SSID"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:428
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:428
+msgid "STA state"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:432
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:432
+msgid "Access point"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:436
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:436
+msgid "AP SSID"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:440
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:440
+msgid "AP IP"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:452
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:452
+msgid "Version"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:465
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:465
+msgid "Language"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:469
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:469
+msgid "Printer type"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:475
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:475
+msgid "MQTT"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:478
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:478
+msgid "Firmware support"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:485
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:485
+msgid "Bridge"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:492
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:492
+msgid "Configured broker"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:502
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:502
+msgid "Device broker"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:510
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:510
+msgid "Recent device responses"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:511
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:511
+msgid "Command acknowledgements from the Panda Breath (set_hostname, scan, etc.)."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:515
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:515
+msgid "Time"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:516
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:516
+msgid "Type"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:517
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:517
+msgid "Result"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:541
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:541
+msgid "Recent frames"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:542
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:542
+msgid "Live ring buffer of WebSocket frames exchanged with the device."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:551
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:551
+msgid "No frames yet."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:553
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:553
+msgid "Persistent frame log"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:555
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:555
+msgid ""
+"Disabled — enable \"Persist WS frames to disk\" in plugin settings to "
+"capture long sessions."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:559
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:559
+msgid "Files in"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:565
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:565
+msgid "File"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:566
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:566
+msgid "Size"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:567
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:567
+msgid "Modified"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:580
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:580
+msgid "Download"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:582
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:582
+msgid "Delete"
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:588
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:588
+msgid "No log files yet — frames will land here on the next received status."
+msgstr ""
+
+#: build/lib/octoprint_pandabreath/templates/pandabreath_tab.jinja2:590
+#: octoprint_pandabreath/templates/pandabreath_tab.jinja2:590
+msgid "Refresh"
+msgstr ""
+
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:299
+msgid "Append OctoPrint instance name (Appearance → Title)"
+msgstr ""
+
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:307
+msgid "Active topic:"
+msgstr ""
+
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:312
+msgid ""
+"Plugin-owned topic namespace: status is published to <base>/state, "
+"inbound commands are read from <base>/command."
 msgstr ""
 

@@ -225,6 +225,10 @@ class PandabreathPlugin(
             # own native topics (panda_breath/<id>/...) are used separately
             # for reading state and sending control frames.
             "mqtt_base_topic": "octoprint/pandabreath",
+            # Append appearance.name to the base topic automatically so that
+            # multiple OctoPrint instances share the same broker without
+            # colliding.  When False, mqtt_base_topic is used verbatim.
+            "mqtt_use_appearance_name": True,
             # Allow inbound commands on <base>/command to drive the chamber.
             # Off → the bridge is publish/telemetry only.
             "mqtt_allow_control": True,
@@ -986,6 +990,28 @@ class PandabreathPlugin(
         # network thread and must not hold the lock while connecting.
         self._start_mqtt_bridge()
 
+    _DEFAULT_BASE_TOPIC = "octoprint/pandabreath"
+
+    def _resolve_mqtt_base_topic(self, s):
+        """Return the effective MQTT base topic.
+
+        When mqtt_use_appearance_name is True and appearance.name is set,
+        appends the URL-encoded instance name to the base topic so that
+        multiple OctoPrint instances on the same broker stay separate.
+        Otherwise uses mqtt_base_topic verbatim.
+        """
+        import urllib.parse
+
+        base = s.get(["mqtt_base_topic"]) or self._DEFAULT_BASE_TOPIC
+        if not s.get_boolean(["mqtt_use_appearance_name"]):
+            return base
+        appearance_name = (
+            self._settings.global_get(["appearance", "name"]) or ""
+        ).strip()
+        if appearance_name:
+            return base + "/" + urllib.parse.quote(appearance_name, safe="")
+        return base
+
     def _start_mqtt_bridge(self):
         """
         Bring up the MQTT bridge if enabled and fw-supported.
@@ -1040,7 +1066,7 @@ class PandabreathPlugin(
                 port=int(s.get(["mqtt_port"]) or 1883),
                 username=s.get(["mqtt_username"]) or None,
                 password=s.get(["mqtt_password"]) or None,
-                base_topic=(s.get(["mqtt_base_topic"]) or "octoprint/pandabreath"),
+                base_topic=self._resolve_mqtt_base_topic(s),
                 command_handler=self._on_mqtt_command,
                 allow_control=s.get_boolean(["mqtt_allow_control"]),
                 logger=self._logger,
