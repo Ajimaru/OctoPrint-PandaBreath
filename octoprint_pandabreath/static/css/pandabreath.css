@@ -92,14 +92,23 @@
 }
 
 /* Navbar emergency-stop button — red and obvious. */
-/* The navbar <li> lays its child out at the top by default; make it a full-
-   height flex container so the button is vertically centred like the text of
-   the other navbar items. */
+/* OctoPrint's navbar is Bootstrap-2: .navbar-inner is min-height 40px and the
+   regular .nav > li > a links use ~10px vertical padding to fill it. Our pill
+   button is shorter, so it would stick to the top of the li. Pin the li to the
+   full 40px navbar height and absolutely-centre the button inside it with
+   top:50% + translateY(-50%) — deterministic regardless of the li's own
+   content height. The li keeps position:relative as the offset parent, and an
+   explicit min-width stops it collapsing when the button leaves the flow. */
 #navbar_plugin_pandabreath {
-  display: flex;
-  align-items: center;
+  position: relative;
+  min-height: 40px;
+  min-width: 96px;
 }
 #navbar_plugin_pandabreath .pandabreath-estop-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
   background: #b94a48;
   color: #fff !important;
   padding: 6px 10px;
@@ -108,6 +117,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  line-height: 1;
+  white-space: nowrap;
 }
 #navbar_plugin_pandabreath .pandabreath-estop-btn:hover {
   background: #953b39;

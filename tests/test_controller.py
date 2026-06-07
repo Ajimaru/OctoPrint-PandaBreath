@@ -338,9 +338,27 @@ def test_on_status_updates_snapshot(controller):
     assert snap["fw_version"] == "1.0"
 
 
-def test_on_status_appends_history(controller):
+def test_on_status_throttles_history(controller):
+    # Two back-to-back updates (< HISTORY_SAMPLE_SPACING apart) collapse to a
+    # single sample so the ring spans the intended ~30 min window.
     controller.on_status({"chamber_temp": 25.0})
     controller.on_status({"chamber_temp": 26.0})
+    samples = controller.history_samples()
+    assert len(samples) == 1
+    assert samples[0][1] == 25.0
+
+
+def test_on_status_appends_history_after_spacing(controller, monkeypatch):
+    import octoprint_pandabreath.controller as controller_module
+
+    fake_now = [1000.0]
+    monkeypatch.setattr(controller_module.time, "time", lambda: fake_now[0])
+
+    controller.on_status({"chamber_temp": 25.0})
+    # Advance past the sampling interval, then a second update is recorded.
+    fake_now[0] += controller_module.HISTORY_SAMPLE_SPACING + 0.1
+    controller.on_status({"chamber_temp": 26.0})
+
     samples = controller.history_samples()
     assert len(samples) == 2
     assert samples[0][1] == 25.0

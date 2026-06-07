@@ -830,6 +830,13 @@ $(function () {
         // Cap on client-side incremental history. Matches the backend
         // ring size — older samples fall off the front as new ones arrive.
         var MAX_UI_HISTORY = 360;
+        // Minimum spacing between appended samples. Status pushes are NOT
+        // evenly spaced: every state change (not just the 5 s keepalive)
+        // emits one, so during init they can arrive ~2/s. Appending each
+        // would fill the 360-sample ring in ~3 min instead of ~30. Throttle
+        // to one sample per ~5 s to match the backend's sampling cadence.
+        var MIN_SAMPLE_SPACING_MS = 4500;
+        var _lastSampleAt = 0;
 
         self.onDataUpdaterPluginMessage = function (plugin, message) {
             if (plugin !== "pandabreath" || !message) return;
@@ -838,14 +845,18 @@ $(function () {
                 self.applyState(snap);
                 // Push messages don't carry the full history (would be
                 // wasteful per tick). Append a single sample from this
-                // snapshot when we have a fresh chamber reading.
+                // snapshot when we have a fresh chamber reading, but no more
+                // often than MIN_SAMPLE_SPACING_MS so the time window is real.
+                var now = Date.now();
                 if (
                     snap.chamber_temp !== null &&
-                    snap.chamber_temp !== undefined
+                    snap.chamber_temp !== undefined &&
+                    now - _lastSampleAt >= MIN_SAMPLE_SPACING_MS
                 ) {
+                    _lastSampleAt = now;
                     var arr = self.history();
                     arr.push([
-                        Date.now() / 1000,
+                        now / 1000,
                         snap.chamber_temp,
                         snap.target_temp || 0,
                     ]);
@@ -1247,9 +1258,33 @@ $(function () {
                         xaxis: {
                             mode: "time",
                             timezone: "browser",
-                            // Show elapsed minutes relative to now (e.g. "-5"),
-                            // matching OctoPrint's native temperature graph
-                            // instead of absolute clock times.
+                            // Place ticks exactly on whole-minute boundaries
+                            // relative to now and label them as elapsed minutes
+                            // (e.g. "-5 Min."), matching OctoPrint's native
+                            // temperature graph. Generating the ticks ourselves
+                            // (instead of letting Flot pick sub-minute steps)
+                            // avoids duplicate labels after rounding.
+                            ticks: function (axis) {
+                                var now = Date.now();
+                                var spanMin = Math.max(
+                                    1,
+                                    Math.ceil((axis.max - axis.min) / 60000),
+                                );
+                                // Aim for ~6 labels; step up so wide windows
+                                // (up to the 30 min buffer) stay readable.
+                                var stepMin = Math.max(
+                                    1,
+                                    Math.ceil(spanMin / 6),
+                                );
+                                var ticks = [];
+                                for (var m = 0; m >= -spanMin; m -= stepMin) {
+                                    var t = now + m * 60000;
+                                    if (t >= axis.min && t <= axis.max) {
+                                        ticks.push(t);
+                                    }
+                                }
+                                return ticks;
+                            },
                             tickFormatter: function (val) {
                                 var minutes = Math.round(
                                     (val - Date.now()) / 60000,

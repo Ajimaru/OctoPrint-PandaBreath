@@ -73,9 +73,13 @@ DEVICE_DRY_TARGET_MAX = 60.0
 DEVICE_DRY_TIMER_MIN = 1
 DEVICE_DRY_TIMER_MAX = 99
 
-# Temperature-history ring buffer size. At a 5 s adapter poll cadence this
-# covers ~30 minutes; samples older than that are silently dropped.
+# Temperature-history ring buffer size. At one sample per HISTORY_SAMPLE_SPACING
+# seconds this covers ~30 minutes; samples older than that are silently dropped.
 HISTORY_MAX_SAMPLES = 360
+# Minimum spacing between history samples. update() runs on every state change
+# (often ~2/s), not just the 5 s keepalive, so throttle to keep the 360-sample
+# ring spanning ~30 min rather than ~3 min.
+HISTORY_SAMPLE_SPACING = 5.0
 
 
 class ChamberController:  # pylint: disable=too-many-instance-attributes
@@ -152,6 +156,11 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._diagnostics = {}
         # Temperature-history ring (entries: (epoch_ts, chamber, target)).
         self._history = collections.deque(maxlen=HISTORY_MAX_SAMPLES)
+        # Wall-clock of the last appended history sample. Updates arrive far
+        # more often than every 5 s (every state change calls update, not just
+        # the keepalive), so we throttle appends to keep ~30 min in the 360-
+        # sample ring instead of compressing it to a few minutes.
+        self._last_history_at = 0.0
         # Recent ``response`` frames — small ring so the UI can show the
         # last handful of command acknowledgements (set_hostname, etc.).
         self._responses = collections.deque(maxlen=20)
@@ -602,9 +611,14 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                     self._diagnostics[key] = payload[key]
             if "response" in payload and isinstance(payload["response"], dict):
                 self._responses.append(payload["response"])
-            # Append a history sample whenever we have a chamber reading.
+            # Append a history sample whenever we have a chamber reading, but
+            # no more often than HISTORY_SAMPLE_SPACING so the ring spans the
+            # intended ~30 min window (update() fires far faster than that).
             if self._chamber_temp is not None:
-                self._history.append((time.time(), self._chamber_temp, self._target))
+                now = time.time()
+                if now - self._last_history_at >= HISTORY_SAMPLE_SPACING:
+                    self._last_history_at = now
+                    self._history.append((now, self._chamber_temp, self._target))
         self._check_safety_limits()
         self._notify()
 
