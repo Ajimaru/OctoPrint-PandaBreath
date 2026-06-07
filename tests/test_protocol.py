@@ -786,3 +786,278 @@ def test_run_client_without_url_returns(monkeypatch):
     # Missing URL -> the loop logs an error and returns without connecting.
     a._run_client()
     assert a.is_connected() is False
+
+
+def test_run_client_without_websocket_module_returns(monkeypatch):
+    a = PandaProtocolAdapter(client_url="ws://panda.local/ws")
+    monkeypatch.setattr(protocol_mod, "websocket", None)
+    a._run_client()
+    assert a.is_connected() is False
+
+
+def test_run_server_without_websockets_module_returns(monkeypatch):
+    a = PandaProtocolAdapter(mode=MODE_SERVER)
+    monkeypatch.setattr(protocol_mod, "websockets", None)
+    a._run_server()
+    assert a.is_connected() is False
+
+
+# ---- normalise_status: additional branches --------------------------------
+
+
+def test_normalise_ha_block(adapter):
+    out = adapter._normalise_status(
+        {
+            "ha": {"ip": "10.0.0.2", "port": "1883", "user": "admin", "state": "2"},
+            "settings": {"set_temp": 50},
+        }
+    )
+    assert out["ha_ip"] == "10.0.0.2"
+    assert out["ha_port"] == 1883
+    assert out["ha_user"] == "admin"
+    assert out["ha_state"] == 2
+
+
+def test_normalise_ha_bad_port_skipped(adapter):
+    out = adapter._normalise_status(
+        {"ha": {"port": "bad"}, "settings": {"set_temp": 50}}
+    )
+    assert "ha_port" not in out
+
+
+def test_normalise_ha_bad_state_skipped(adapter):
+    out = adapter._normalise_status(
+        {"ha": {"state": "bad"}, "settings": {"set_temp": 50}}
+    )
+    assert "ha_state" not in out
+
+
+def test_normalise_language_setting(adapter):
+    out = adapter._normalise_status({"settings": {"language": "en", "set_temp": 50}})
+    assert out["language"] == "en"
+
+
+def test_normalise_response_bad_ok_type(adapter):
+    out = adapter._normalise_status(
+        {"response": {"type": "set_hostname", "ok": "not-int"}}
+    )
+    assert out["response"]["ok"] is None
+
+
+def test_normalise_printer_bad_state_skipped(adapter):
+    out = adapter._normalise_status(
+        {"printer": {"state": "bad"}, "settings": {"set_temp": 50}}
+    )
+    assert "printer_state" not in out
+
+
+def test_normalise_printer_extra_fields(adapter):
+    out = adapter._normalise_status(
+        {
+            "printer": {"name": "X1", "host": "bambu.local", "port": 1883},
+            "settings": {"set_temp": 50},
+        }
+    )
+    assert out["printer_name"] == "X1"
+    assert out["printer_host"] == "bambu.local"
+    assert out["printer_port"] == 1883
+
+
+def test_normalise_sta_bad_state_skipped(adapter):
+    out = adapter._normalise_status(
+        {"sta": {"state": "bad"}, "settings": {"set_temp": 50}}
+    )
+    assert "net_sta_state" not in out
+
+
+def test_normalise_ap_bad_on_skipped(adapter):
+    out = adapter._normalise_status(
+        {"ap": {"on": "notanint"}, "settings": {"set_temp": 50}}
+    )
+    assert "net_ap_on" not in out
+
+
+def test_normalise_settings_cast_errors_skipped(adapter):
+    out = adapter._normalise_status(
+        {
+            "settings": {
+                "custom_temp": "bad",
+                "custom_timer": "bad",
+                "remaining_seconds": "bad",
+                "set_temp": "50",
+            }
+        }
+    )
+    assert "dry_target" not in out
+    assert "dry_timer_hours" not in out
+    assert "dry_remaining_s" not in out
+    assert out["target_temp"] == 50.0
+
+
+def test_normalise_work_mode_bad_value_skipped(adapter):
+    out = adapter._normalise_status(
+        {"settings": {"work_mode": "bad", "set_temp": "50"}}
+    )
+    assert "mode" not in out
+
+
+def test_normalise_target_temp_bad_skipped(adapter):
+    out = adapter._normalise_status({"settings": {"set_temp": "bad"}})
+    assert out is None
+
+
+# ---- redact_frame list walk -----------------------------------------------
+
+
+def test_redact_nested_list(adapter):
+    raw = json.dumps({"items": [{"access_code": "secret"}, {"x": 1}]})
+    out = json.loads(adapter._redact_frame(raw))
+    assert out["items"][0]["access_code"] == "<redacted>"
+    assert out["items"][1]["x"] == 1
+
+
+# ---- record_frame exception paths -----------------------------------------
+
+
+def test_record_frame_persist_exception_swallowed():
+    def boom(d, f):
+        raise RuntimeError("disk full")
+
+    a = PandaProtocolAdapter(client_url="ws://x/ws", on_frame_persist=boom)
+    a._record_frame("rx", '{"a": 1}')  # must not raise
+
+
+def test_record_frame_on_frame_exception_swallowed():
+    def boom(d, f):
+        raise RuntimeError("handler failed")
+
+    a = PandaProtocolAdapter(client_url="ws://x/ws", on_frame=boom)
+    a._record_frame("rx", '{"a": 1}')  # must not raise
+
+
+def test_record_frame_none_is_noop():
+    a = PandaProtocolAdapter(client_url="ws://x/ws")
+    a._record_frame("rx", None)
+    assert a.get_frame_history() == []
+
+
+# ---- handle_inbound: on_status callback exception swallowed ---------------
+
+
+def test_handle_inbound_on_status_exception_swallowed():
+    def boom(s):
+        raise RuntimeError("handler exploded")
+
+    a = PandaProtocolAdapter(client_url="ws://x/ws", on_status=boom)
+    # Must not propagate the exception.
+    a._handle_inbound('{"settings": {"set_temp": 50}}', True)
+
+
+# ---- _set_connected: callback exception swallowed -------------------------
+
+
+def test_set_connected_callback_exception_swallowed():
+    def boom(v):
+        raise RuntimeError("callback exploded")
+
+    a = PandaProtocolAdapter(client_url="ws://x/ws", on_connection_change=boom)
+    a._set_connected(True)  # must not raise
+
+
+# ---- _reset_error_log_state logs when suppressed count > 0 ----------------
+
+
+def test_reset_error_log_state_logs_suppressed(adapter, caplog):
+    e = OSError("down")
+    e.errno = 61
+    adapter._log_reconnect_error(e)
+    adapter._log_reconnect_error(e)  # now suppressed_count == 1
+    with caplog.at_level(logging.INFO):
+        adapter._reset_error_log_state("connected")
+    assert any("suppressed" in r.getMessage() for r in caplog.records)
+
+
+# ---- _log_reconnect_error: bucket change emits suppressed count -----------
+
+
+def test_log_reconnect_error_emits_suppressed_on_bucket_change(adapter, caplog):
+    e1 = OSError("down")
+    e1.errno = 61
+    adapter._log_reconnect_error(e1)
+    adapter._log_reconnect_error(e1)  # suppressed_count == 1
+
+    e2 = ValueError("other")
+    with caplog.at_level(logging.WARNING):
+        adapter._log_reconnect_error(e2)
+    # Should have logged the "suppressed N further..." line.
+    assert any("suppressed" in r.getMessage() for r in caplog.records)
+
+
+# ---- _close_active_socket with async coroutine loop ----------------------
+
+
+def test_close_active_socket_with_async_loop(adapter, monkeypatch):
+    """When _active_loop is set and close() returns a coroutine, it's scheduled."""
+    scheduled = []
+
+    class _FakeLoop:
+        pass
+
+    class _FakeCoroutine:
+        pass
+
+    fake_loop = _FakeLoop()
+
+    class _MockAsyncio:
+        @staticmethod
+        def iscoroutine(obj):
+            return isinstance(obj, _FakeCoroutine)
+
+        @staticmethod
+        def run_coroutine_threadsafe(coro, loop):
+            scheduled.append((coro, loop))
+
+    coro = _FakeCoroutine()
+
+    class _AsyncSocket:
+        def close(self):
+            return coro
+
+    monkeypatch.setattr(protocol_mod, "asyncio", _MockAsyncio)
+    adapter._active_socket = _AsyncSocket()
+    adapter._active_loop = fake_loop
+    adapter._close_active_socket()
+    assert len(scheduled) == 1
+    assert scheduled[0][1] is fake_loop
+
+
+# ---- _build_ssl_context: client-side TLS options --------------------------
+
+
+def test_ssl_context_client_with_ca_file(tmp_path):
+    # We just check the method doesn't crash with tls_enabled and a ca_file
+    # pointing at a valid PEM; for unit purposes, we pass the Python cert
+    # bundle so we don't need to generate our own.
+
+    import certifi
+
+    a = PandaProtocolAdapter(
+        client_url="wss://panda.local/ws",
+        tls_enabled=True,
+        tls_ca_file=certifi.where(),
+    )
+    ctx = a._build_ssl_context(server_side=False)
+    assert ctx is not None
+
+
+def test_ssl_context_client_insecure(adapter):
+    import ssl as _ssl
+
+    a = PandaProtocolAdapter(
+        client_url="wss://panda.local/ws",
+        tls_enabled=True,
+        tls_insecure=True,
+    )
+    ctx = a._build_ssl_context(server_side=False)
+    assert ctx is not None
+    assert ctx.verify_mode == _ssl.CERT_NONE

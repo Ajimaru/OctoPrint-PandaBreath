@@ -489,7 +489,9 @@ def test_printer_link_lock_does_not_override_user_lock(controller):
 
 
 def test_dry_remaining_extrapolates_while_running(controller):
-    controller.on_status({"is_running": True, "dry_remaining_s": 3600})
+    # start_drying sets _is_running=True; then a status with remaining triggers anchor.
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 3600})
     # Force the anchor back in time so elapsed > 0.
     with controller._lock:
         anchor_ts, anchor_val = controller._dry_remaining_anchor
@@ -498,11 +500,49 @@ def test_dry_remaining_extrapolates_while_running(controller):
     assert remaining <= 3600 - 9  # roughly 10s elapsed
 
 
+def test_dry_remaining_floored_at_zero(controller):
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 5})
+    with controller._lock:
+        anchor_ts, anchor_val = controller._dry_remaining_anchor
+        controller._dry_remaining_anchor = (anchor_ts - 9999, anchor_val)
+    assert controller.snapshot()["dry_remaining_s"] == 0
+
+
 def test_dry_remaining_not_extrapolated_when_stopped(controller):
-    controller.on_status({"is_running": True, "dry_remaining_s": 3600})
-    controller.on_status({"is_running": False})
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 3600})
+    controller.stop_drying()
     # Anchor dropped when not running -> base value returned unchanged.
     assert controller.snapshot()["dry_remaining_s"] == 3600
+
+
+def test_dry_remaining_anchor_set_on_status_while_running(controller):
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 1800})
+    with controller._lock:
+        assert controller._dry_remaining_anchor is not None
+        _, val = controller._dry_remaining_anchor
+    assert val == 1800
+
+
+def test_dry_remaining_anchor_none_when_not_running(controller):
+    # No start_drying -> _is_running stays falsy -> anchor stays None.
+    controller.on_status({"dry_remaining_s": 3600})
+    with controller._lock:
+        assert controller._dry_remaining_anchor is None
+
+
+def test_dry_remaining_countdown_clears_running_flag(controller):
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 1})
+    # Wind anchor back far enough that extrapolated remaining == 0.
+    with controller._lock:
+        anchor_ts, anchor_val = controller._dry_remaining_anchor
+        controller._dry_remaining_anchor = (anchor_ts - 9999, anchor_val)
+    # Trigger another on_status to run the zero-check path.
+    controller.on_status({})
+    assert controller.snapshot()["is_running"] is False
 
 
 # ---- watchdog -----------------------------------------------------------
@@ -607,3 +647,127 @@ def test_clearing_sink_restores_adapter(controller, adapter):
     controller.set_control_sink(None)
     controller.set_target(45)
     assert ("set_target", {"value": 45.0}) in adapter.commands
+
+
+# ---- observe-only permission checks -------------------------------------
+
+
+def _observe_only_controller():
+    adapter = FakeAdapter(observe_only=True)
+    return ChamberController(adapter)
+
+
+def test_set_mode_observe_only_raises(controller):
+    # Patch adapter to observe-only after construction.
+    controller._adapter._observe_only = True
+    with pytest.raises(PermissionError):
+        controller.set_mode(MODE_AUTO)
+
+
+def test_set_heater_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_heater(True)
+
+
+def test_set_heater_off_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_heater(False)
+
+
+def test_set_custom_dry_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.set_custom_dry(60, 4)
+
+
+def test_set_custom_dry_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_custom_dry(60, 4)
+
+
+def test_select_preset_pla_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.select_preset_pla()
+
+
+def test_select_preset_pla_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.select_preset_pla()
+
+
+def test_select_preset_petg_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.select_preset_petg()
+
+
+def test_select_preset_petg_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.select_preset_petg()
+
+
+def test_set_filter_threshold_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.set_filter_threshold(40)
+
+
+def test_set_filter_threshold_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_filter_threshold(40)
+
+
+def test_set_heater_threshold_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.set_heater_threshold(40)
+
+
+def test_set_heater_threshold_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_heater_threshold(40)
+
+
+def test_start_drying_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.start_drying()
+
+
+def test_start_drying_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.start_drying()
+
+
+def test_stop_drying_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.stop_drying()
+
+
+def test_stop_drying_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.stop_drying()
+
+
+# ---- on_status bad-type coercion paths ----------------------------------
+
+
+def test_on_status_bad_chamber_temp_ignored(controller):
+    controller.on_status({"chamber_temp": "not-a-float"})
+    assert controller.snapshot()["chamber_temp"] is None
+
+
+def test_on_status_bad_target_temp_ignored(controller):
+    controller.on_status({"target_temp": "bad"})
+    assert controller.snapshot()["target_temp"] == 0.0

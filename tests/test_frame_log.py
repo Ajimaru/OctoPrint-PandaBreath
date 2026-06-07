@@ -216,3 +216,119 @@ def test_cleanup_ignores_unparseable_names(tmp_path):
     # Must not raise even though the stem is not a date.
     FrameLog(str(tmp_path), retention_days=1)
     assert (tmp_path / "frames_garbage.jsonl").exists()
+
+
+def test_mkdir_oserror_is_swallowed(tmp_path, monkeypatch):
+    """An OSError from makedirs is logged but does not propagate."""
+    monkeypatch.setattr(
+        os, "makedirs", lambda *a, **kw: (_ for _ in ()).throw(OSError("no space"))
+    )
+    # Must not raise; the logger logs and moves on.
+    FrameLog(str(tmp_path / "nonexistent"))
+
+
+def test_write_with_open_failure_does_not_raise(tmp_path, monkeypatch):
+    """If _ensure_open leaves _fp=None the write is silently skipped."""
+    log = FrameLog(str(tmp_path))
+    # Force _ensure_open to fail by making open() raise.
+    real_open = open
+
+    def _fail_open(path, *a, **kw):
+        if "frames_" in str(path):
+            raise OSError("permission denied")
+        return real_open(path, *a, **kw)
+
+    monkeypatch.setattr("builtins.open", _fail_open)
+    log.write("rx", {"x": 1})  # must not raise
+
+
+def test_write_oserror_on_flush_closes_handle(tmp_path, monkeypatch):
+    """An OSError during write/flush closes the file handle."""
+    log = FrameLog(str(tmp_path))
+    # Prime the handle by writing once successfully.
+    log.write("rx", {"x": 1})
+    assert log._fp is not None
+
+    # Now make fp.write raise.
+    class _FailFP:
+        def write(self, _data):
+            raise OSError("disk full")
+
+        def flush(self):
+            pass
+
+        def close(self):
+            pass
+
+    log._fp = _FailFP()
+    log.write("rx", {"y": 2})  # must not raise
+    assert log._fp is None
+
+
+def test_list_files_stat_error_skips_entry(tmp_path, monkeypatch):
+    """A stat error for an individual file skips it without crashing."""
+    log = FrameLog(str(tmp_path))
+    log.write("rx", {"x": 1})
+    log.close()
+
+    real_stat = os.stat
+
+    def _fail_stat(path, *a, **kw):
+        if "frames_" in str(path):
+            raise OSError("stat failed")
+        return real_stat(path, *a, **kw)
+
+    monkeypatch.setattr(os, "stat", _fail_stat)
+    result = log.list_files()
+    assert result == []
+
+
+def test_safe_close_oserror_swallowed(tmp_path):
+    """An OSError during _safe_close is swallowed."""
+    log = FrameLog(str(tmp_path))
+    log.write("rx", {"x": 1})
+
+    class _FailClose:
+        def write(self, _d):
+            pass
+
+        def flush(self):
+            pass
+
+        def close(self):
+            raise OSError("close error")
+
+    log._fp = _FailClose()
+    log.close()  # must not raise
+    assert log._fp is None
+
+
+def test_path_for_commonpath_value_error(tmp_path, monkeypatch):
+    """ValueError from commonpath (e.g. different drives) returns None."""
+    log = FrameLog(str(tmp_path), retention_days=0)
+    name = _today_name()
+    (tmp_path / name).write_text("data\n")
+
+    monkeypatch.setattr(
+        os.path,
+        "commonpath",
+        lambda _paths: (_ for _ in ()).throw(ValueError("different drives")),
+    )
+    assert log.path_for(name) is None
+
+
+def test_cleanup_remove_oserror_swallowed(tmp_path, monkeypatch):
+    """An OSError removing an old file during cleanup is swallowed."""
+    old_day = datetime.date.today() - datetime.timedelta(days=30)
+    (tmp_path / _name_for(old_day)).write_text("old\n")
+
+    real_remove = os.remove
+
+    def _fail_remove(path):
+        if "frames_" in str(path):
+            raise OSError("permission denied")
+        real_remove(path)
+
+    monkeypatch.setattr(os, "remove", _fail_remove)
+    # Must not raise even though removal failed.
+    FrameLog(str(tmp_path), retention_days=7)

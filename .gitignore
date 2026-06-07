@@ -24,3 +24,4 @@ tools/
 .agents/
 .github/copilot-instructions.md
 skills-lock.json
+coverage.json
