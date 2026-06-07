@@ -158,12 +158,14 @@ $(function () {
             if (hintEl) {
                 var b = self.mqttDeviceBroker();
                 if (b && b.ip) {
-                    hintEl.innerHTML =
-                        "Device is bound to broker <code>" +
-                        b.ip +
-                        ":" +
-                        (b.port || 1883) +
-                        "</code>.";
+                    // Build the hint via DOM nodes + textContent so the
+                    // device-reported ip/port are never parsed as HTML
+                    // (avoids XSS from a spoofed/compromised device).
+                    hintEl.textContent = "Device is bound to broker ";
+                    var code = document.createElement("code");
+                    code.textContent = b.ip + ":" + (b.port || 1883);
+                    hintEl.appendChild(code);
+                    hintEl.appendChild(document.createTextNode("."));
                     hintEl.style.display = "inline-block";
                 } else {
                     hintEl.style.display = "none";
@@ -1242,8 +1244,26 @@ $(function () {
                         },
                     ],
                     {
-                        xaxis: { mode: "time", timezone: "browser" },
-                        yaxis: { min: 0 },
+                        xaxis: {
+                            mode: "time",
+                            timezone: "browser",
+                            // Show elapsed minutes relative to now (e.g. "-5"),
+                            // matching OctoPrint's native temperature graph
+                            // instead of absolute clock times.
+                            tickFormatter: function (val) {
+                                var minutes = Math.round(
+                                    (val - Date.now()) / 60000,
+                                );
+                                return minutes + " " + gettext("min");
+                            },
+                        },
+                        yaxis: {
+                            min: 0,
+                            // Append the temperature unit to each tick.
+                            tickFormatter: function (val) {
+                                return val + " °C";
+                            },
+                        },
                         grid: { borderWidth: 1, hoverable: true },
                         legend: { position: "nw" },
                     },

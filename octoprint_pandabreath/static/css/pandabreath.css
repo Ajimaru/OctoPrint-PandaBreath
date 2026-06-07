@@ -92,6 +92,13 @@
 }
 
 /* Navbar emergency-stop button — red and obvious. */
+/* The navbar <li> lays its child out at the top by default; make it a full-
+   height flex container so the button is vertically centred like the text of
+   the other navbar items. */
+#navbar_plugin_pandabreath {
+  display: flex;
+  align-items: center;
+}
 #navbar_plugin_pandabreath .pandabreath-estop-btn {
   background: #b94a48;
   color: #fff !important;

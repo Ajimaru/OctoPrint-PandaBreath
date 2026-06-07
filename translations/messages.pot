@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: i18n@octoprint.org\n"
-"POT-Creation-Date: 2026-06-07 14:28+0200\n"
+"POT-Creation-Date: 2026-06-07 15:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,11 +22,11 @@ msgstr ""
 msgid " available"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1181
+#: octoprint_pandabreath/static/js/pandabreath.js:1183
 msgid " file(s)"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1160
+#: octoprint_pandabreath/static/js/pandabreath.js:1162
 msgid " frame log file(s)."
 msgstr ""
 
@@ -54,19 +54,19 @@ msgstr ""
 msgid "Active topic:"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:411
+#: octoprint_pandabreath/__init__.py:413
 msgid "Administer chamber lock"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:402
+#: octoprint_pandabreath/__init__.py:404
 msgid "Allows changing target, mode and heater state."
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:412
+#: octoprint_pandabreath/__init__.py:414
 msgid "Allows locking/unlocking the safety interlock."
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:394
+#: octoprint_pandabreath/__init__.py:396
 msgid "Allows reading Panda Breath chamber state."
 msgstr ""
 
@@ -150,11 +150,11 @@ msgstr ""
 msgid "Chamber heats to this temperature regardless of the paired printer state."
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1234
+#: octoprint_pandabreath/static/js/pandabreath.js:1236
 msgid "Chamber target"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1228
+#: octoprint_pandabreath/static/js/pandabreath.js:1230
 msgid "Chamber temperature"
 msgstr ""
 
@@ -193,7 +193,7 @@ msgstr ""
 msgid "Control chamber from M141/M191 in G-code"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:401
+#: octoprint_pandabreath/__init__.py:403
 msgid "Control chamber heater"
 msgstr ""
 
@@ -209,7 +209,7 @@ msgstr ""
 msgid "Currently drying"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:379
+#: octoprint_pandabreath/static/js/pandabreath.js:381
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:284
 msgid "Custom"
 msgstr ""
@@ -223,7 +223,7 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:748
+#: octoprint_pandabreath/static/js/pandabreath.js:750
 msgid "Delete "
 msgstr ""
 
@@ -231,15 +231,15 @@ msgstr ""
 msgid "Delete all"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1140
+#: octoprint_pandabreath/static/js/pandabreath.js:1142
 msgid "Delete all persistent frame logs?"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1167
+#: octoprint_pandabreath/static/js/pandabreath.js:1169
 msgid "Delete failed"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1158
+#: octoprint_pandabreath/static/js/pandabreath.js:1160
 msgid "Deleted "
 msgstr ""
 
@@ -308,7 +308,7 @@ msgstr ""
 msgid "Emergency stop"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1278
+#: octoprint_pandabreath/static/js/pandabreath.js:1298
 msgid "Emergency stop sent."
 msgstr ""
 
@@ -375,7 +375,7 @@ msgstr ""
 msgid "Firmware support"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1108
+#: octoprint_pandabreath/static/js/pandabreath.js:1110
 msgid ""
 "Forcing a reconnect — sidebar will blip offline briefly while a fresh "
 "snapshot is pulled."
@@ -385,7 +385,7 @@ msgstr ""
 msgid "Frame logs on disk"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:536
+#: octoprint_pandabreath/static/js/pandabreath.js:538
 msgid "HEATING"
 msgstr ""
 
@@ -536,7 +536,7 @@ msgstr ""
 msgid "OBSERVE-ONLY"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:535
+#: octoprint_pandabreath/static/js/pandabreath.js:537
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:103
 msgid "OFF"
 msgstr ""
@@ -545,7 +545,7 @@ msgstr ""
 msgid "ON"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:537
+#: octoprint_pandabreath/static/js/pandabreath.js:539
 msgid "ON (idle)"
 msgstr ""
 
@@ -636,7 +636,7 @@ msgstr ""
 msgid "Printer"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1092
+#: octoprint_pandabreath/static/js/pandabreath.js:1094
 msgid "Printer scan triggered — refresh in a few seconds."
 msgstr ""
 
@@ -692,7 +692,7 @@ msgid ""
 "enabled."
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:947
+#: octoprint_pandabreath/static/js/pandabreath.js:949
 msgid "Request failed"
 msgstr ""
 
@@ -880,7 +880,7 @@ msgstr ""
 msgid "Transport"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1267
+#: octoprint_pandabreath/static/js/pandabreath.js:1287
 msgid ""
 "Trigger Panda Breath emergency stop?\n"
 "\n"
@@ -920,7 +920,7 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: octoprint_pandabreath/__init__.py:393
+#: octoprint_pandabreath/__init__.py:395
 msgid "View chamber status"
 msgstr ""
 
@@ -954,25 +954,25 @@ msgstr ""
 msgid "WiFi SSID"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:200
+#: octoprint_pandabreath/static/js/pandabreath.js:202
 msgid "active"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:307
-#: octoprint_pandabreath/static/js/pandabreath.js:325
-#: octoprint_pandabreath/static/js/pandabreath.js:519
+#: octoprint_pandabreath/static/js/pandabreath.js:309
+#: octoprint_pandabreath/static/js/pandabreath.js:327
+#: octoprint_pandabreath/static/js/pandabreath.js:521
 msgid "binding"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:308
+#: octoprint_pandabreath/static/js/pandabreath.js:310
 msgid "bound"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:347
+#: octoprint_pandabreath/static/js/pandabreath.js:349
 msgid "complete"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:520
+#: octoprint_pandabreath/static/js/pandabreath.js:522
 msgid "connected / idle"
 msgstr ""
 
@@ -980,7 +980,7 @@ msgstr ""
 msgid "days"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:198
+#: octoprint_pandabreath/static/js/pandabreath.js:200
 msgid "disabled"
 msgstr ""
 
@@ -988,7 +988,7 @@ msgstr ""
 msgid "drying"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:201
+#: octoprint_pandabreath/static/js/pandabreath.js:203
 msgid "enabled, waiting"
 msgstr ""
 
@@ -996,7 +996,7 @@ msgstr ""
 msgid "hours"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:345
+#: octoprint_pandabreath/static/js/pandabreath.js:347
 msgid "idle"
 msgstr ""
 
@@ -1006,16 +1006,20 @@ msgstr ""
 msgid "leave empty to skip"
 msgstr ""
 
+#: octoprint_pandabreath/static/js/pandabreath.js:1257
+msgid "min"
+msgstr ""
+
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:339
 msgid "no"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1179
+#: octoprint_pandabreath/static/js/pandabreath.js:1181
 #: octoprint_pandabreath/templates/pandabreath_settings.jinja2:388
 msgid "no log files"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:287
+#: octoprint_pandabreath/static/js/pandabreath.js:289
 #: octoprint_pandabreath/templates/pandabreath_settings.jinja2:67
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:28
 msgid "not bound"
@@ -1026,7 +1030,7 @@ msgstr ""
 msgid "not reported"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:266
+#: octoprint_pandabreath/static/js/pandabreath.js:268
 msgid "off"
 msgstr ""
 
@@ -1035,7 +1039,7 @@ msgstr ""
 msgid "offline"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:266
+#: octoprint_pandabreath/static/js/pandabreath.js:268
 msgid "on"
 msgstr ""
 
@@ -1044,42 +1048,42 @@ msgstr ""
 msgid "online"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:324
+#: octoprint_pandabreath/static/js/pandabreath.js:326
 msgid "reachable"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:195
+#: octoprint_pandabreath/static/js/pandabreath.js:197
 msgid "requires firmware V1.0.4+"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:346
+#: octoprint_pandabreath/static/js/pandabreath.js:348
 msgid "scanning…"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:310
-#: octoprint_pandabreath/static/js/pandabreath.js:327
+#: octoprint_pandabreath/static/js/pandabreath.js:312
+#: octoprint_pandabreath/static/js/pandabreath.js:329
 msgid "state "
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:194
+#: octoprint_pandabreath/static/js/pandabreath.js:196
 msgid "supported"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:306
-#: octoprint_pandabreath/static/js/pandabreath.js:323
+#: octoprint_pandabreath/static/js/pandabreath.js:308
+#: octoprint_pandabreath/static/js/pandabreath.js:325
 msgid "unknown"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:309
-#: octoprint_pandabreath/static/js/pandabreath.js:326
+#: octoprint_pandabreath/static/js/pandabreath.js:311
+#: octoprint_pandabreath/static/js/pandabreath.js:328
 msgid "unreachable"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:521
+#: octoprint_pandabreath/static/js/pandabreath.js:523
 msgid "unreachable / error"
 msgstr ""
 
-#: octoprint_pandabreath/static/js/pandabreath.js:192
+#: octoprint_pandabreath/static/js/pandabreath.js:194
 msgid "waiting for device status"
 msgstr ""
 
