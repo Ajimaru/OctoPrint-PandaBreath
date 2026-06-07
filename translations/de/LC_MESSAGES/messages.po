@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-05 15:16+0200\n"
+"Report-Msgid-Bugs-To: i18n@octoprint.org\n"
+"POT-Creation-Date: 2026-06-07 08:57+0200\n"
 "PO-Revision-Date: 2026-06-03 20:12+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -24,12 +24,12 @@ msgstr ""
 msgid " available"
 msgstr "verfügbar"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1180
+#: octoprint_pandabreath/static/js/pandabreath.js:1181
 #, fuzzy
 msgid " file(s)"
 msgstr "Datei(en)"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1159
+#: octoprint_pandabreath/static/js/pandabreath.js:1160
 #, fuzzy
 msgid " frame log file(s)."
 msgstr "rahmen log file(s)."
@@ -42,11 +42,11 @@ msgstr "AP-IP"
 msgid "AP SSID"
 msgstr "AP-SSID"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:307
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:324
 msgid "Accept inbound commands over MQTT"
 msgstr "Eingehende Befehle über MQTT annehmen"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:164
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:166
 msgid "Access code"
 msgstr "Zugangscode"
 
@@ -54,25 +54,33 @@ msgstr "Zugangscode"
 msgid "Access point"
 msgstr "Zugangspunkt"
 
-#: octoprint_pandabreath/__init__.py:407
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:310
+msgid "Active topic:"
+msgstr "Aktiver Topic:"
+
+#: octoprint_pandabreath/__init__.py:411
 #, fuzzy
 msgid "Administer chamber lock"
 msgstr "Administer Kammerschloss"
 
-#: octoprint_pandabreath/__init__.py:398
+#: octoprint_pandabreath/__init__.py:402
 #, fuzzy
 msgid "Allows changing target, mode and heater state."
 msgstr "Ermöglicht das Ändern von Ziel-, Modus- und Heizzustand."
 
-#: octoprint_pandabreath/__init__.py:408
+#: octoprint_pandabreath/__init__.py:412
 #, fuzzy
 msgid "Allows locking/unlocking the safety interlock."
 msgstr "Ermöglicht die Verriegelung/Entriegelung der Sicherheitsverriegelung."
 
-#: octoprint_pandabreath/__init__.py:390
+#: octoprint_pandabreath/__init__.py:394
 #, fuzzy
 msgid "Allows reading Panda Breath chamber state."
 msgstr "Erlaubt das Lesen von Panda Breath Kammerzustand."
+
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:303
+msgid "Append OctoPrint instance name (Appearance → Title)"
+msgstr "OctoPrint-Instanzname anhängen (Erscheinungsbild → Titel)"
 
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:157
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:180
@@ -94,7 +102,7 @@ msgstr "Auto"
 msgid "Auto mode"
 msgstr "Auto-Modus"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:140
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:142
 #, fuzzy
 msgid ""
 "Bambu-emulation setups (server mode) need these credentials so the Panda "
@@ -104,20 +112,20 @@ msgstr ""
 "Anmeldeinformationen, so dass der Panda Breath den binden Rahmen "
 "akzeptiert. Lassen Sie sie für jede andere Verwendung leer."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:292
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:297
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:496
 msgid "Base topic"
 msgstr "Basis-Topic"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:41
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:42
 msgid "Bind host"
 msgstr "Bind-Host"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:48
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:49
 msgid "Bind port"
 msgstr "Bind-Port"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:64
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:65
 msgid "Bound printer"
 msgstr "Gebundener Drucker"
 
@@ -125,15 +133,15 @@ msgstr "Gebundener Drucker"
 msgid "Bridge"
 msgstr "Bridge"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:253
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:258
 msgid "Broker host"
 msgstr "Broker-Host"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:268
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:273
 msgid "Broker port"
 msgstr "Broker-Port"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:103
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:105
 #, fuzzy
 msgid "CA file"
 msgstr "CA-Datei"
@@ -163,25 +171,25 @@ msgstr ""
 "Die Kammer erwärmt sich auf diese Temperatur unabhängig vom gepaarten "
 "Druckerzustand."
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1233
+#: octoprint_pandabreath/static/js/pandabreath.js:1234
 msgid "Chamber target"
 msgstr "Kammer-Zieltemperatur"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1227
+#: octoprint_pandabreath/static/js/pandabreath.js:1228
 msgid "Chamber temperature"
 msgstr "Kammertemperatur"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:33
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:34
 #, fuzzy
 msgid "Client (OctoPrint connects to ws://<panda>/ws)"
 msgstr "Client (OctoPrint verbindet mit ws://<panda>/ws)"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:111
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:113
 #, fuzzy
 msgid "Client cert file"
 msgstr "Client Cert-Datei"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:119
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:121
 #, fuzzy
 msgid "Client key file"
 msgstr "Client Schlüsseldatei"
@@ -210,17 +218,17 @@ msgstr "Konfigurierter Broker"
 msgid "Connection"
 msgstr "Verbindung"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:195
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:199
 #, fuzzy
 msgid "Control chamber from M141/M191 in G-code"
 msgstr "Steuerkammer von M141/M191 in G-Code"
 
-#: octoprint_pandabreath/__init__.py:397
+#: octoprint_pandabreath/__init__.py:401
 #, fuzzy
 msgid "Control chamber heater"
 msgstr "Steuerkammerheizung"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:211
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:215
 msgid "Cool down when print ends"
 msgstr "Abkühlen, wenn der Druck endet"
 
@@ -232,13 +240,12 @@ msgstr "Aktuelle Trocken-Zieltemperatur"
 msgid "Currently drying"
 msgstr "Trocknet gerade"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:378
+#: octoprint_pandabreath/static/js/pandabreath.js:379
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:284
-#, fuzzy
 msgid "Custom"
-msgstr "Zoll"
+msgstr "Benutzerdefiniert"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:315
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:333
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:23
 msgid "Debug"
 msgstr "Debug"
@@ -247,25 +254,25 @@ msgstr "Debug"
 msgid "Delete"
 msgstr "Löschen"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:747
+#: octoprint_pandabreath/static/js/pandabreath.js:748
 #, fuzzy
 msgid "Delete "
 msgstr "Löschen"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:376
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:394
 msgid "Delete all"
 msgstr "Alle löschen"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1139
+#: octoprint_pandabreath/static/js/pandabreath.js:1140
 #, fuzzy
 msgid "Delete all persistent frame logs?"
 msgstr "Löschen Sie alle persistenten Rahmenprotokolle?"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1166
+#: octoprint_pandabreath/static/js/pandabreath.js:1167
 msgid "Delete failed"
 msgstr "Löschen fehlgeschlagen"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1157
+#: octoprint_pandabreath/static/js/pandabreath.js:1158
 #, fuzzy
 msgid "Deleted "
 msgstr "Gelöscht"
@@ -344,20 +351,20 @@ msgstr "NOT-AUS"
 msgid "Emergency stop"
 msgstr "Notausschalter"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1277
+#: octoprint_pandabreath/static/js/pandabreath.js:1278
 msgid "Emergency stop sent."
 msgstr "Notausschalter ausgelöst."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:234
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:239
 msgid "Enable MQTT control bridge"
 msgstr "MQTT-Steuerungs-Bridge aktivieren"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:94
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:96
 #, fuzzy
 msgid "Enable TLS (wss://) for the WebSocket transport"
 msgstr "TLS aktivieren (wss://) für den WebSocket-Transport"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:324
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:342
 #, fuzzy
 msgid ""
 "Enable only when troubleshooting protocol issues — broadcasts are rate-"
@@ -399,21 +406,20 @@ msgstr ""
 "Betttemperaturen (z.B. PLA)."
 
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:60
-#, fuzzy
 msgid "Filter on"
-msgstr "Filtern nach"
+msgstr "Filter an"
 
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:185
 #, fuzzy
 msgid "Filter-fan activation threshold"
 msgstr "Filterfan Aktivierungsschwelle"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:353
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:371
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:449
 msgid "Firmware"
 msgstr "Firmware"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:363
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:381
 #, fuzzy
 msgid ""
 "Firmware string reported by the Panda Breath. Empty until the device "
@@ -426,7 +432,7 @@ msgstr ""
 msgid "Firmware support"
 msgstr "Firmware-Unterstützung"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1107
+#: octoprint_pandabreath/static/js/pandabreath.js:1108
 #, fuzzy
 msgid ""
 "Forcing a reconnect — sidebar will blip offline briefly while a fresh "
@@ -435,16 +441,16 @@ msgstr ""
 "Forcing a reconnect — Sidebar wird offline kurz blip, während ein "
 "frischer Snapshot gezogen wird."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:368
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:386
 #, fuzzy
 msgid "Frame logs on disk"
 msgstr "Rahmenprotokolle auf der Festplatte"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:535
+#: octoprint_pandabreath/static/js/pandabreath.js:536
 msgid "HEATING"
 msgstr "HEIZT"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:203
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:207
 #, fuzzy
 msgid "Heat chamber when print starts"
 msgstr "Wärmekammer bei Druckbeginn"
@@ -459,7 +465,7 @@ msgstr "Heater Aktivierungsschwelle"
 msgid "Heater on"
 msgstr "Heater on"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:145
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:147
 #, fuzzy
 msgid "Host IP"
 msgstr "Host IP"
@@ -474,7 +480,7 @@ msgstr "Hostname"
 msgid "IP"
 msgstr "IP-Adresse"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:151
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:153
 #, fuzzy
 msgid ""
 "IP of this OctoPrint host, echoed back to the Panda Breath in the bind "
@@ -498,7 +504,7 @@ msgstr "LOCKE"
 msgid "Language"
 msgstr "Sprache"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:172
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:175
 #, fuzzy
 msgid "Limits"
 msgstr "Grenzwerte"
@@ -527,16 +533,15 @@ msgstr ""
 "Befehle wieder auszugeben."
 
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:475
-#, fuzzy
 msgid "MQTT"
-msgstr "MQT"
+msgstr "MQTT"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:227
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:232
 #, fuzzy
 msgid "MQTT control (firmware V1.0.4+)"
 msgstr "MQTT-Steuerung (Firmware V1.0.4+)"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:237
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:242
 #, fuzzy
 msgid ""
 "MQTT control + status via your broker. WebSocket remains for "
@@ -558,7 +563,7 @@ msgstr "Handbuch"
 msgid "Manual mode"
 msgstr "Betriebsart"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:174
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:177
 #, fuzzy
 msgid "Max temperature"
 msgstr "Maximale Temperatur"
@@ -573,7 +578,7 @@ msgstr "Mindestens 2 h — das Gerät Firmware stumm ablehnt kürzere Werte ab."
 msgid "Mirrors the Start/Stop buttons in the Panda Breath WebUI."
 msgstr "Spiegelt die Start/Stop-Tasten im Panda Breath WebUI."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:29
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:30
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:15
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:48
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:124
@@ -636,7 +641,7 @@ msgstr "Es werden keine Schreibrahmen an das Gerät gesendet."
 msgid "OBSERVE-ONLY"
 msgstr "OBSERVE-ONLY"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:534
+#: octoprint_pandabreath/static/js/pandabreath.js:535
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:103
 msgid "OFF"
 msgstr "AUS"
@@ -646,7 +651,7 @@ msgstr "AUS"
 msgid "ON"
 msgstr "EIN"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:536
+#: octoprint_pandabreath/static/js/pandabreath.js:537
 msgid "ON (idle)"
 msgstr "EIN (inaktiv)"
 
@@ -661,17 +666,17 @@ msgstr "Beobachtungsmodus"
 msgid "Paired printer"
 msgstr "Kombinierter Drucker"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:136
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:138
 #, fuzzy
 msgid "Pairing (server mode)"
 msgstr "Paarung (Servermodus)"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:73
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:74
 #, fuzzy
 msgid "Pairing actions"
 msgstr "Paarungsaktionen"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:56
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:57
 #, fuzzy
 msgid "Panda Breath IP / host"
 msgstr "Panda Breath IP / Host"
@@ -687,12 +692,11 @@ msgstr "Panda Breath Notstopp"
 msgid "Panda Breath network"
 msgstr "Panda Breath Netzwerk"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:285
-#, fuzzy
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:290
 msgid "Password"
-msgstr "Passwort vergessen?"
+msgstr "Passwort"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:334
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:352
 #, fuzzy
 msgid "Persist WS frames to disk"
 msgstr "Persist WS-Rahmen auf Festplatte"
@@ -702,14 +706,13 @@ msgstr "Persist WS-Rahmen auf Festplatte"
 msgid "Persistent frame log"
 msgstr "Persistentes Rahmenprotokoll"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:298
-#, fuzzy
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:315
 msgid ""
-"Plugin-owned topic namespace: status is published to <base>/state, and "
+"Plugin-owned topic namespace: status is published to <base>/state, "
 "inbound commands are read from <base>/command."
 msgstr ""
-"Plugin-besitzte Thema Namespace: Status wird auf <base>/state "
-"veröffentlicht, und Inbound-Befehle werden von <base>/command gelesen."
+"Plugin-eigener Topic-Namensraum: Status wird auf <base>/state "
+"veröffentlicht, eingehende Befehle werden von <base>/command gelesen."
 
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:400
 #, fuzzy
@@ -747,12 +750,12 @@ msgstr ""
 "Filament vor. Schalten Sie auf Custom, um Target & Timer manuell "
 "einzustellen."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:189
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:193
 #, fuzzy
 msgid "Print integration"
 msgstr "Druckintegration"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:220
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:224
 #, fuzzy
 msgid "Print-start target"
 msgstr "Ziel für den Druckstart"
@@ -763,7 +766,7 @@ msgstr "Ziel für den Druckstart"
 msgid "Printer"
 msgstr "Drucker"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1091
+#: octoprint_pandabreath/static/js/pandabreath.js:1092
 #, fuzzy
 msgid "Printer scan triggered — refresh in a few seconds."
 msgstr "Drucker-Scan ausgelöst — in wenigen Sekunden aktualisieren."
@@ -778,7 +781,7 @@ msgstr "Druckertyp"
 msgid "Reachability"
 msgstr "Zuverlässigkeit"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:97
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:99
 #, fuzzy
 msgid ""
 "Real Panda Breath firmware does not require TLS on its /ws endpoint. Only"
@@ -813,7 +816,7 @@ msgstr ""
 msgid "Refresh"
 msgstr "Aktualisieren"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:81
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:82
 #, fuzzy
 msgid "Refresh from device"
 msgstr "Refresh vom Gerät"
@@ -828,7 +831,7 @@ msgstr "Sicherheitsschloss freigeben"
 msgid "Remaining"
 msgstr "Bleiben"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:379
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:397
 #, fuzzy
 msgid ""
 "Removes every persistent frame log file in the plugin data folder. A "
@@ -839,11 +842,11 @@ msgstr ""
 "neue Datei wird auf dem nächsten empfangenen Frame erstellt, wenn "
 "Persistenz aktiviert ist."
 
-#: octoprint_pandabreath/static/js/pandabreath.js:946
+#: octoprint_pandabreath/static/js/pandabreath.js:947
 msgid "Request failed"
 msgstr "Anfrage fehlgeschlagen"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:337
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:355
 #, fuzzy
 msgid ""
 "Requires the debug panel above. One JSONL file per day in the plugin data"
@@ -859,7 +862,7 @@ msgstr ""
 msgid "Result"
 msgstr "Ergebnis"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:343
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:361
 #, fuzzy
 msgid "Retention"
 msgstr "Zurückhaltung"
@@ -881,7 +884,7 @@ msgstr "Sicherheit"
 msgid "Safety lock"
 msgstr "Sicherheitsschloss"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:77
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:78
 #, fuzzy
 msgid "Scan for printers"
 msgstr "Scannen nach Druckern"
@@ -891,7 +894,7 @@ msgstr "Scannen nach Druckern"
 msgid "Scan list"
 msgstr "Scanliste"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:84
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:85
 #, fuzzy
 msgid ""
 "Scan starts a new LAN discovery (2-3 min; see Scan badge in Diagnostics)."
@@ -917,20 +920,19 @@ msgstr "Siehe BIQU-Dokumentation"
 msgid "Sends target + timer + commit in one transaction (single reconnect)."
 msgstr "Sendet Target + Timer + Commit in einer Transaktion (Einzel-Reconnect)."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:156
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:158
 #, fuzzy
 msgid "Serial number"
 msgstr "Seriennummer"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:35
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:36
 #, fuzzy
 msgid "Server (Bambu-emulation; Panda Breath connects to us)"
 msgstr "Server (Bambu-Emulation; Panda Breath verbindet uns)"
 
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:45
-#, fuzzy
 msgid "Setpoint"
-msgstr "Punkt"
+msgstr "Sollwert"
 
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:182
 #, fuzzy
@@ -939,7 +941,7 @@ msgid ""
 "below."
 msgstr "Richten Sie die Kammer auf einmal aktiviert durch die Heizschwelle unten."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:321
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:339
 #, fuzzy
 msgid "Show debug panel in plugin tab"
 msgstr "Debug-Panel anzeigen im Plugin Tab"
@@ -954,7 +956,7 @@ msgstr "Not-Stop-Taste in navbar anzeigen"
 msgid "Size"
 msgstr "Größe"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:131
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:133
 #, fuzzy
 msgid "Skip certificate verification (debug only)"
 msgstr "Skip-Zertifikatverifikation (nur Debug)"
@@ -999,7 +1001,7 @@ msgstr ""
 "Einzelbetrieb. Die Panda Breath Firmware stoppt jeden laufenden "
 "Trockenzyklus auf eigene Faust."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:88
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:90
 #, fuzzy
 msgid "TLS"
 msgstr "TLS"
@@ -1022,7 +1024,7 @@ msgstr "Temperatur der Zielkammer"
 msgid "Temperature history"
 msgstr "Temperaturverlauf"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:263
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:268
 #, fuzzy
 msgid ""
 "The broker the plugin connects to. If the Panda is already bound to a "
@@ -1033,7 +1035,7 @@ msgstr ""
 "gebunden ist, füllt \"Benutzergerät Broker\" Host/port/Benutzer aus dem, "
 "was das Gerät meldet (Sie geben noch das Passwort ein)."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:247
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:252
 #, fuzzy
 msgid ""
 "The connected device does not report firmware V1.0.4+ (or has not "
@@ -1053,7 +1055,7 @@ msgstr ""
 "greift nach dem Überqueren der jeweiligen Schwellen selbständig an "
 "Filterlüfter und Heizung an."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:68
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:69
 #, fuzzy
 msgid ""
 "The printer the Panda Breath is currently bound to (read from its last "
@@ -1067,7 +1069,7 @@ msgstr ""
 msgid "Time"
 msgstr "Zeit"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:182
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:185
 #, fuzzy
 msgid "Timeout"
 msgstr "Zeit"
@@ -1086,12 +1088,12 @@ msgstr ""
 "Um die Trocknung zu beginnen: Wechseln Sie zum Dry-Modus und schalten Sie"
 " zuerst die Power in der Registerkarte Kammer ein."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:27
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:28
 #, fuzzy
 msgid "Transport"
 msgstr "Verkehr"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1266
+#: octoprint_pandabreath/static/js/pandabreath.js:1267
 #, fuzzy
 msgid ""
 "Trigger Panda Breath emergency stop?\n"
@@ -1133,11 +1135,11 @@ msgstr "Typ"
 msgid "Unlock"
 msgstr "Entriegelung"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:261
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:266
 msgid "Use device broker"
 msgstr "Geräte-Broker verwenden"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:278
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:283
 #, fuzzy
 msgid "Username"
 msgstr "Benutzername"
@@ -1147,12 +1149,12 @@ msgstr "Benutzername"
 msgid "Version"
 msgstr "Version"
 
-#: octoprint_pandabreath/__init__.py:389
+#: octoprint_pandabreath/__init__.py:393
 #, fuzzy
 msgid "View chamber status"
 msgstr "Ansicht der Kammer"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:214
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:218
 #, fuzzy
 msgid ""
 "When a print finishes, is cancelled or fails, set the chamber target to 0"
@@ -1161,7 +1163,7 @@ msgstr ""
 "Wenn ein Druck beendet wird, gelöscht oder ausfällt, setzen Sie das "
 "Kammerziel auf 0 °C und schalten Sie die Heizung aus."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:206
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:210
 #, fuzzy
 msgid ""
 "When a print starts, switch the Panda Breath to auto mode and heat to the"
@@ -1170,7 +1172,7 @@ msgstr ""
 "Wenn ein Druck beginnt, schalten Sie den Panda Breath in den Auto-Modus "
 "und Wärme auf das Druck-Start-Ziel unten."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:310
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:327
 #, fuzzy
 msgid ""
 "When off, the bridge is telemetry-only (publishes status, ignores "
@@ -1181,7 +1183,7 @@ msgstr ""
 "Befehle auf <base>/command). Notfallstopp wird über MQTT nie akzeptiert, "
 "unabhängig von dieser Einstellung."
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:198
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:202
 #, fuzzy
 msgid ""
 "When your slicer or G-code sets a chamber temperature with M141/M191, "
@@ -1201,25 +1203,25 @@ msgstr "WLAN SSID"
 msgid "active"
 msgstr "aktiv"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:306
-#: octoprint_pandabreath/static/js/pandabreath.js:324
-#: octoprint_pandabreath/static/js/pandabreath.js:518
+#: octoprint_pandabreath/static/js/pandabreath.js:307
+#: octoprint_pandabreath/static/js/pandabreath.js:325
+#: octoprint_pandabreath/static/js/pandabreath.js:519
 msgid "binding"
 msgstr "wird gebunden"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:307
+#: octoprint_pandabreath/static/js/pandabreath.js:308
 msgid "bound"
 msgstr "gebunden"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:346
+#: octoprint_pandabreath/static/js/pandabreath.js:347
 msgid "complete"
 msgstr "abgeschlossen"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:519
+#: octoprint_pandabreath/static/js/pandabreath.js:520
 msgid "connected / idle"
 msgstr "verbunden / inaktiv"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:343
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:361
 #, fuzzy
 msgid "days"
 msgstr "Tage"
@@ -1242,13 +1244,13 @@ msgstr "aktiviert, wartet"
 msgid "hours"
 msgstr "Stunden"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:344
+#: octoprint_pandabreath/static/js/pandabreath.js:345
 msgid "idle"
 msgstr "inaktiv"
 
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:148
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:159
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:167
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:150
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:161
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:169
 #, fuzzy
 msgid "leave empty to skip"
 msgstr "leer bleiben"
@@ -1258,23 +1260,23 @@ msgstr "leer bleiben"
 msgid "no"
 msgstr "Nein"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:1178
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:370
+#: octoprint_pandabreath/static/js/pandabreath.js:1179
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:388
 msgid "no log files"
 msgstr "keine Protokolldateien"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:286
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:66
+#: octoprint_pandabreath/static/js/pandabreath.js:287
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:67
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:28
 msgid "not bound"
 msgstr "nicht gebunden"
 
 #: octoprint_pandabreath/static/js/pandabreath.js:103
-#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:355
+#: octoprint_pandabreath/templates/pandabreath_settings.jinja2:373
 msgid "not reported"
 msgstr "nicht gemeldet"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:265
+#: octoprint_pandabreath/static/js/pandabreath.js:266
 msgid "off"
 msgstr "aus"
 
@@ -1284,17 +1286,16 @@ msgstr "aus"
 msgid "offline"
 msgstr "offline"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:265
+#: octoprint_pandabreath/static/js/pandabreath.js:266
 msgid "on"
 msgstr "ein"
 
 #: octoprint_pandabreath/templates/pandabreath_sidebar.jinja2:20
 #: octoprint_pandabreath/templates/pandabreath_tab.jinja2:54
-#, fuzzy
 msgid "online"
-msgstr "online kaufen"
+msgstr "online"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:323
+#: octoprint_pandabreath/static/js/pandabreath.js:324
 msgid "reachable"
 msgstr "erreichbar"
 
@@ -1302,12 +1303,12 @@ msgstr "erreichbar"
 msgid "requires firmware V1.0.4+"
 msgstr "erfordert Firmware V1.0.4+"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:345
+#: octoprint_pandabreath/static/js/pandabreath.js:346
 msgid "scanning…"
 msgstr "suche…"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:309
-#: octoprint_pandabreath/static/js/pandabreath.js:326
+#: octoprint_pandabreath/static/js/pandabreath.js:310
+#: octoprint_pandabreath/static/js/pandabreath.js:327
 #, fuzzy
 msgid "state "
 msgstr "Zustand"
@@ -1316,17 +1317,17 @@ msgstr "Zustand"
 msgid "supported"
 msgstr "unterstützt"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:305
-#: octoprint_pandabreath/static/js/pandabreath.js:322
+#: octoprint_pandabreath/static/js/pandabreath.js:306
+#: octoprint_pandabreath/static/js/pandabreath.js:323
 msgid "unknown"
 msgstr "unbekannt"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:308
-#: octoprint_pandabreath/static/js/pandabreath.js:325
+#: octoprint_pandabreath/static/js/pandabreath.js:309
+#: octoprint_pandabreath/static/js/pandabreath.js:326
 msgid "unreachable"
 msgstr "nicht erreichbar"
 
-#: octoprint_pandabreath/static/js/pandabreath.js:520
+#: octoprint_pandabreath/static/js/pandabreath.js:521
 msgid "unreachable / error"
 msgstr "nicht erreichbar / Fehler"
 
@@ -1338,4 +1339,22 @@ msgstr "warte auf Gerätestatus"
 #, fuzzy
 msgid "yes"
 msgstr "Ja."
+
+#~ msgid ""
+#~ "Plugin-owned topic namespace: status is"
+#~ " published to <base>/state, and inbound "
+#~ "commands are read from <base>/command. "
+#~ "When set to the default, the "
+#~ "OctoPrint instance name (Appearance → "
+#~ "Title) is appended automatically so "
+#~ "multiple instances stay separate."
+#~ msgstr ""
+#~ "Plugin-eigener Topic-Namensraum: Status "
+#~ "wird auf <base>/state veröffentlicht, "
+#~ "eingehende Befehle werden von <base>/command"
+#~ " gelesen. Bei Verwendung des Standardwerts"
+#~ " wird der OctoPrint-Instanzname "
+#~ "(Erscheinungsbild → Titel) automatisch "
+#~ "angehängt, damit mehrere Instanzen getrennt"
+#~ " bleiben."
 

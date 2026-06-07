@@ -24,6 +24,7 @@
             </span>
         </div>
     </div>
+    <hr>
     <h4>{{ _("Transport") }}</h4>
     <div class="control-group">
         <label class="control-label">{{ _("Mode") }}</label>
@@ -85,6 +86,7 @@
             </span>
         </div>
     </div>
+    <hr>
     <h4>{{ _("TLS") }}</h4>
     <div class="control-group">
         <div class="controls">
@@ -169,6 +171,7 @@
             </div>
         </div>
     </div>
+    <hr>
     <h4>{{ _("Limits") }}</h4>
     <div class="control-group">
         <label class="control-label">{{ _("Max temperature") }} (°C)</label>
@@ -186,6 +189,7 @@
                    data-bind="value: settings.plugins.pandabreath.timeout_seconds">
         </div>
     </div>
+    <hr>
     <h4>{{ _("Print integration") }}</h4>
     <div class="control-group">
         <div class="controls">
@@ -224,6 +228,7 @@
                    data-bind="value: settings.plugins.pandabreath.print_start_target">
         </div>
     </div>
+    <hr>
     <h4>{{ _("MQTT control (firmware V1.0.4+)") }}</h4>
     <div class="control-group">
         <div class="controls">
@@ -291,11 +296,23 @@
         <div class="control-group">
             <label class="control-label">{{ _("Base topic") }}</label>
             <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           id="pandabreath_mqtt_use_appearance_name"
+                           data-bind="checked: settings.plugins.pandabreath.mqtt_use_appearance_name, enable: !!settings.appearance.name()">
+                    {{ _("Append OctoPrint instance name (Appearance → Title)") }}
+                </label>
                 <input type="text"
                        placeholder="octoprint/pandabreath"
-                       data-bind="value: settings.plugins.pandabreath.mqtt_base_topic">
-                <span class="help-block">
-                    {{ _("Plugin-owned topic namespace: status is published to <base>/state, and inbound commands are read from <base>/command.") }}
+                       data-bind="value: settings.plugins.pandabreath.mqtt_base_topic, disable: settings.plugins.pandabreath.mqtt_use_appearance_name() && !!settings.appearance.name()">
+                <span class="help-block"
+                      data-bind="visible: settings.plugins.pandabreath.mqtt_use_appearance_name() && !!settings.appearance.name()">
+                    {{ _("Active topic:") }}
+                    <strong><span data-bind="text: (settings.plugins.pandabreath.mqtt_base_topic() || 'octoprint/pandabreath').replace(/\/+$/, '') + '/' + encodeURIComponent((settings.appearance.name() || '').trim())"></span></strong>
+                </span>
+                <span class="help-block"
+                      data-bind="visible: !settings.plugins.pandabreath.mqtt_use_appearance_name() || !settings.appearance.name()">
+                    {{ _("Plugin-owned topic namespace: status is published to <base>/state, inbound commands are read from <base>/command.") }}
                 </span>
             </div>
         </div>
@@ -312,6 +329,7 @@
             </div>
         </div>
     </div>
+    <hr>
     <h4>{{ _("Debug") }}</h4>
     <div class="control-group">
         <div class="controls">

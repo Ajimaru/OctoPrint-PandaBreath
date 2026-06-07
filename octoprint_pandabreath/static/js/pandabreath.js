@@ -225,6 +225,7 @@ $(function () {
         self.mqttBaseTopicDisplay = ko.pureComputed(function () {
             return readPbSetting("mqtt_base_topic") || "octoprint/pandabreath";
         });
+
         self.mqttDeviceBrokerDisplay = ko.pureComputed(function () {
             var b = self.mqttDeviceBroker();
             if (!b || !b.ip) return "—";
