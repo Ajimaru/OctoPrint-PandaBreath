@@ -153,10 +153,11 @@
                                    min="0"
                                    max="60"
                                    step="1"
-                                   data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled">
+                                   data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled"
+                                   inputmode="numeric">
                             <button class="btn" data-bind="click: applyTarget, enable: controlsEnabled">{{ _("Apply") }}</button>
                         </div>
-                        <span class="help-block">{{ _("Chamber heats to this temperature regardless of the paired printer state.") }}</span>
+                        <span class="help-block">{{ _("Chamber heats to this temperature regardless of the paired printer state (0–60 °C, whole numbers only).") }}</span>
                     </div>
                 </div>
                 <!-- Auto mode: target + two thresholds tracking the printer hotbed -->
@@ -176,7 +177,8 @@
                                                            min="0"
                                                            max="60"
                                                            step="1"
-                                                           data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled">
+                                                           data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled"
+                                                           inputmode="numeric">
                                                     <button class="btn" data-bind="click: applyTarget, enable: controlsEnabled">{{ _('Apply') }}</button>
                                                 </div>
                                                 <span class="help-block">{{ _('Setpoint the chamber heats to once activated by the heater threshold below.') }}</span>
@@ -188,14 +190,15 @@
                                                            min="0"
                                                            max="120"
                                                            step="1"
-                                                           data-bind="value: filterThresholdInput, valueUpdate: 'input', hasFocus: filterThresholdInputFocused, enable: controlsEnabled">
+                                                           data-bind="value: filterThresholdInput, valueUpdate: 'input', hasFocus: filterThresholdInputFocused, enable: controlsEnabled"
+                                                           inputmode="numeric">
                                                     <button class="btn"
                                                             data-bind="click: applyFilterThreshold, enable: controlsEnabled">
                                                         {{ _('Apply') }}
                                                     </button>
                                                 </div>
                                                 <span class="help-block">
-                                                    {{ _('Filter fan switches on when the printer hotbed crosses this temperature — useful for filament odour control at lower bed temperatures (e.g. PLA).') }}
+                                                    {{ _('Filter fan switches on when the printer hotbed crosses this temperature — useful for filament odour control at lower bed temperatures (e.g. PLA, 0–120 °C, whole numbers only).') }}
                         </span>
                     </div>
                     <div class="control-group">
@@ -205,14 +208,15 @@
                                    min="40"
                                    max="120"
                                    step="1"
-                                   data-bind="value: heaterThresholdInput, valueUpdate: 'input', hasFocus: heaterThresholdInputFocused, enable: controlsEnabled">
+                                   data-bind="value: heaterThresholdInput, valueUpdate: 'input', hasFocus: heaterThresholdInputFocused, enable: controlsEnabled"
+                                   inputmode="numeric">
                             <button class="btn"
                                     data-bind="click: applyHeaterThreshold, enable: controlsEnabled">
                                 {{ _("Apply") }}
                             </button>
                         </div>
                         <span class="help-block">
-                            {{ _("Chamber heater (and filter fan) switch on when the printer hotbed crosses this temperature — typically set higher than the filter threshold to limit heating to materials that need it (e.g. ABS, PETG).") }}
+                            {{ _("Chamber heater (and filter fan) switch on when the printer hotbed crosses this temperature — typically set higher than the filter threshold to limit heating to materials that need it (e.g. ABS, PETG, 40–120 °C, whole numbers only).") }}
                         </span>
                     </div>
                 </div>
@@ -315,7 +319,9 @@
                                    min="40"
                                    max="60"
                                    step="1"
-                                   data-bind="value: dryTargetInput, valueUpdate: 'input', hasFocus: dryTargetInputFocused, enable: dryEditEnabled">
+                                   data-bind="value: dryTargetInput, valueUpdate: 'input', hasFocus: dryTargetInputFocused, enable: dryEditEnabled"
+                                   inputmode="numeric">
+                            <span class="help-block">{{ _("Filament drying temperature (40–60 °C, whole numbers only).") }}</span>
                         </div>
                         <div class="control-group">
                             <label>{{ _("Dry timer") }} ({{ _("hours") }})</label>
