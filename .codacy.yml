@@ -1,3 +1,18 @@
 ---
 exclude_paths:
   - "tests/**"
+
+# JavaScript linting is owned by ESLint (see eslint.config.js), which Codacy
+# already runs and which reports clean. The other JS engines duplicate or
+# contradict that setup and Prettier:
+#   - PMD ecmascript "AvoidTrailingComma" fights Prettier, which intentionally
+#     emits trailing commas. Disabled here.
+#   - Biome's style rules (useTemplate, useOptionalChain, noInnerDeclarations
+#     on the file's deliberate ES5 `var` style, etc.) overlap ESLint and target
+#     browser-compat code. Biome is NOT in .codacy/codacy.yaml's tool list, so
+#     it only runs in Codacy's server profile — disable it in the Codacy
+#     dashboard (Code patterns) if its findings are noise; it cannot be turned
+#     off from a tracked file.
+engines:
+  pmd:
+    enabled: false

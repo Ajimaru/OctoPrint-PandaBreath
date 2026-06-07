@@ -1,0 +1,13 @@
+{
+  "//": "Plain CSS only (no SCSS). Prettier owns formatting; this config keeps Stylelint to code-quality rules and disables the ones that fight Prettier or flag framework-imposed names.",
+  "rules": {
+    "//rule-empty-line-before": "Prettier does not insert blank lines between adjacent rules; let it own spacing.",
+    "rule-empty-line-before": null,
+
+    "//selector-id-pattern": "OctoPrint generates the navbar container id as navbar_plugin_<identifier> (snake_case, referenced from JS/templates). Allow snake_case ids alongside kebab-case instead of forcing a rename that would break the selector.",
+    "selector-id-pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$",
+
+    "//scss": "This file is plain CSS, not SCSS — the scss/* rules Codacy enabled do not apply and their names are invalid in core Stylelint.",
+    "at-rule-no-unknown": true
+  }
+}
