@@ -47,6 +47,7 @@ import logging
 import ssl
 import threading
 import time
+from types import ModuleType
 from typing import Any, cast
 
 # pylint: disable=broad-exception-caught,invalid-name
@@ -730,12 +731,11 @@ class PandaProtocolAdapter:
             self._backoff_sleep()
 
     async def _serve_forever(self):
-        aio = asyncio
-        wss = websockets
-        # Type-narrowing only (both guaranteed non-None by _run_server's
-        # guard before asyncio.run); not a runtime safety check.
-        # nosemgrep
-        assert aio is not None and wss is not None
+        # Both guaranteed non-None by _run_server's guard before asyncio.run.
+        # cast() narrows the Optional modules for the static checker without a
+        # runtime assert (which Bandit B101 flags and ``python -O`` strips).
+        aio = cast(ModuleType, asyncio)
+        wss = cast(ModuleType, websockets)
         self._active_loop = aio.get_running_loop()
         stop_future = self._active_loop.create_future()
 

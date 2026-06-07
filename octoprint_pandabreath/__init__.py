@@ -219,7 +219,9 @@ class PandabreathPlugin(
             "mqtt_host": "",
             "mqtt_port": 1883,
             "mqtt_username": "",
-            "mqtt_password": "",
+            # nosec B105: empty default for a user-supplied settings field,
+            # not a hardcoded secret (the broker password is entered in the UI).
+            "mqtt_password": "",  # nosec B105
             # Plugin-owned topic namespace for the snapshot the plugin
             # publishes and the command topic it listens on. The device's
             # own native topics (panda_breath/<id>/...) are used separately
