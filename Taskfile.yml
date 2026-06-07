@@ -61,9 +61,12 @@ tasks:
   babel-update:
     desc: Update translation files from pot file
     cmds:
+      # --no-fuzzy-matching: never auto-match a new msgid to a similar old
+      # translation. Babel's fuzzy matcher silently pulled stale Argos strings
+      # (e.g. "Saved presets" -> "Filament-Voreinstellung") onto new keys.
       - for:
           var: LOCALES
-        cmd: pybabel update --input-file=translations/messages.pot --output-dir=translations --locale={{ .ITEM }}
+        cmd: pybabel update --no-fuzzy-matching --input-file=translations/messages.pot --output-dir=translations --locale={{ .ITEM }}
 
   babel-refresh:
     desc: Update translation files from source
