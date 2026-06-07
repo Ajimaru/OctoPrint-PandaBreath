@@ -53,7 +53,10 @@ tasks:
   babel-extract:
     desc: Update pot file from source
     cmds:
-      - pybabel extract --mapping-file=babel.cfg --output-file=translations/messages.pot --msgid-bugs-address=i18n@octoprint.org --copyright-holder="The OctoPrint Project" .
+      # Extract only from real source paths (mirrors CI i18n.yml). Scanning the
+      # repo root pulled source refs from build/ and crashed on foreign Jinja
+      # templates under .cache/octoprint-src (unknown {% assets %} tag).
+      - pybabel extract --sort-output --mapping-file=babel.cfg --output-file=translations/messages.pot --msgid-bugs-address=i18n@octoprint.org --copyright-holder="The OctoPrint Project" setup.py octoprint_pandabreath tests
 
   babel-update:
     desc: Update translation files from pot file

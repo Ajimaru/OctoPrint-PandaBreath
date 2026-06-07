@@ -1,126 +1,122 @@
 #!/usr/bin/env bash
 
-# Helper: verify that top-level PO catalogs are synchronized with translations/messages.pot
+# Pre-commit hook: keep translation catalogs in sync, automatically.
+#
 # Behavior:
-#  - Creates a temporary copy of `translations/`, runs `pybabel update` against the POT
-#    on the temporary copy and compares it to the real `translations/` directory.
-#  - Performs a read-only check (does not modify the working tree); intended for pre-commit.
-#  - Exits 0 when translations are up-to-date; otherwise prints diffs and exits non-zero.
-# Usage:
-#  - Typically invoked from a pre-commit hook or CI to ensure translators are synchronized.
+#  - Runs .development/compile_translations.sh, which re-extracts the POT from
+#    the current sources, updates the PO files (with --no-fuzzy-matching),
+#    compiles the MO files, copies them into the plugin package, and verifies
+#    the catalogs (fails on stray fuzzy entries or an 'en' msgstr that differs
+#    from its msgid).
+#  - Compares the regenerated catalogs against the staged/working versions
+#    using a NORMALIZED comparison (volatile POT-Creation-Date / Generated-By
+#    headers and shifting "#: file:line" references are ignored). Only a real
+#    change in msgids/msgstrs counts.
+#  - On a real content change, the hook re-stages the changed translation
+#    files and FAILS once (standard pre-commit auto-fixer convention, like
+#    black/prettier): the fix is staged for you, just re-run `git commit`.
+#  - If only volatile metadata changed, the working tree is restored to avoid
+#    noisy timestamp-only diffs, and the commit proceeds.
+#  - If the compile/verify step itself fails, the hook fails with that error.
+#
+# This catches the case where a formatter (djlint/prettier) reflows templates:
+# msgid text is unchanged but POT line references move, so the catalogs must be
+# regenerated to stay technically in sync without producing churn.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Prefer the git top-level so the hook works regardless of whether it runs
-# from .githooks (repo root) or .development/.githooks (one level deeper).
 if ! REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; then
     REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 cd "$REPO_ROOT"
 
-VENV_PYBABEL="./.venv/bin/pybabel"
-VENV_PYTHON="./.venv/bin/python3"
-
-PYBABEL=""
-if [[ -x "$VENV_PYBABEL" ]]; then
-  PYBABEL="$VENV_PYBABEL"
-else
-  if command -v pybabel >/dev/null 2>&1; then
-    PYBABEL="$(command -v pybabel)"
-  else
-    echo "pybabel not found in ./.venv or system PATH. Install dev requirements: pip install Babel" >&2
-    exit 1
-  fi
-fi
-
-if [[ ! -f translations/messages.pot ]]; then
-  echo "POT file not found at translations/messages.pot. Update .pot files first." >&2
-  exit 1
-fi
-
-echo "Checking translations against POT (no changes will be made to working tree)..."
-
-tmpdir=$(mktemp -d)
-trap 'rm -rf "$tmpdir"' EXIT
-
-# copy translations to temporary location
-cp -a translations "$tmpdir"/translations
-
-# run pybabel update on the temporary copy
-if ! output="$("$PYBABEL" update -i translations/messages.pot -d "$tmpdir"/translations 2>&1)"; then
-    echo "pybabel failed while updating temporary translations. Output follows:" >&2
-    printf '%s\n' "$output" >&2
+COMPILE_SCRIPT="$REPO_ROOT/.development/compile_translations.sh"
+if [[ ! -f "$COMPILE_SCRIPT" ]]; then
+    echo "ERROR: $COMPILE_SCRIPT not found." >&2
     exit 1
 fi
 
-# normalize and compare using Python with polib for canonical representation
-if [[ -x "$VENV_PYTHON" ]]; then
-  "$VENV_PYTHON" - <<'COMPARE' "$REPO_ROOT" "$tmpdir"
+VENV_PYTHON="$REPO_ROOT/.venv/bin/python3"
+
+# Translation artifacts that this hook may regenerate and re-stage.
+TRANSLATION_PATHS=(
+    "translations"
+    "octoprint_pandabreath/translations"
+)
+
+# Snapshot current PO/POT content (normalized) before regenerating, so we can
+# tell a real change from pure timestamp churn.
+snapshot_normalized() {
+    if [[ ! -x "$VENV_PYTHON" ]]; then
+        # No venv python: fall back to "changed if git says so".
+        git status --porcelain -- "${TRANSLATION_PATHS[@]}" 2>/dev/null || true
+        return
+    fi
+    "$VENV_PYTHON" - <<'PY'
+import hashlib
 import sys
 from pathlib import Path
 
-def normalize_po_content(path: str) -> str:
-    """Normalize a PO/POT file using polib for canonical representation."""
-    if not Path(path).exists():
-        return ""
+try:
+    import polib
+except ImportError:
+    sys.exit(0)  # caller treats empty output as "unknown"; git diff decides
 
-    try:
-        import polib
-        pofile = polib.pofile(path)
-        return pofile.__unicode__()
-    except Exception:
-        # Fallback to filtering timestamps manually
-        text = Path(path).read_text(encoding="utf-8")
-        lines = text.splitlines()
-        out = []
-        for line in lines:
-            if line.startswith('"POT-Creation-Date:'):
-                continue
-            if line.startswith('"Generated-By:'):
-                continue
-            out.append(line)
-        return "\n".join(out).strip() + "\n"
+roots = ["translations", "octoprint_pandabreath/translations"]
+out = []
+for root in roots:
+    base = Path(root)
+    if not base.exists():
+        continue
+    for f in sorted(base.rglob("*")):
+        if f.suffix not in {".po", ".pot"} or not f.is_file():
+            continue
+        try:
+            po = polib.pofile(str(f))
+        except Exception:
+            continue
+        # Canonical content = sorted (msgid, msgctxt, msgstr) tuples only.
+        # Ignores headers, line refs, flags ordering, file order.
+        items = sorted(
+            (e.msgctxt or "", e.msgid, e.msgstr)
+            for e in po
+            if not e.obsolete
+        )
+        h = hashlib.sha256(repr(items).encode("utf-8")).hexdigest()
+        out.append(f"{f}:{h}")
+print("\n".join(out))
+PY
+}
 
-repo_root = Path(sys.argv[1])
-tmpdir = Path(sys.argv[2])
-real_dir = repo_root / "translations"
-temp_dir = tmpdir / "translations"
+before="$(snapshot_normalized)"
 
-if not real_dir.exists() or not temp_dir.exists():
-    print("ERROR: translations directory not found", file=sys.stderr)
-    sys.exit(1)
-
-# Get all relative paths for .pot and .po files in both directories
-real_po_files = {f.relative_to(real_dir) for f in real_dir.rglob("*") if f.suffix in {".pot", ".po"} and f.is_file()}
-temp_po_files = {f.relative_to(temp_dir) for f in temp_dir.rglob("*") if f.suffix in {".pot", ".po"} and f.is_file()}
-
-all_relative_paths = real_po_files | temp_po_files
-differences = []
-
-for rel_path in sorted(all_relative_paths):
-    real_file = real_dir / rel_path
-    temp_file = temp_dir / rel_path
-
-    real_normalized = normalize_po_content(str(real_file))
-    temp_normalized = normalize_po_content(str(temp_file))
-
-    if real_normalized != temp_normalized:
-        differences.append(str(rel_path))
-
-if differences:
-    print("ERROR: Translations are out of sync with translations/messages.pot.", file=sys.stderr)
-    print("Files with content differences:", file=sys.stderr)
-    for f in differences:
-        print(f"  {f}", file=sys.stderr)
-    sys.exit(1)
-else:
-    print("Translations are up-to-date.")
-    sys.exit(0)
-COMPARE
-  exit_code=$?
-  exit "$exit_code"
+echo "Regenerating translation catalogs (extract + update + compile + verify)..."
+if ! FORCE_CLEAN=true bash "$COMPILE_SCRIPT"; then
+    echo "ERROR: translation compilation/verification failed (see output above)." >&2
+    echo "Fix the reported catalog problems, then re-run the commit." >&2
+    exit 1
 fi
 
-printf '%s\n' "ERROR: Unable to run Python for comparison check"
+after="$(snapshot_normalized)"
+
+if [[ -n "$before" && "$before" == "$after" ]]; then
+    # Only volatile metadata (timestamps / line refs) changed. Restore the
+    # working tree for these paths to avoid noisy diffs, then proceed.
+    echo "Translations already in sync (no msgid/msgstr changes)."
+    git checkout -- "${TRANSLATION_PATHS[@]}" 2>/dev/null || true
+    exit 0
+fi
+
+# Real content change (or no usable snapshot): re-stage and ask for re-commit.
+echo "Translation catalogs were regenerated with content changes. Re-staging:" >&2
+git add -- "${TRANSLATION_PATHS[@]}"
+git status --porcelain -- "${TRANSLATION_PATHS[@]}" | sed 's/^/  /' >&2
+
+cat >&2 <<'MSG'
+
+Translation catalogs were out of sync and have been regenerated and staged.
+This is expected after editing translatable strings or reformatting templates.
+Please re-run your commit to include the updated catalogs.
+MSG
 exit 1
