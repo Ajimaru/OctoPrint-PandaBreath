@@ -226,25 +226,6 @@ $(function () {
             return readPbSetting("mqtt_base_topic") || "octoprint/pandabreath";
         });
 
-        // Resolved topic shown in the settings UI: base + encoded appearance
-        // name when the checkbox is on, otherwise just the base topic.
-        // Evaluated in the PandaBreath VM scope via a DOM-level computed so it
-        // can be used from the settings template's global binding scope too.
-        self.mqttResolvedTopicDisplay = ko.pureComputed(function () {
-            var s = self.settings;
-            if (!s) return "";
-            var base =
-                ko.unwrap(s.plugins.pandabreath.mqtt_base_topic) ||
-                "octoprint/pandabreath";
-            var useAppearance = ko.unwrap(
-                s.plugins.pandabreath.mqtt_use_appearance_name,
-            );
-            var name = ko.unwrap(s.appearance.name) || "";
-            if (useAppearance && name.trim()) {
-                return base + "/" + encodeURIComponent(name.trim());
-            }
-            return base;
-        });
         self.mqttDeviceBrokerDisplay = ko.pureComputed(function () {
             var b = self.mqttDeviceBroker();
             if (!b || !b.ip) return "—";

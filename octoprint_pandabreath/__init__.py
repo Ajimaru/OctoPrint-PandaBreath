@@ -1002,7 +1002,7 @@ class PandabreathPlugin(
         """
         import urllib.parse
 
-        base = s.get(["mqtt_base_topic"]) or self._DEFAULT_BASE_TOPIC
+        base = (s.get(["mqtt_base_topic"]) or self._DEFAULT_BASE_TOPIC).rstrip("/")
         if not s.get_boolean(["mqtt_use_appearance_name"]):
             return base
         appearance_name = (

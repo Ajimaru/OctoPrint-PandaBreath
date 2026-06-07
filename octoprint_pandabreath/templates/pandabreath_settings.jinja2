@@ -308,7 +308,7 @@
                 <span class="help-block"
                       data-bind="visible: settings.plugins.pandabreath.mqtt_use_appearance_name() && !!settings.appearance.name()">
                     {{ _("Active topic:") }}
-                    <strong><span data-bind="text: (settings.plugins.pandabreath.mqtt_base_topic() || 'octoprint/pandabreath') + '/' + encodeURIComponent((settings.appearance.name() || '').trim())"></span></strong>
+                    <strong><span data-bind="text: (settings.plugins.pandabreath.mqtt_base_topic() || 'octoprint/pandabreath').replace(/\/+$/, '') + '/' + encodeURIComponent((settings.appearance.name() || '').trim())"></span></strong>
                 </span>
                 <span class="help-block"
                       data-bind="visible: !settings.plugins.pandabreath.mqtt_use_appearance_name() || !settings.appearance.name()">

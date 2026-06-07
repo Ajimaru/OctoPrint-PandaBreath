@@ -19,8 +19,13 @@ repos:
       - id: mixed-line-ending
         args: ["--fix=lf"] # Normalize mixed line endings to LF (fixes CRLF issues)
       - id: trailing-whitespace # Remove trailing whitespace from lines
+        exclude: '(^|/)translations/.*\.(po|pot)$' # gettext catalogs are tool-generated; leave their formatting alone
       - id: end-of-file-fixer
-        exclude: '^translations/.*\.(po|pot)$' # Ensure files end with a newline (skip translation sources)
+        # Skip gettext catalogs in BOTH the top-level translations/ and the
+        # copied package translations dir (octoprint_<pkg>/translations/...).
+        # The previous '^translations/...' anchor missed the package copy, so
+        # the hook kept stripping a trailing blank line and aborting commits.
+        exclude: '(^|/)translations/.*\.(po|pot)$' # Ensure files end with a newline (skip translation sources)
       - id: check-executables-have-shebangs # Verify executable scripts have a shebang line
       - id: check-shebang-scripts-are-executable # Ensure scripts with shebangs are executable
       - id: check-ast # Quick check that Python files parse (catch syntax errors)
