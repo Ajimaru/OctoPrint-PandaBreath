@@ -486,6 +486,14 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("start_drying")
+        # The WebSocket does not ACK writes and the device echoes isrunning
+        # only in a post-reconnect snapshot (never in the periodic status
+        # frames — see the captures, isrunning stays 0). Optimistically
+        # reflect the running state so the UI (Stop button, dry status)
+        # updates immediately, same approach as the dry-remaining anchor.
+        with self._lock:
+            self._is_running = True
+        self._notify()
 
     def stop_drying(self):
         """Stop an in-progress dry cycle on the device."""
@@ -494,6 +502,11 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("stop_drying")
+        # Optimistic mirror — see start_drying. Without this the UI would
+        # wait forever for an isrunning=0 echo that already reads 0.
+        with self._lock:
+            self._is_running = False
+        self._notify()
 
     def scan_printers(self):
         """
@@ -560,6 +573,16 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                     pass
             # Pass-through firmware extras — protocol.py has already
             # cast them; store as-is and let the UI decide.
+            #
+            # NB: ``is_running`` is deliberately NOT taken from the device
+            # here. The Panda reports ``isrunning:0`` in every periodic
+            # status frame even while a dry cycle is active (confirmed across
+            # 13k captured frames and live) — it only reflects the true state
+            # in a post-reconnect snapshot the plugin doesn't force on
+            # start/stop. So the plugin owns this flag itself: set
+            # optimistically in start_drying/stop_drying and cleared when the
+            # extrapolated countdown reaches zero (below). Honouring the
+            # device value would clobber that within seconds.
             for key in (
                 "fw_version",
                 "dry_target",
@@ -567,7 +590,6 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 "dry_remaining_s",
                 "bed_temp_limit",
                 "filter_threshold",
-                "is_running",
                 "printer_type",
                 "printer_state",
             ):
@@ -583,6 +605,13 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                     int(payload["dry_remaining_s"]),
                 )
             elif not self._is_running:
+                self._dry_remaining_anchor = None
+            # Plugin-owned end-of-cycle detection: since the device never
+            # echoes isrunning=0 on its own, clear the running flag once the
+            # extrapolated countdown reaches zero so the UI stops showing an
+            # active cycle after the timer elapses.
+            if self._is_running and self._extrapolated_dry_remaining() == 0:
+                self._is_running = False
                 self._dry_remaining_anchor = None
             # Network / pairing / language diagnostics — merged into the
             # rolling diagnostics dict so the latest known value sticks

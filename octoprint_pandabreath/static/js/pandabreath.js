@@ -380,6 +380,20 @@ $(function () {
             if (p === "petg") return "PETG / ABS";
             return gettext("Custom");
         });
+        // User-defined custom presets ({name, target, hours}), synced from
+        // the backend snapshot. The dropdown selection fills the Custom
+        // target/timer fields; newPresetName backs the "save preset" input.
+        self.customPresets = ko.observableArray([]);
+        self.selectedPreset = ko.observable(null);
+        self.newPresetName = ko.observable("");
+        // Selecting a saved preset loads its values into the editable
+        // Custom fields (only meaningful while the Custom panel is shown).
+        self.selectedPreset.subscribe(function (p) {
+            if (p && typeof p === "object") {
+                self.dryTargetInput(p.target);
+                self.dryTimerInput(p.hours);
+            }
+        });
 
         // Auto-mode threshold inputs: seeded once from the device's
         // current snapshot, same pattern as targetInput.
@@ -711,6 +725,12 @@ $(function () {
             if ("frame_log" in state && state.frame_log) {
                 self.applyFrameLogStatus(state.frame_log);
             }
+            if (
+                "custom_presets" in state &&
+                Array.isArray(state.custom_presets)
+            ) {
+                self.customPresets(state.custom_presets);
+            }
         };
 
         // ---- frame log ----
@@ -1026,6 +1046,52 @@ $(function () {
         self.selectPresetPetg = function () {
             self.dryPreset("petg");
             post("preset_petg", {}, { autoRefresh: true });
+        };
+        // Save the current Custom target/timer under a user-supplied name.
+        // Client-side validation mirrors the server (which is authoritative):
+        // a friendly early bail keeps a round-trip out of the common cases.
+        // The backend returns {custom_presets: [...]}, which post()->applyState
+        // feeds straight back into self.customPresets — no device I/O, so no
+        // autoRefresh/reconnect.
+        self.saveCustomPreset = function () {
+            var name = (self.newPresetName() || "").trim();
+            if (!name) {
+                new PNotify({
+                    title: "Panda Breath",
+                    text: gettext("Enter a preset name first."),
+                    type: "error",
+                });
+                return;
+            }
+            // Same whitelist as the server: letters/digits/space/-/_, max 32.
+            if (!/^[\w \-]{1,32}$/.test(name)) {
+                new PNotify({
+                    title: "Panda Breath",
+                    text: gettext(
+                        "Preset name may use letters, digits, spaces, " +
+                            "'-' and '_' (max 32 chars).",
+                    ),
+                    type: "error",
+                });
+                return;
+            }
+            post("save_custom_preset", {
+                name: name,
+                value: parseFloat(self.dryTargetInput()),
+                hours: parseInt(self.dryTimerInput(), 10),
+            });
+            self.newPresetName("");
+        };
+        self.deleteCustomPreset = function () {
+            var p = self.selectedPreset();
+            if (!p || typeof p !== "object") return;
+            if (
+                !window.confirm(gettext("Delete preset") + ' "' + p.name + '"?')
+            ) {
+                return;
+            }
+            post("delete_custom_preset", { name: p.name });
+            self.selectedPreset(null);
         };
         self.applyFilterThreshold = function () {
             post(

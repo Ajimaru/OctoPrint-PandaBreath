@@ -296,6 +296,19 @@
                         </span>
                     </div>
                     <div data-bind="visible: dryPreset() === 'custom'">
+                        <div class="control-group" data-bind="visible: customPresets().length">
+                            <label>{{ _("Saved presets") }}</label>
+                            <div class="input-append">
+                                <select data-bind="options: customPresets, optionsText: 'name', value: selectedPreset, optionsCaption: '{{ _("Select a preset…") }}', enable: dryEditEnabled">
+                                </select>
+                                <button class="btn btn-danger"
+                                        title="{{ _('Delete preset') }}"
+                                        data-bind="click: deleteCustomPreset, enable: dryEditEnabled() && selectedPreset()">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                            <span class="help-block">{{ _("Selecting a preset fills the target and timer below.") }}</span>
+                        </div>
                         <div class="control-group">
                             <label>{{ _("Dry target") }} (°C)</label>
                             <input type="number"
@@ -319,6 +332,20 @@
                                 {{ _("Apply Custom") }}
                             </button>
                             <span class="help-block">{{ _("Sends target + timer + commit in one transaction (single reconnect).") }}</span>
+                        </div>
+                        <div class="control-group">
+                            <label>{{ _("Save as preset") }}</label>
+                            <div class="input-append">
+                                <input type="text"
+                                       maxlength="32"
+                                       placeholder="{{ _('Preset name') }}"
+                                       data-bind="value: newPresetName, valueUpdate: 'input', enable: dryEditEnabled">
+                                <button class="btn"
+                                        data-bind="click: saveCustomPreset, enable: dryEditEnabled">
+                                    <i class="fa fa-save"></i> {{ _("Save preset") }}
+                                </button>
+                            </div>
+                            <span class="help-block">{{ _("Saves the current target and timer under a name for quick reuse. Letters, digits, spaces, '-' and '_' (max 32 chars).") }}</span>
                         </div>
                     </div>
                 </div>

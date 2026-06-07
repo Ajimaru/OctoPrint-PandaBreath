@@ -28,7 +28,14 @@ from octoprint.events import Events
 from octoprint.util import RepeatedTimer
 
 from ._version import VERSION as PLUGIN_VERSION
-from .controller import MODE_AUTO, ChamberController
+from .controller import (
+    DEVICE_DRY_TARGET_MAX,
+    DEVICE_DRY_TARGET_MIN,
+    DEVICE_DRY_TIMER_MAX,
+    DEVICE_DRY_TIMER_MIN,
+    MODE_AUTO,
+    ChamberController,
+)
 from .frame_log import FrameLog
 from .mqtt_bridge import MqttBridge, paho_available
 from .protocol import PandaProtocolAdapter
@@ -40,6 +47,52 @@ MQTT_MIN_FW = (1, 0, 4)
 # as "still hot" for the drying interlock, even with no target set — so a
 # dry cycle cannot be armed while the printer is heating up or cooling down.
 PRINTER_HOT_THRESHOLD_C = 50.0
+
+# ---- User-defined custom drying presets --------------------------------
+# These are a pure plugin convenience: a saved {name, target, hours} triple
+# that fills the existing Custom target/timer fields. The device knows
+# nothing about them. Limits guard the settings file against bloat/abuse.
+CUSTOM_PRESET_MAX = 20
+CUSTOM_PRESET_NAME_MAX = 32
+# Whitelist: letters (incl. accented via \w + UNICODE), digits, spaces,
+# hyphen and underscore. 1..32 chars. Rejects anything that could carry
+# markup/control characters even though Knockout escapes on output.
+CUSTOM_PRESET_NAME_RE = re.compile(
+    r"^[\w \-]{1,%d}$" % CUSTOM_PRESET_NAME_MAX, re.UNICODE
+)
+
+
+def validate_custom_preset(name, target, hours):
+    """
+    Validate + normalise a custom-preset triple.
+
+    Returns a clean ``{"name", "target", "hours"}`` dict or raises
+    ``ValueError`` with a user-safe message. Target/timer reuse the device
+    dry-mode bounds so a saved preset can always be applied.
+    """
+    name = "" if name is None else str(name).strip()
+    if not name:
+        raise ValueError("preset name must not be empty")
+    if not CUSTOM_PRESET_NAME_RE.match(name):
+        raise ValueError(
+            "preset name may use letters, digits, spaces, '-' and '_' "
+            f"(max {CUSTOM_PRESET_NAME_MAX} chars)"
+        )
+    try:
+        target = float(target)
+        hours = int(float(hours))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("preset target/timer must be numeric") from exc
+    if not DEVICE_DRY_TARGET_MIN <= target <= DEVICE_DRY_TARGET_MAX:
+        raise ValueError(
+            f"dry target must be {DEVICE_DRY_TARGET_MIN:.0f}-"
+            f"{DEVICE_DRY_TARGET_MAX:.0f}"
+        )
+    if not DEVICE_DRY_TIMER_MIN <= hours <= DEVICE_DRY_TIMER_MAX:
+        raise ValueError(
+            f"dry timer must be {DEVICE_DRY_TIMER_MIN}-{DEVICE_DRY_TIMER_MAX} h"
+        )
+    return {"name": name, "target": target, "hours": hours}
 
 
 def _parse_fw_version(raw):
@@ -194,6 +247,11 @@ class PandabreathPlugin(
             "auto_on_print_start": False,
             "auto_off_print_end": True,
             "print_start_target": 40.0,
+            # User-defined drying presets: list of {name, target, hours}.
+            # Pure UI convenience that fills the Custom target/timer fields;
+            # the device does not store these. Managed via the
+            # save_custom_preset / delete_custom_preset API commands.
+            "custom_presets": [],
             # Show the emergency-stop button in the OctoPrint navbar.
             # Enabled by default — the operator can hide it from settings.
             "navbar_estop_enabled": True,
@@ -434,6 +492,8 @@ class PandabreathPlugin(
             "set_mode": ["mode"],
             "set_heater": ["on"],
             "set_custom_dry": ["value", "hours"],
+            "save_custom_preset": ["name", "value", "hours"],
+            "delete_custom_preset": ["name"],
             "preset_pla": [],
             "preset_petg": [],
             "start_drying": [],
@@ -463,6 +523,11 @@ class PandabreathPlugin(
         # populate the chart on first paint. Push messages send only the
         # incremental sample to keep the channel cheap.
         snapshot["history"] = self._controller.history_samples()
+        # User-defined drying presets live in plugin settings, not the
+        # controller. Attach them so the Drying tab can populate the dropdown
+        # on first paint. Not sent in the 2 Hz push — they only change on an
+        # explicit save/delete, which refreshes the tab anyway.
+        snapshot["custom_presets"] = self._custom_presets()
         # ?debug=1 attaches the frame ring buffer for the debug panel.
         if request.values.get("debug") in ("1", "true", "yes"):
             snapshot["frames"] = (
@@ -485,6 +550,47 @@ class PandabreathPlugin(
             "directory": log.directory(),
             "files": files,
         }
+
+    # ---- Custom drying presets --------------------------------------
+
+    def _custom_presets(self):
+        """Return the stored custom presets as a list (never None)."""
+        presets = self._settings.get(["custom_presets"])
+        return presets if isinstance(presets, list) else []
+
+    def _save_custom_preset(self, name, target, hours):
+        """
+        Validate and persist a custom preset. Same name replaces in place;
+        otherwise it is appended (subject to CUSTOM_PRESET_MAX). Returns the
+        full updated list. Raises ``ValueError`` on bad input or overflow.
+
+        Persists directly via the settings API instead of on_settings_save
+        so saving a preset does not bounce the adapter (no reconnect).
+        """
+        preset = validate_custom_preset(name, target, hours)
+        presets = [dict(p) for p in self._custom_presets()]
+        for i, existing in enumerate(presets):
+            if existing.get("name") == preset["name"]:
+                presets[i] = preset
+                break
+        else:
+            if len(presets) >= CUSTOM_PRESET_MAX:
+                raise ValueError(
+                    f"at most {CUSTOM_PRESET_MAX} custom presets are allowed"
+                )
+            presets.append(preset)
+        self._settings.set(["custom_presets"], presets)
+        self._settings.save()
+        return presets
+
+    def _delete_custom_preset(self, name):
+        """Remove the preset with the given name (no-op if absent). Returns
+        the updated list."""
+        name = "" if name is None else str(name).strip()
+        presets = [dict(p) for p in self._custom_presets() if p.get("name") != name]
+        self._settings.set(["custom_presets"], presets)
+        self._settings.save()
+        return presets
 
     # ---- BlueprintPlugin (frame log download) -----------------------
 
@@ -604,6 +710,23 @@ class PandabreathPlugin(
         perm = _plugin_permission(required)
         if perm is not None and not perm.can():
             return flask.abort(403)
+
+        # Custom presets are pure plugin settings (no device I/O, no
+        # controller needed). Handle them before the controller checks and
+        # return the updated list so the UI can refresh the dropdown.
+        if command in ("save_custom_preset", "delete_custom_preset"):
+            try:
+                if command == "save_custom_preset":
+                    presets = self._save_custom_preset(
+                        data.get("name"), data.get("value"), data.get("hours")
+                    )
+                else:
+                    presets = self._delete_custom_preset(data.get("name"))
+            except (ValueError, TypeError) as exc:
+                return flask.make_response(
+                    flask.jsonify({"error": _safe_error_message(exc)}), 400
+                )
+            return flask.jsonify({"custom_presets": presets})
 
         if self._controller is None:
             return flask.make_response(
