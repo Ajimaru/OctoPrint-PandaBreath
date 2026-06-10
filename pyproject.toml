@@ -43,7 +43,7 @@ develop = [
     "go-task-bin",
     # Match OctoPrint's constraint (Babel<2.17) so locally generated message
     # catalogs match the i18n CI and the OctoPrint test venvs.
-    "Babel>=2.16,<2.17",
+    "Babel>=2.16,<2.19",
     "polib",
     "pyyaml"
 ]
