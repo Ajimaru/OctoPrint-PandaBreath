@@ -203,6 +203,16 @@ def test_set_custom_dry_transaction(controller, adapter):
     ]
 
 
+def test_set_custom_dry_updates_displayed_values(controller):
+    # The device only echoes new custom values post-reconnect, so the
+    # controller must reflect them optimistically for the Drying-status UI.
+    controller.set_custom_dry(53, 6)
+    snap = controller.snapshot()
+    assert snap["dry_target"] == 53.0
+    assert snap["dry_timer_hours"] == 6
+    assert snap["dry_remaining_s"] == 6 * 3600
+
+
 def test_set_custom_dry_negative_rejected(controller):
     with pytest.raises(ValueError):
         controller.set_custom_dry(-1, 8)

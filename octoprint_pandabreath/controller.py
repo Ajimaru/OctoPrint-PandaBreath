@@ -423,6 +423,23 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._send("set_dry_target", value=value)
         self._send("set_dry_timer", hours=hours)
         self._send("commit_dry")
+        # Optimistically reflect the applied values. The device only echoes
+        # the new custom_temp/custom_timer in a post-reconnect snapshot, not
+        # in its periodic status frames, so without this the Drying-status
+        # readouts would keep showing the device's previous values (e.g. the
+        # 50 °C / 12 h defaults) until the next reconnect. Same approach as
+        # the is_running flag.
+        with self._lock:
+            self._dry_target = value
+            self._dry_timer_hours = hours
+            self._dry_remaining_s = hours * 3600
+            # Reset the extrapolation anchor so the countdown starts from the
+            # freshly applied timer rather than drifting off a stale base.
+            if self._is_running:
+                self._dry_remaining_anchor = (time.monotonic(), hours * 3600)
+            else:
+                self._dry_remaining_anchor = None
+        self._notify()
 
     def select_preset_pla(self):
         """Select the device's built-in PLA dry preset."""

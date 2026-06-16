@@ -714,9 +714,11 @@ class _FakeWebsocketModule:
     def __init__(self, ws):
         self._ws = ws
         self.connect_url = None
+        self.connect_kwargs = None
 
-    def create_connection(self, url, **_kwargs):
+    def create_connection(self, url, **kwargs):
         self.connect_url = url
+        self.connect_kwargs = kwargs
         return self._ws
 
 
@@ -758,6 +760,36 @@ def test_client_run_loop_full_cycle(monkeypatch):
     assert statuses and statuses[0]["target_temp"] == 50.0
     assert fake_mod.connect_url == "ws://panda.local/ws"
     assert fake_ws.closed is True
+
+
+def test_client_run_loop_wss_passes_tls_options(monkeypatch):
+    fake_ws = _FakeClientWS(script=[_FakeClientWS.TIMEOUT])
+    fake_mod = _FakeWebsocketModule(fake_ws)
+
+    a = PandaProtocolAdapter(
+        client_url="wss://panda.local/ws",
+        tls_enabled=True,
+        tls_ca_file="/tmp/ca.pem",
+        tls_cert_file="/tmp/client.pem",
+        tls_key_file="/tmp/client.key",
+        tls_insecure=True,
+        reconnect_delay=0.01,
+    )
+    monkeypatch.setattr(protocol_mod, "websocket", fake_mod)
+    monkeypatch.setattr(a, "_backoff_sleep", lambda: a._stop_event.set())
+    ticks = iter(range(0, 100000, 10))
+    monkeypatch.setattr(protocol_mod.time, "monotonic", lambda: float(next(ticks)))
+
+    a._run_client()
+
+    assert fake_mod.connect_url == "wss://panda.local/ws"
+    sslopt = fake_mod.connect_kwargs.get("sslopt")
+    assert sslopt is not None
+    assert sslopt["ca_certs"] == "/tmp/ca.pem"
+    assert sslopt["certfile"] == "/tmp/client.pem"
+    assert sslopt["keyfile"] == "/tmp/client.key"
+    # tls_insecure -> verification disabled.
+    assert sslopt["check_hostname"] is False
 
 
 def test_client_run_loop_connect_error(monkeypatch):
