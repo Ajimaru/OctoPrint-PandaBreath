@@ -2,16 +2,14 @@
 
 ## Supported Versions
 
-| Version | Supported |
-| ------- | --------- |
-| 0.1.x   | Yes       |
-| < 0.1   | No        |
+Security fixes are provided for the latest released version. Please update to
+the most recent release before reporting an issue.
 
 ## Reporting a Vulnerability
 
 Please do not open a public issue for security problems.
 
-Report vulnerabilities by email to [ajimaru_gdr@pm.me](mailto:ajimaru_gdr@pm.me).
+Report vulnerabilities by email to [ajimaru_gdr [at] pm [dot] me].
 
 Include:
 

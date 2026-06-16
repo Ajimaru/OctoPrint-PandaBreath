@@ -24,7 +24,7 @@ Unacceptable behavior includes:
 
 Project maintainers may remove, edit, or reject contributions that violate this code of conduct.
 
-Reports can be sent to [ajimaru_gdr@pm.me](mailto:ajimaru_gdr@pm.me).
+Reports can be sent to [ajimaru_gdr [at] pm [dot] me](mailto:ajimaru_gdr [at] pm [dot] me).
 
 ## Scope
 
