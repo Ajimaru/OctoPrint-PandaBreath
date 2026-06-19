@@ -3,11 +3,12 @@
 # Pre-commit hook: keep translation catalogs in sync, automatically.
 #
 # Behavior:
-#  - Runs .development/compile_translations.sh, which re-extracts the POT from
-#    the current sources, updates the PO files (with --no-fuzzy-matching),
-#    compiles the MO files, copies them into the plugin package, and verifies
-#    the catalogs (fails on stray fuzzy entries or an 'en' msgstr that differs
-#    from its msgid).
+#  - Runs .scripts/compile_translations.sh (standalone, no .development/ needed),
+#    which re-extracts the POT from the current sources, updates the PO files
+#    (with --no-fuzzy-matching), compiles the MO files, copies them into the
+#    plugin package, and verifies the catalogs.
+#  - Falls back to .development/compile_translations.sh if the standalone
+#    script is not present (local dev with full devkit).
 #  - Compares the regenerated catalogs against the staged/working versions
 #    using a NORMALIZED comparison (volatile POT-Creation-Date / Generated-By
 #    headers and shifting "#: file:line" references are ignored). Only a real
@@ -31,9 +32,14 @@ if ! REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; 
 fi
 cd "$REPO_ROOT"
 
-COMPILE_SCRIPT="$REPO_ROOT/.development/compile_translations.sh"
+# Prefer the standalone script (tracked in git, no .development/ required).
+# Fall back to the full devkit script for local dev environments that have it.
+COMPILE_SCRIPT="$REPO_ROOT/.scripts/compile_translations.sh"
 if [[ ! -f "$COMPILE_SCRIPT" ]]; then
-    echo "ERROR: $COMPILE_SCRIPT not found." >&2
+    COMPILE_SCRIPT="$REPO_ROOT/.development/compile_translations.sh"
+fi
+if [[ ! -f "$COMPILE_SCRIPT" ]]; then
+    echo "ERROR: compile_translations.sh not found in .scripts/ or .development/." >&2
     exit 1
 fi
 

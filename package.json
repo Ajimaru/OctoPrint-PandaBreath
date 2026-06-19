@@ -1,0 +1,7 @@
+{
+  "name": "octoprint-pandabreath",
+  "private": true,
+  "devDependencies": {
+    "prettier": "3.5.3"
+  }
+}

@@ -1,6 +1,5 @@
 .ideas/
 .vscode/
-.github/instructions/codacy.instructions.md
 .claude/
 .codacy/
 .development/
@@ -23,5 +22,7 @@ tools/
 .ruff_cache/
 .agents/
 .github/copilot-instructions.md
+.github/instructions/
 skills-lock.json
 coverage.json
+node_modules/
