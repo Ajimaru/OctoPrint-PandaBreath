@@ -3,3 +3,7 @@
 # they render. Keep Prettier away from the docs tree; format it by the
 # MkDocs/Material conventions instead.
 docs/
+
+# Root README uses GitHub Admonition syntax (> [!NOTE]) which Prettier
+# collapses onto a single line, breaking the rendered output.
+README.md
