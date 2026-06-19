@@ -47,7 +47,7 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install setuptools "Babel==${{ env.BABEL_VERSION }}" "polib==${{ env.POLIB_VERSION }}"
+          python -m pip install setuptools "Babel==${{ env.BABEL_VERSION }}" "polib==${{ env.POLIB_VERSION }}" Jinja2
 
       - # Extract and validate translation catalog
         name: Verify messages.pot is up to date
