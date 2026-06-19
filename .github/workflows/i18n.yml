@@ -19,6 +19,7 @@ jobs:
     name: i18n catalog check
     runs-on: ubuntu-latest
     env:
+      BABEL_VERSION: "2.16.0"
       POLIB_VERSION: "1.2.0"
 
     steps:
@@ -46,10 +47,7 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          # Do NOT pin Babel here: OctoPrint constrains Babel (<2.17,>=2.16),
-          # and pinning the central BABEL_VERSION (2.18) conflicts with it.
-          # Let OctoPrint's own requirement resolve the Babel version.
-          python -m pip install setuptools "polib==${{ env.POLIB_VERSION }}" 'OctoPrint>=1.11.0,<2'
+          python -m pip install setuptools "Babel==${{ env.BABEL_VERSION }}" "polib==${{ env.POLIB_VERSION }}"
 
       - # Extract and validate translation catalog
         name: Verify messages.pot is up to date
@@ -57,21 +55,34 @@ jobs:
           . .venv/bin/activate
           ./.venv/bin/pybabel extract --sort-output -F babel.cfg -o /tmp/messages.pot setup.py octoprint_pandabreath tests
           python - <<'PY'
-          import pathlib
+          import re
           import sys
+          try:
+              import polib
+          except ImportError:
+              polib = None
+          import pathlib
 
-          def normalize(path: str) -> str:
+          def extract_entries(path: str):
+              """Return a frozenset of (msgid, msgctxt) from a POT file, ignoring headers."""
+              if polib:
+                  try:
+                      catalog = polib.pofile(path)
+                      return frozenset(
+                          (e.msgid, e.msgctxt or "")
+                          for e in catalog
+                          if not e.obsolete and e.msgid
+                      )
+                  except Exception:
+                      pass
+              # Fallback: crude text extraction of msgid strings
               text = pathlib.Path(path).read_text(encoding="utf-8")
-              lines = text.splitlines()
-              out = []
-              for line in lines:
-                  # These headers are time/tool-version dependent.
-                  if line.startswith('"POT-Creation-Date:'):
-                      continue
-                  if line.startswith('"Generated-By:'):
-                      continue
-                  out.append(line)
-              return "\n".join(out).strip() + "\n"
+              ids = set()
+              for m in re.finditer(r'^msgid\s+"(.*)"', text, re.MULTILINE):
+                  val = m.group(1)
+                  if val:
+                      ids.add(val)
+              return frozenset(ids)
 
           repo = "translations/messages.pot"
           tmp = "/tmp/messages.pot"
@@ -80,12 +91,25 @@ jobs:
               print(f"Missing {repo}")
               sys.exit(1)
 
-          if normalize(repo) != normalize(tmp):
-              print("translations/messages.pot is out of date. Run:")
-              print("  pybabel extract --sort-output -F babel.cfg -o translations/messages.pot setup.py octoprint_pandabreath tests")
-              print("  pybabel update -i translations/messages.pot -d translations -l de")
-              print("  pybabel update -i translations/messages.pot -d translations -l en")
+          repo_ids = extract_entries(repo)
+          tmp_ids = extract_entries(tmp)
+
+          added = tmp_ids - repo_ids
+          removed = repo_ids - tmp_ids
+
+          if added or removed:
+              print("translations/messages.pot is out of date.")
+              if added:
+                  print(f"  New msgids not in committed POT ({len(added)}):")
+                  for mid, ctx in sorted(added)[:10]:
+                      print(f"    + {mid!r}" + (f" [ctx={ctx!r}]" if ctx else ""))
+              if removed:
+                  print(f"  Removed msgids still in committed POT ({len(removed)}):")
+                  for mid, ctx in sorted(removed)[:10]:
+                      print(f"    - {mid!r}" + (f" [ctx={ctx!r}]" if ctx else ""))
+              print("Run: bash .scripts/compile_translations.sh")
               sys.exit(1)
+          print(f"translations/messages.pot is up to date ({len(repo_ids)} msgids).")
           PY
 
       - # Compile translation catalogs and copy to plugin directory
