@@ -10,16 +10,16 @@ The plugin talks to the Panda Breath over a WebSocket. You only enter the
 device address — the scheme (`ws://` vs `wss://`) and the `/ws` suffix are
 derived from the TLS toggle automatically.
 
-| Setting           | Default     | Description                                                                                                           |
-| ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| Setting           | Default     | Description                                                                                                          |
+| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
 | `transport`       | `client`    | `client` connects to the device's own WebSocket; `server` is only for Bambu-emulation (BIQU-Panda-Breath-Mod) setups |
-| `client_host`     | *(empty)*   | Host/IP of the Panda Breath device (client mode)                                                                    |
-| `bind_host`       | `127.0.0.1` | Local bind address (server mode)                                                                                    |
-| `bind_port`       | `8765`      | Local bind port (server mode)                                                                                       |
-| `host_ip`         | *(empty)*   | Device IP used in bind frames                                                                                       |
-| `serial_number`   | *(empty)*   | Device serial, for Bambu-emulation bind                                                                            |
-| `access_code`     | *(empty)*   | Device access code, for Bambu-emulation bind                                                                       |
-| `reconnect_delay` | `5.0`       | Seconds to wait before reconnecting after a drop                                                                   |
+| `client_host`     | *(empty)*   | Host/IP of the Panda Breath device (client mode)                                                                     |
+| `bind_host`       | `127.0.0.1` | Local bind address (server mode)                                                                                     |
+| `bind_port`       | `8765`      | Local bind port (server mode)                                                                                        |
+| `host_ip`         | *(empty)*   | Device IP used in bind frames                                                                                        |
+| `serial_number`   | *(empty)*   | Device serial, for Bambu-emulation bind                                                                              |
+| `access_code`     | *(empty)*   | Device access code, for Bambu-emulation bind                                                                         |
+| `reconnect_delay` | `5.0`       | Seconds to wait before reconnecting after a drop                                                                     |
 
 !!! note "Server mode is niche"
     Most users run **client mode**. Server mode exists for the
@@ -71,6 +71,22 @@ See [Safety](safety.md) for how these are enforced.
     persistent frame log only when you need a longer capture to debug
     protocol behaviour — it adds disk I/O and noise.
 
+## Drying presets
+
+`custom_presets` stores user-defined drying presets as a list of
+`{name, target, hours}` entries. They are a pure plugin convenience that
+fills the Custom target/timer fields — the device does not know about them.
+Manage them from the Drying tab or via the `save_custom_preset` /
+`delete_custom_preset` API commands (max 20 presets; names limited to
+letters, digits, spaces, `-` and `_`, 32 chars; target/timer bounds mirror
+the [device dry-mode limits](safety.md#device-input-limits)).
+
+## MQTT
+
+The MQTT bridge settings (`mqtt_enabled`, broker host/port/credentials,
+base topic, appearance-name suffix, allow-control) are documented on the
+dedicated [MQTT](mqtt.md) page.
+
 ## G-code integration (M141 / M191)
 
 When `gcode_integration` is enabled, PandaBreath intercepts chamber
@@ -79,8 +95,8 @@ chamber instead of forwarding them to the printer firmware (which usually
 cannot handle them):
 
 | G-code         | Meaning                          | Plugin behaviour                                                             |
-| -------------- | -------------------------------- | --------------------------------------------------------------------------- |
-| `M141 S<temp>` | Set chamber temperature          | Switches to **auto** mode, sets the target to `<temp>`                      |
+| -------------- | -------------------------------- | ---------------------------------------------------------------------------- |
+| `M141 S<temp>` | Set chamber temperature          | Switches to **auto** mode, sets the target to `<temp>`                       |
 | `M191 S<temp>` | Set chamber temperature and wait | Same re-targeting; the wait semantics are handled by the slicer/printer side |
 
 Both commands are **swallowed** after handling, so they are not forwarded to
@@ -98,20 +114,22 @@ The plugin exposes a `SimpleApiPlugin` interface. Commands that mutate state
 require the **Control** (or **Administer**) permission and are subject to the
 safety lock and observe-only mode.
 
-| Command                        | Parameters       | Notes                                                                                   |
-| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
-| `set_target`                   | `value`          | Chamber target (°C)                                                                      |
-| `set_mode`                     | `mode`           | `auto` / `manual` / `dry` / `standby`                                                    |
-| `set_heater`                   | `on`             | Power on/off; on is gated by the [printer-link barrier](safety.md#printer-link-barrier) |
-| `set_custom_dry`               | `value`, `hours` | Dry target + timer in one transaction                                                    |
-| `preset_pla` / `preset_petg`   | —                | Apply a built-in dry preset                                                              |
-| `start_drying` / `stop_drying` | —                | Control the dry cycle                                                                    |
-| `set_filter_threshold`         | `value`          | Filter-fan activation threshold                                                          |
-| `set_heater_threshold`         | `value`          | Heater activation threshold                                                              |
-| `scan_printers`                | —                | Trigger a printer scan                                                                   |
-| `refresh_settings`             | —                | Re-read device settings                                                                  |
-| `lock` / `unlock`              | —                | Engage/release the safety lock (Administer permission)                                   |
-| `emergency_stop`               | —                | Hard stop (bypasses observe-only)                                                        |
+| Command                        | Parameters               | Notes                                                                                   |
+| ------------------------------ | ------------------------ | --------------------------------------------------------------------------------------- |
+| `set_target`                   | `value`                  | Chamber target (°C)                                                                     |
+| `set_mode`                     | `mode`                   | `auto` / `manual` / `dry` / `standby`                                                   |
+| `set_heater`                   | `on`                     | Power on/off; on is gated by the [printer-link barrier](safety.md#printer-link-barrier) |
+| `set_custom_dry`               | `value`, `hours`         | Dry target + timer in one transaction                                                   |
+| `preset_pla` / `preset_petg`   | —                        | Apply a built-in dry preset                                                             |
+| `start_drying` / `stop_drying` | —                        | Control the dry cycle                                                                   |
+| `set_filter_threshold`         | `value`                  | Filter-fan activation threshold                                                         |
+| `set_heater_threshold`         | `value`                  | Heater activation threshold                                                             |
+| `scan_printers`                | —                        | Trigger a printer scan                                                                  |
+| `refresh_settings`             | —                        | Re-read device settings                                                                 |
+| `save_custom_preset`           | `name`, `value`, `hours` | Save (or replace) a user-defined drying preset                                          |
+| `delete_custom_preset`         | `name`                   | Delete a user-defined drying preset                                                     |
+| `lock` / `unlock`              | —                        | Engage/release the safety lock (Administer permission)                                  |
+| `emergency_stop`               | —                        | Hard stop, bypasses observe-only (Administer permission)                                |
 
 Mutating commands return **409** under observe-only and **423** when locked.
 
