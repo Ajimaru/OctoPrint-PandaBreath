@@ -113,11 +113,14 @@ Once you trust the connection:
 
 Enable this if your Panda Breath is already bound to an MQTT broker (for example via the device's **Bind a Broker** menu).
 
-| Setting                | Default            | Description                                                  |
-| ---------------------- | ------------------ | ------------------------------------------------------------ |
-| **MQTT Enabled**       | ⬜ disabled        | Routes operational control through MQTT when available.      |
-| **Broker Host / Port** | _(empty)_ / `1883` | Broker endpoint the plugin connects to.                      |
-| **Allow MQTT Control** | ✅ enabled         | Accepts inbound MQTT commands from the broker topic handler. |
+| Setting                 | Default                 | Description                                                                  |
+| ----------------------- | ----------------------- | ---------------------------------------------------------------------------- |
+| **MQTT Enabled**        | ⬜ disabled             | Routes operational control through MQTT when available.                      |
+| **Broker Host / Port**  | _(empty)_ / `1883`      | Broker endpoint the plugin connects to.                                      |
+| **Username / Password** | _(empty)_               | Broker credentials, if required. Admin-only settings.                        |
+| **Base Topic**          | `octoprint/pandabreath` | Plugin-owned topic namespace for its state/command topics.                   |
+| **Use Appearance Name** | ✅ enabled              | Appends OctoPrint's appearance name to the base topic (multi-instance safe). |
+| **Allow MQTT Control**  | ✅ enabled              | Accepts inbound MQTT commands from the broker topic handler.                 |
 
 When the MQTT bridge is active, chamber control writes are sent over MQTT; WebSocket remains active for setup/safety functions and status capture.
 

@@ -274,6 +274,19 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
     def _is_observe_only(self):
         return bool(getattr(self._adapter, "is_observe_only", lambda: False)())
 
+    def _ensure_unlocked(self):
+        """
+        Raise ``PermissionError`` if the safety lock is engaged.
+
+        Reads ``_locked`` under ``self._lock`` so the check cannot race a
+        concurrent lock()/unlock()/printer-link transition — the same
+        atomicity rule ``_check_printer_link`` documents for its own
+        state changes.
+        """
+        with self._lock:
+            if self._locked:
+                raise PermissionError("system locked")
+
     def set_target(self, value):
         """
         Push a new target temperature to the device.
@@ -291,8 +304,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         upper = min(DEVICE_TARGET_MAX, self._max_temp)
         if value > upper:
             raise ValueError(f"target exceeds max {upper:.1f}")
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_target", value=value)
@@ -304,8 +316,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         """Switch the work-mode on the device (auto/manual/dry)."""
         if mode not in VALID_MODES:
             raise ValueError("invalid mode")
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         with self._lock:
@@ -333,13 +344,18 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
 
     def set_heater(self, on):
         """Turn the heater on or off, honouring lock and observe-only."""
-        if on and self._locked:
-            raise PermissionError("system locked")
-        if on and not self._printer_link_ok():
-            # Refuse to power the chamber while the printer link is
-            # binding/unreachable — the same guarantee the status loop
-            # enforces by forcing the heater off.
-            raise PermissionError("printer link not ready")
+        if on:
+            # Check lock + printer link in one lock acquisition so the
+            # decision cannot straddle a concurrent lock()/printer-state
+            # transition.
+            with self._lock:
+                if self._locked:
+                    raise PermissionError("system locked")
+                if not self._printer_link_ok():
+                    # Refuse to power the chamber while the printer link is
+                    # binding/unreachable — the same guarantee the status
+                    # loop enforces by forcing the heater off.
+                    raise PermissionError("printer link not ready")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._command_heater(bool(on))
@@ -416,8 +432,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise ValueError(
                 f"dry timer must be {DEVICE_DRY_TIMER_MIN}-" f"{DEVICE_DRY_TIMER_MAX} h"
             )
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_dry_target", value=value)
@@ -443,16 +458,14 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
 
     def select_preset_pla(self):
         """Select the device's built-in PLA dry preset."""
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("preset_pla")
 
     def select_preset_petg(self):
         """Select the device's built-in PETG/ABS dry preset."""
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("preset_petg")
@@ -471,8 +484,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 f"filter threshold must be {DEVICE_FILTER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_FILTER_THRESHOLD_MAX:.0f}"
             )
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_filter_threshold", value=value)
@@ -485,8 +497,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 f"heater threshold must be {DEVICE_HEATER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_HEATER_THRESHOLD_MAX:.0f}"
             )
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_heater_threshold", value=value)
@@ -498,8 +509,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         Mirrors the WebUI "Start Drying" button — a bare ``isrunning=1``
         write, no commit frame.
         """
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("start_drying")
@@ -514,8 +524,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
 
     def stop_drying(self):
         """Stop an in-progress dry cycle on the device."""
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("stop_drying")
@@ -563,11 +572,20 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         # the data flow recovered, so the safety reason is no longer
         # valid. Manual locks (reason='user') and emergency stops
         # (reason='estop') stay engaged until the operator releases them.
-        if self._locked and self._last_safety_reason == "timeout":
+        # Check-and-clear happens atomically under the lock — a separate
+        # read followed by unlock() could wrongly release a user/estop
+        # lock engaged in the gap.
+        with self._lock:
+            released_watchdog_lock = (
+                self._locked and self._last_safety_reason == "timeout"
+            )
+            if released_watchdog_lock:
+                self._locked = False
+                self._last_safety_reason = None
+        if released_watchdog_lock:
             self._log.info(
                 "ChamberController: data flow recovered, releasing watchdog lock"
             )
-            self.unlock()
         with self._lock:
             if chamber_temp is not None:
                 try:

@@ -14,7 +14,10 @@
 import logging
 import os
 import re
+import sys
 import threading
+import time
+import urllib.parse
 from typing import TYPE_CHECKING
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -199,6 +202,12 @@ class PandabreathPlugin(
         self._frame_log = None  # type: FrameLog | None
         self._mqtt_bridge = None  # type: MqttBridge | None
         self._stack_lock = threading.Lock()
+        # Serializes whole stop+start cycles. Two quick settings saves each
+        # spawn a restart thread; without this their _stop_stack/_start_stack
+        # calls can interleave so the second _start_stack overwrites
+        # self._adapter while the first adapter is still running — a leaked
+        # thread that keeps pushing status into a dead controller.
+        self._restart_lock = threading.Lock()
         # Throttle frame broadcasts: an idle Panda emits status frames
         # every few seconds, but a chatty bind sequence can burst. Cap
         # the per-second push rate so a busy plugin-message channel
@@ -229,7 +238,7 @@ class PandabreathPlugin(
             # Observe-only is the safe default. The adapter connects,
             # binds and polls but suppresses every write frame, the
             # controller stops issuing its own heater on/off commands,
-            # and the HTTP API rejects mutating commands with 423.
+            # and the HTTP API rejects mutating commands with 409.
             # Disable this only after verifying real-hardware behaviour
             # from the logs.
             "observe_only": True,
@@ -330,8 +339,11 @@ class PandabreathPlugin(
 
     def on_after_startup(self):
         """Bring up the protocol stack and the safety watchdog."""
-        self._refresh_frame_log()
-        self._start_stack()
+        # Same serialization as _restart_stack — a settings save that lands
+        # during startup must not interleave its stop/start with ours.
+        with self._restart_lock:
+            self._refresh_frame_log()
+            self._start_stack()
         self._start_watchdog()
         threading.Thread(target=self._fetch_latest_fw, daemon=True).start()
 
@@ -814,12 +826,15 @@ class PandabreathPlugin(
         elif command == "refresh_settings":
             c.refresh_settings()
         elif command == "lock":
-            c.lock(reason=source)
+            # The reason is the documented ``user`` for every operator-
+            # triggered lock; the transport (api/mqtt) only goes to the log.
+            self._logger.info("PandaBreath: safety lock engaged via %s", source)
+            c.lock(reason="user")
         elif command == "unlock":
             c.unlock()
         elif command == "emergency_stop":
             self._logger.warning("PandaBreath: EMERGENCY STOP triggered via %s", source)
-            c.emergency_stop(reason="navbar_estop")
+            c.emergency_stop(reason="estop")
         else:
             return False
         return True
@@ -1125,8 +1140,6 @@ class PandabreathPlugin(
         multiple OctoPrint instances on the same broker stay separate.
         Otherwise uses mqtt_base_topic verbatim.
         """
-        import urllib.parse
-
         base = (s.get(["mqtt_base_topic"]) or self._DEFAULT_BASE_TOPIC).rstrip("/")
         if not s.get_boolean(["mqtt_use_appearance_name"]):
             return base
@@ -1240,9 +1253,10 @@ class PandabreathPlugin(
                 self._logger.exception("PandaBreath: adapter stop failed")
 
     def _restart_stack(self):
-        self._refresh_frame_log()
-        self._stop_stack()
-        self._start_stack()
+        with self._restart_lock:
+            self._refresh_frame_log()
+            self._stop_stack()
+            self._start_stack()
 
     def _refresh_frame_log(self):
         """
@@ -1327,9 +1341,7 @@ class PandabreathPlugin(
     def _on_frame(self, direction, frame):
         # Rate-limit to ~5 broadcasts/s. UI catches up via the debug API
         # on next refresh if we drop a burst.
-        import time as _time
-
-        now = _time.monotonic()
+        now = time.monotonic()
         with self._frame_push_lock:
             if now - self._frame_push_last < 0.2:
                 return
@@ -1337,7 +1349,7 @@ class PandabreathPlugin(
         self._send_plugin_message(
             {
                 "kind": "frame",
-                "ts": _time.time(),
+                "ts": time.time(),
                 "dir": direction,
                 "frame": frame,
             }
@@ -1416,8 +1428,6 @@ def __plugin_load__():  # noqa: N807  (mandatory OctoPrint loader hook name)
     # after this function returns. Done via ``setattr`` on the module
     # object so the assignment is explicit and no ``global`` statement is
     # needed.
-    import sys
-
     impl = PandabreathPlugin()
     module = sys.modules[__name__]
     setattr(module, "__plugin_implementation__", impl)

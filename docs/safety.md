@@ -62,7 +62,8 @@ Panda Breath's own WebUI "Work Mode off" toggle uses, which is the only stop
 the device firmware exposes. The firmware then stops any running dry cycle and
 turns the heater off internally.
 
-- Exposed as a navbar button (toggle with the `navbar_estop_enabled` setting).
+- Exposed in the sidebar, the tab's Safety subtab, and optionally the navbar
+  (toggle the navbar button with the `navbar_estop_enabled` setting).
 - Engages a manual-class lock (`estop`) that must be released manually.
 - Never surfaces transport errors: the internal state flips to locked even if
   the wire frame fails to send, so the safety guarantee holds.
