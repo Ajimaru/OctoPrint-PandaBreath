@@ -476,11 +476,19 @@ class PandaProtocolAdapter:
                 # mode it is a synchronous websocket-client socket. The
                 # branch is selected by whether a loop is active, but the
                 # type checker cannot see that — cast to silence it.
+                # Sends are serialized by the event loop itself, so no
+                # lock is held while waiting (a loop callback grabbing
+                # ``_send_lock`` would otherwise deadlock against us).
                 asyncio.run_coroutine_threadsafe(
                     cast(Any, sock.send(frame)), loop
                 ).result(timeout=2.0)
             else:
-                sock.send(frame)
+                # websocket-client sockets are not safe for concurrent
+                # writers: the run-loop keepalive and API-thread commands
+                # can send at the same time and interleave frame bytes.
+                # Hold the send lock across the whole write.
+                with self._send_lock:
+                    sock.send(frame)
             self._record_frame("tx", frame)
             return True
         except Exception as exc:
@@ -765,21 +773,28 @@ class PandaProtocolAdapter:
             ssl_ctx = self._build_ssl_context(server_side=True)
         except Exception as exc:
             self._log.error("PandaProtocolAdapter: TLS setup failed: %s", exc)
+            self._active_loop = None
             return
         scheme = "wss" if ssl_ctx is not None else "ws"
-        async with wss.serve(_on_client, self._host, self._port, ssl=ssl_ctx):
-            self._log.info(
-                "PandaProtocolAdapter: listening on %s://%s:%s",
-                scheme,
-                self._host,
-                self._port,
-            )
-            watcher = aio.create_task(_stop_watcher())
-            try:
-                await stop_future
-            finally:
-                watcher.cancel()
-        self._active_loop = None
+        try:
+            async with wss.serve(_on_client, self._host, self._port, ssl=ssl_ctx):
+                self._log.info(
+                    "PandaProtocolAdapter: listening on %s://%s:%s",
+                    scheme,
+                    self._host,
+                    self._port,
+                )
+                watcher = aio.create_task(_stop_watcher())
+                try:
+                    await stop_future
+                finally:
+                    watcher.cancel()
+        finally:
+            # Always drop the loop reference, including on the exception
+            # path back into _run_server — otherwise ``_send_raw`` would
+            # keep scheduling coroutines onto a loop that asyncio.run has
+            # already closed.
+            self._active_loop = None
 
     # ---- client mode (talks to ws:<panda_ip>/ws) --------------------
 
@@ -826,17 +841,21 @@ class PandaProtocolAdapter:
                 self._reset_error_log_state("connected")
 
                 # Bind handshake — see Panda.py:644-665. Without this the
-                # heater ignores subsequent settings frames.
+                # heater ignores subsequent settings frames. All direct
+                # writes from this thread take the send lock so they cannot
+                # interleave with API-thread sends via ``_send_raw``.
                 bind_frame = self._build_frame("bind", {}) or {}
                 if bind_frame.get("printer"):
                     payload = json.dumps(bind_frame)
-                    ws.send(payload)
+                    with self._send_lock:
+                        ws.send(payload)
                     self._record_frame("tx", payload)
                 # Pull full settings once so the controller has a complete
                 # snapshot — get_settings returns more fields than the
                 # lightweight ``query:1`` poll.
                 getset_payload = json.dumps(self._build_frame("get_settings", {}))
-                ws.send(getset_payload)
+                with self._send_lock:
+                    ws.send(getset_payload)
                 self._record_frame("tx", getset_payload)
 
                 # In client mode we initiated the connection, so the remote
@@ -866,7 +885,8 @@ class PandaProtocolAdapter:
                             # path — exactly what we want when the
                             # socket is dead.
                             payload = json.dumps(self._build_frame("query", {}))
-                            ws.send(payload)
+                            with self._send_lock:
+                                ws.send(payload)
                             self._record_frame("tx", payload)
                         continue
                     if not raw:
