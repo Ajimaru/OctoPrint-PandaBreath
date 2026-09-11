@@ -175,8 +175,8 @@ class PandabreathPlugin(
     """
     Wire the Panda Breath protocol adapter and chamber controller into OctoPrint.
 
-    Hooks into OctoPrint's lifecycle, settings, API, event bus and
-    GCODE-queuing hook.
+    Hooks into OctoPrint's lifecycle, settings, API, event bus, GCODE-
+    queuing hook and print-starting hook.
     """
 
     # OctoPrint injects these attributes after construction (see
@@ -510,6 +510,8 @@ class PandabreathPlugin(
             "preset_petg": [],
             "start_drying": [],
             "stop_drying": [],
+            "prepare_drying": [],
+            "cancel_prepare_drying": [],
             "set_filter_threshold": ["value"],
             "set_heater_threshold": ["value"],
             "scan_printers": [],
@@ -817,6 +819,10 @@ class PandabreathPlugin(
             c.start_drying()
         elif command == "stop_drying":
             c.stop_drying()
+        elif command == "prepare_drying":
+            c.prepare_drying()
+        elif command == "cancel_prepare_drying":
+            c.cancel_prepare_drying()
         elif command == "set_filter_threshold":
             c.set_filter_threshold(data.get("value"))
         elif command == "set_heater_threshold":
@@ -901,7 +907,89 @@ class PandabreathPlugin(
                         "PandaBreath: failed to apply auto-off at print end"
                     )
 
-    # ---- GCODE hook (M141 / M191) -----------------------------------
+    # ---- Print-start hook --------------------------------------------
+
+    # Connector ids (OctoPrint's ``connection_state["connector"]``) whose
+    # GCODE actually flows through the serial_connector plugin's
+    # ``octoprint.comm.protocol.gcode.queuing`` hook — the hook
+    # hook_gcode_queuing below relies on. Third-party connectors (Moonraker,
+    # Prusa Connect, ...) send GCODE straight to their own backend and never
+    # invoke it, so the movement/heater block in hook_gcode_queuing is a
+    # no-op there; print-starting stays enforced everywhere since it isn't
+    # connector-specific. See _gcode_hook_effective() and the
+    # ``gcode_hook_effective`` snapshot field the UI warns on.
+    _SERIAL_CONNECTOR_IDS = ("serial",)
+
+    def _gcode_hook_effective(self):
+        """
+        Best-effort check: does hook_gcode_queuing actually see this
+        printer's GCODE?
+
+        OctoPrint 2.0's connector architecture has no connector-agnostic
+        hook for commands()/home()/jog() — only the built-in serial
+        connector still routes through the legacy
+        octoprint.comm.protocol.gcode.queuing hook. Anything else (Moonraker,
+        etc.) bypasses it entirely, so the heating/movement block below
+        cannot be relied on there. Fails open (True) if the connector can't
+        be determined — matches the rest of this module's fail-open stance
+        and avoids a false "unprotected" warning on ordinary serial setups
+        where introspection hiccups.
+        """
+        printer = getattr(self, "_printer", None)
+        if printer is None:
+            return True
+        try:
+            state = printer.connection_state
+            connector = state.get("connector") if isinstance(state, dict) else None
+        except Exception:  # pylint: disable=broad-exception-caught
+            self._logger.debug(
+                "PandaBreath: connector-type probe failed", exc_info=True
+            )
+            return True
+        if connector is None:
+            return True
+        return connector in self._SERIAL_CONNECTOR_IDS
+
+    def hook_print_starting(  # pylint: disable=unused-argument
+        self, comm_instance, filename, user, *args, **kwargs
+    ):
+        """
+        Refuse to start a print job while the drying interlock is armed.
+
+        Signature dictated by OctoPrint's ``octoprint.printer.print.starting``
+        hook contract. Returning a non-empty string aborts the print start
+        and surfaces the string as the error shown to the user; returning
+        ``None`` allows it. Fails open (returns None) if the controller
+        isn't up — the existing drying interlock (heat/movement block) is
+        the backstop in that case. Connector-agnostic: print start always
+        goes through OctoPrint core regardless of which connector plugin is
+        active, unlike hook_gcode_queuing below.
+        """
+        controller = self._controller
+        if controller is None:
+            return None
+        try:
+            if controller.is_drying_locked():
+                return (
+                    "PandaBreath: cannot start a print while drying mode is "
+                    "prepared/active. Stop drying first."
+                )
+        except Exception:  # pylint: disable=broad-exception-caught
+            self._logger.debug(
+                "PandaBreath: drying-lock probe failed in print-starting hook",
+                exc_info=True,
+            )
+        return None
+
+    # ---- GCODE hook (M141 / M191, drying interlock) -------------------
+
+    # GCODE codes that move or home an axis — blocked while the drying
+    # interlock is armed so a parked bed/toolhead cannot be driven back
+    # into the chamber's heating path.
+    _DRYING_BLOCKED_MOVEMENT_GCODES = ("G28", "G0", "G1")
+    # GCODE codes that command a heater — blocked for the same reason
+    # (M104/M109 hotend, M140/M190 bed).
+    _DRYING_BLOCKED_HEATER_GCODES = ("M104", "M109", "M140", "M190")
 
     def hook_gcode_queuing(  # pylint: disable=unused-argument
         self,
@@ -914,7 +1002,8 @@ class PandabreathPlugin(
         **kwargs,
     ):
         """
-        Intercept M141/M191 from the gcode stream and re-target the chamber.
+        Intercept M141/M191 from the gcode stream and re-target the chamber;
+        also enforce the drying interlock against heating/movement GCODE.
 
         The full signature is dictated by OctoPrint's
         ``octoprint.comm.protocol.gcode.queuing`` hook contract; all positional
@@ -924,6 +1013,26 @@ class PandabreathPlugin(
         """
         if self._controller is None:
             return None
+        if gcode in self._DRYING_BLOCKED_MOVEMENT_GCODES or (
+            gcode in self._DRYING_BLOCKED_HEATER_GCODES
+        ):
+            try:
+                locked = self._controller.is_drying_locked()
+            except Exception:  # pylint: disable=broad-exception-caught
+                locked = False
+                self._logger.debug(
+                    "PandaBreath: drying-lock probe failed in gcode hook",
+                    exc_info=True,
+                )
+            if locked:
+                self._logger.info(
+                    "PandaBreath: blocked %s while drying interlock armed",
+                    gcode,
+                )
+                # Swallow the command instead of forwarding it — the bed/
+                # toolhead was parked by the operator via "Prepare Drying"
+                # and must not move or heat until drying is stopped.
+                return (None,)
         if not self._settings.get_boolean(["gcode_integration"]):
             return None
         if gcode not in ("M141", "M191"):
@@ -1312,6 +1421,12 @@ class PandabreathPlugin(
         snapshot["mqtt_enabled"] = self._settings.get_boolean(["mqtt_enabled"])
         snapshot["mqtt_active"] = self._mqtt_bridge is not None
         snapshot["mqtt_supported"] = fw_supports_mqtt(snapshot.get("fw_version"))
+        # True unless the active printer connector is known to bypass
+        # hook_gcode_queuing (see _gcode_hook_effective) — the UI uses this
+        # to warn that the drying interlock can't back its heating/movement
+        # block with a server-side GCODE block on this connector, only the
+        # print-starting hook (which is connector-agnostic) still applies.
+        snapshot["gcode_hook_effective"] = self._gcode_hook_effective()
 
     def _push_status(self, snapshot):
         snapshot["latest_fw_version"] = self._latest_fw_version
@@ -1439,6 +1554,7 @@ def __plugin_load__():  # noqa: N807  (mandatory OctoPrint loader hook name)
                 impl.get_update_information
             ),
             "octoprint.comm.protocol.gcode.queuing": impl.hook_gcode_queuing,
+            "octoprint.printer.print.starting": impl.hook_print_starting,
             "octoprint.access.permissions": impl.get_additional_permissions,
         },
     )

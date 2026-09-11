@@ -301,6 +301,58 @@ def test_start_stop_drying(controller, adapter):
     assert adapter.command_names() == ["start_drying", "stop_drying"]
 
 
+# ---- drying interlock (prepare_drying / is_drying_locked) ---------------
+
+
+def test_is_drying_locked_false_by_default(controller):
+    assert controller.is_drying_locked() is False
+
+
+def test_prepare_drying_requires_dry_mode(controller):
+    with pytest.raises(ValueError):
+        controller.prepare_drying()
+    assert controller.is_drying_locked() is False
+
+
+def test_prepare_drying_arms_lock_in_dry_mode(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    assert controller.is_drying_locked() is True
+    assert controller.snapshot()["drying_prepared"] is True
+    assert controller.snapshot()["drying_locked"] is True
+
+
+def test_cancel_prepare_drying_disarms(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    controller.cancel_prepare_drying()
+    assert controller.is_drying_locked() is False
+    assert controller.snapshot()["drying_prepared"] is False
+
+
+def test_switching_mode_away_from_dry_disarms_lock(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    controller.set_mode(MODE_AUTO)
+    assert controller.is_drying_locked() is False
+    assert controller.snapshot()["drying_prepared"] is False
+
+
+def test_stop_drying_disarms_lock(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    controller.stop_drying()
+    assert controller.is_drying_locked() is False
+    assert controller.snapshot()["drying_prepared"] is False
+
+
+def test_prepare_drying_blocked_when_locked(controller):
+    controller.set_mode(MODE_DRY)
+    controller.lock(reason="user")
+    with pytest.raises(PermissionError):
+        controller.prepare_drying()
+
+
 def test_scan_printers(controller, adapter):
     controller.scan_printers()
     assert adapter.last_command() == ("scan_printers", {})

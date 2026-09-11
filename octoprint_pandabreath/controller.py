@@ -150,6 +150,15 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._is_running = None
         self._printer_type = None
         self._printer_state = None
+        # Set by prepare_drying() once the operator has manually parked the
+        # bed/toolhead in a safe position for this printer's kinematics (the
+        # plugin cannot know that position itself — it varies by printer
+        # architecture, e.g. bed lowered and toolheads parked on a
+        # moving-bed design vs. toolhead raised and clear on a bed-slinger).
+        # Cleared on stop_drying() and on any set_mode() away from dry.
+        # While True (and mode == dry) the plugin-level interlock refuses
+        # print starts and blocks heating/movement GCODE.
+        self._drying_prepared = False
         # Catch-all for low-frequency diagnostic fields (network blocks,
         # paired-printer identity, language) — kept loose so adding a new
         # field doesn't require a controller change.
@@ -243,6 +252,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 "diagnostics": dict(self._diagnostics),
                 "responses": list(self._responses),
                 "is_running": self._is_running,
+                "drying_prepared": self._drying_prepared,
+                "drying_locked": self._mode == MODE_DRY and self._drying_prepared,
             }
 
     def _extrapolated_dry_remaining(self):
@@ -321,7 +332,48 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise PermissionError("observe-only mode")
         with self._lock:
             self._mode = mode
+            if mode != MODE_DRY:
+                # Leaving dry-mode always drops the prepared/armed state —
+                # the parked position was only meaningful for the drying
+                # interlock that just ended.
+                self._drying_prepared = False
         self._send("set_mode", mode=mode)
+        self._notify()
+
+    def is_drying_locked(self):
+        """
+        True while the print/heat/movement interlock must be enforced.
+
+        Requires both mode == dry and an operator-confirmed
+        prepare_drying() — merely selecting dry-mode does not park the
+        bed/toolhead by itself, so the interlock only arms once the
+        operator has confirmed the printer is in a safe position.
+        """
+        with self._lock:
+            return self._mode == MODE_DRY and self._drying_prepared
+
+    def prepare_drying(self):
+        """
+        Arm the drying interlock after the operator has parked the printer.
+
+        Purely a plugin-side confirmation flag — sends nothing to the
+        device. The actual parking (bed/toolhead position) is printer-
+        specific and must be done by the operator beforehand; the plugin
+        cannot know the safe position for arbitrary kinematics. Only
+        meaningful in dry-mode; raises if the mode is not dry so the UI
+        cannot arm the interlock in the wrong context.
+        """
+        self._ensure_unlocked()
+        with self._lock:
+            if self._mode != MODE_DRY:
+                raise ValueError("switch to dry-mode before preparing drying")
+            self._drying_prepared = True
+        self._notify()
+
+    def cancel_prepare_drying(self):
+        """Disarm the drying interlock without changing mode."""
+        with self._lock:
+            self._drying_prepared = False
         self._notify()
 
     def _printer_link_ok(self):
@@ -532,6 +584,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         # wait forever for an isrunning=0 echo that already reads 0.
         with self._lock:
             self._is_running = False
+            self._drying_prepared = False
         self._notify()
 
     def scan_printers(self):

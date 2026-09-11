@@ -154,3 +154,56 @@ def test_heating_handles_missing_temps():
     """Empty/None temperatures do not block drying."""
     assert getattr(_plugin(TempPrinter({})), "_printer_is_busy")() is False
     assert getattr(_plugin(TempPrinter(None)), "_printer_is_busy")() is False
+
+
+# ---- _gcode_hook_effective (connector-type probe) ----------------------
+#
+# OctoPrint 2.0's connector architecture (serial_connector, Moonraker, ...)
+# has no connector-agnostic hook for commands()/home()/jog() — only the
+# built-in serial connector still routes GCODE through
+# octoprint.comm.protocol.gcode.queuing, which hook_gcode_queuing relies on
+# for the heating/movement half of the drying interlock. This probe tells
+# the UI when that half cannot be enforced so it can warn instead of
+# implying a guarantee that doesn't hold.
+
+
+class ConnectorPrinter(FakePrinter):
+    """Idle printer that also reports a connection_state dict."""
+
+    def __init__(self, connector, **flags):
+        super().__init__(**flags)
+        self._connector = connector
+
+    @property
+    def connection_state(self):
+        """Return a connection_state dict with the configured connector id."""
+        return {"connector": self._connector, "state": "Operational"}
+
+
+def test_gcode_hook_effective_for_serial_connector():
+    p = ConnectorPrinter("serial")
+    assert getattr(_plugin(p), "_gcode_hook_effective")() is True
+
+
+def test_gcode_hook_not_effective_for_other_connector():
+    p = ConnectorPrinter("moonraker")
+    assert getattr(_plugin(p), "_gcode_hook_effective")() is False
+
+
+def test_gcode_hook_effective_when_connector_unknown():
+    """Fails open (True) rather than flag a false "unprotected" warning."""
+    p = ConnectorPrinter(None)
+    assert getattr(_plugin(p), "_gcode_hook_effective")() is True
+
+
+def test_gcode_hook_effective_without_printer():
+    assert getattr(_plugin(None), "_gcode_hook_effective")() is True
+
+
+def test_gcode_hook_effective_fails_open_on_error():
+    class RaisingConnectionState(FakePrinter):
+        @property
+        def connection_state(self):
+            raise RuntimeError("boom")
+
+    assert getattr(_plugin(RaisingConnectionState()), "_gcode_hook_effective")() is True

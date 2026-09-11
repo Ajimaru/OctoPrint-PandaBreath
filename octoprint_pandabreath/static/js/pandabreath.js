@@ -29,33 +29,62 @@ $(function () {
         // temperatureViewModel exposes a `temperatures` observable keyed by
         // tool0/bed/... each with `actual`/`target` arrays (latest sample
         // last); fall back to plain numbers defensively.
-        self.octoprintHeating = ko.pureComputed(function () {
+        var _latestTempSample = function (series) {
+            var v = ko.unwrap(series);
+            if (Array.isArray(v)) {
+                var last = v[v.length - 1];
+                // Samples are usually {x: time, y: value} pairs.
+                if (last && typeof last === "object") return last.y;
+                return last;
+            }
+            return v;
+        };
+
+        // True if any entry in a name-filtered subset of the paired
+        // printer's temperatures has a target set or is still hot.
+        // ``match`` receives the entry name (e.g. "bed", "tool0") and
+        // decides whether it counts towards this check.
+        var _anyHot = function (match) {
             var tv = self.octoprintTemps;
             if (!tv || !tv.temperatures) return false;
             var temps = ko.unwrap(tv.temperatures) || {};
-            var latest = function (series) {
-                var v = ko.unwrap(series);
-                if (Array.isArray(v)) {
-                    var last = v[v.length - 1];
-                    // Samples are usually {x: time, y: value} pairs.
-                    if (last && typeof last === "object") return last.y;
-                    return last;
-                }
-                return v;
-            };
             for (var name in temps) {
                 if (!Object.prototype.hasOwnProperty.call(temps, name))
                     continue;
-                if (name === "chamber") continue; // Panda chamber, not printer
+                if (!match(name)) continue;
                 var entry = temps[name];
                 if (!entry) continue;
-                var target = latest(entry.target) || 0;
-                var actual = latest(entry.actual) || 0;
+                var target = _latestTempSample(entry.target) || 0;
+                var actual = _latestTempSample(entry.actual) || 0;
                 if (target > 0 || actual >= PRINTER_HOT_THRESHOLD_C) {
                     return true;
                 }
             }
             return false;
+        };
+
+        // True if the paired printer's bed or any hotend has a target set or
+        // is still hot — mirrors the backend's _printer_is_heating(). The
+        // temperatureViewModel exposes a `temperatures` observable keyed by
+        // tool0/bed/... each with `actual`/`target` arrays (latest sample
+        // last); fall back to plain numbers defensively.
+        self.octoprintHeating = ko.pureComputed(function () {
+            return _anyHot(function (name) {
+                return name !== "chamber"; // Panda chamber, not printer
+            });
+        });
+
+        // Split out for the Prepare-Drying confirmation dialog, which asks
+        // the operator to confirm bed and toolhead(s) are cold separately.
+        self.octoprintBedHot = ko.pureComputed(function () {
+            return _anyHot(function (name) {
+                return name === "bed";
+            });
+        });
+        self.octoprintToolsHot = ko.pureComputed(function () {
+            return _anyHot(function (name) {
+                return name.indexOf("tool") === 0;
+            });
         });
 
         // True while the paired OctoPrint printer is running a job OR
@@ -135,6 +164,18 @@ $(function () {
         self.isRunning = ko.observable(null);
         self.printerType = ko.observable(null);
         self.printerState = ko.observable(null);
+        // Operator-confirmed "bed/toolhead parked" flag (see prepareDrying
+        // below) and the derived interlock state mirrored from the
+        // controller snapshot — surfaced separately so the UI can show
+        // "prepared, not yet locked" vs. "locked" distinctly if needed.
+        self.dryingPrepared = ko.observable(false);
+        self.dryingLocked = ko.observable(false);
+        // False when the active printer connector (e.g. a Moonraker/Klipper
+        // bridge) is known to bypass the backend's GCODE-level heating/
+        // movement block — only the connector-agnostic print-start block
+        // still applies there. Defaults true so the warning doesn't flash
+        // on before the first snapshot arrives.
+        self.gcodeHookEffective = ko.observable(true);
 
         // MQTT bridge state (firmware V1.0.4+). The settings template is
         // bound to the SettingsViewModel (custom_bindings: False), so these
@@ -602,6 +643,12 @@ $(function () {
                 }
             }
             if ("observe_only" in state) self.observeOnly(!!state.observe_only);
+            if ("drying_prepared" in state)
+                self.dryingPrepared(!!state.drying_prepared);
+            if ("drying_locked" in state)
+                self.dryingLocked(!!state.drying_locked);
+            if ("gcode_hook_effective" in state)
+                self.gcodeHookEffective(state.gcode_hook_effective !== false);
             if ("fw_version" in state) self.fwVersion(state.fw_version);
             if ("latest_fw_version" in state && state.latest_fw_version)
                 self.latestFwVersion(state.latest_fw_version);
@@ -1113,6 +1160,92 @@ $(function () {
         self.stopDrying = function () {
             post("stop_drying", {}, { autoRefresh: true });
         };
+        // ---- Prepare-drying dialog (spans prepare → start → stop) -----
+        //
+        // "Prepare Drying" opens a single modal that stays open for the
+        // whole drying session instead of a one-shot confirmation:
+        //   1. checklist step — operator confirms bed/toolhead(s) are
+        //      parked safely (the plugin cannot know the right position
+        //      for arbitrary printer kinematics — see prepare_drying() in
+        //      controller.py) and the bed/hotend temperatures are cold;
+        //   2. once confirmed, prepare_drying() arms the interlock and the
+        //      modal switches to showing preset/Start/Stop controls (reusing
+        //      the same observables/commands as the tab body) plus the live
+        //      countdown;
+        //   3. Stop Drying stops the cycle, disarms the interlock and
+        //      closes the modal;
+        //   4. the modal's own close (x) never closes it directly — it asks
+        //      "stop drying, or keep going" first. Clicking the backdrop
+        //      does nothing (static backdrop, keyboard disabled).
+        self.prepareDryingParkedConfirmed = ko.observable(false);
+        // True once prepare_drying() has been confirmed for the *current*
+        // modal session — distinct from the server-side dryingPrepared,
+        // which can already be true on open (e.g. a page reload while
+        // prepared) and would otherwise skip straight past the checklist.
+        self.prepareDryingModalArmed = ko.observable(false);
+        // Drives the close-confirmation sub-panel ("stop drying, or keep
+        // going") triggered by the modal's own close (x).
+        self.prepareDryingAskCloseConfirm = ko.observable(false);
+
+        self.prepareDrying = function () {
+            self.prepareDryingParkedConfirmed(false);
+            self.prepareDryingAskCloseConfirm(false);
+            // Skip the checklist if the interlock is already armed from a
+            // prior confirmation this page load didn't see closed (e.g.
+            // navigated away and back) — go straight to the control step.
+            self.prepareDryingModalArmed(!!self.dryingPrepared());
+            // static backdrop + no keyboard: clicking outside or pressing
+            // Escape must not close this modal, only the explicit buttons
+            // (and the close-confirmation flow) may.
+            $("#pandabreath_prepare_drying_modal").modal({
+                backdrop: "static",
+                keyboard: false,
+                show: true,
+            });
+        };
+        self.prepareDryingBedOk = ko.pureComputed(function () {
+            return !self.octoprintBedHot();
+        });
+        self.prepareDryingToolsOk = ko.pureComputed(function () {
+            return !self.octoprintToolsHot();
+        });
+        self.prepareDryingCanConfirm = ko.pureComputed(function () {
+            return (
+                self.prepareDryingParkedConfirmed() &&
+                self.prepareDryingBedOk() &&
+                self.prepareDryingToolsOk()
+            );
+        });
+        self.confirmPrepareDrying = function () {
+            if (!self.prepareDryingCanConfirm()) return;
+            post("prepare_drying", {}, { autoRefresh: true });
+            self.prepareDryingModalArmed(true);
+        };
+        // Reachable only from the close-confirmation sub-panel ("keep
+        // going" — i.e. cancel the close, not the drying session).
+        self.prepareDryingKeepGoing = function () {
+            self.prepareDryingAskCloseConfirm(false);
+        };
+        // "Stop drying" both inside the control step and as the close-
+        // confirmation's "stop drying" choice: stops the cycle, disarms
+        // the interlock server-side and actually closes the modal.
+        self.stopDryingAndClose = function () {
+            post("stop_drying", {}, { autoRefresh: true });
+            post("cancel_prepare_drying", {}, { autoRefresh: true });
+            self.prepareDryingAskCloseConfirm(false);
+            self.prepareDryingModalArmed(false);
+            $("#pandabreath_prepare_drying_modal").modal("hide");
+        };
+        // The modal's own (x) button. Before the checklist is confirmed
+        // there is nothing armed yet, so close outright; once armed, ask
+        // "stop drying, or keep going" instead of closing directly.
+        self.requestClosePrepareDrying = function () {
+            if (!self.prepareDryingModalArmed()) {
+                $("#pandabreath_prepare_drying_modal").modal("hide");
+                return;
+            }
+            self.prepareDryingAskCloseConfirm(true);
+        };
         // True when the device is actively drying — surfaces from the
         // isrunning flag in the snapshot.
         self.dryingActive = ko.pureComputed(function () {
@@ -1133,6 +1266,17 @@ $(function () {
         });
         self.canStopDrying = ko.pureComputed(function () {
             return self.controlsEnabled() && self.dryingActive();
+        });
+        // "Prepare Drying" opens the modal — offered in dry-mode while the
+        // printer isn't busy. Stays enabled once already prepared/active so
+        // the operator can reopen the modal (e.g. after navigating away) to
+        // reach Start/Stop or the close-confirmation again.
+        self.canPrepareDrying = ko.pureComputed(function () {
+            return (
+                self.controlsEnabled() &&
+                (self.dryingPrepared() ||
+                    (!self.octoprintBusy() && self.mode() === "dry"))
+            );
         });
         // Convenience gate for any dry-mode write: presets, custom inputs
         // and Apply Custom are only meaningful when the device is in dry

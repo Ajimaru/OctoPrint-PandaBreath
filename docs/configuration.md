@@ -108,6 +108,13 @@ still subject to `max_temp` and the device limits.
     UI. If the safety lock is engaged or the printer link is not bound, the
     re-target is refused exactly as a manual change would be.
 
+This same `gcode.queuing` hook also enforces the printer-side half of the
+[drying interlock](safety.md#drying-interlock): once armed, `M104`/`M109`/
+`M140`/`M190` (heating) and `G28`/`G0`/`G1` (movement/homing) are swallowed
+regardless of `gcode_integration`'s setting. This only applies while
+OctoPrint's built-in **serial** connector is active — see the interlock's
+own warning for connectors (e.g. Moonraker/Klipper) that bypass this hook.
+
 ## API commands
 
 The plugin exposes a `SimpleApiPlugin` interface. Commands that mutate state
@@ -122,6 +129,8 @@ safety lock and observe-only mode.
 | `set_custom_dry`               | `value`, `hours`         | Dry target + timer in one transaction                                                   |
 | `preset_pla` / `preset_petg`   | —                        | Apply a built-in dry preset                                                             |
 | `start_drying` / `stop_drying` | —                        | Control the dry cycle                                                                   |
+| `prepare_drying`               | —                        | Arm the [drying interlock](safety.md#drying-interlock) (dry-mode only)                  |
+| `cancel_prepare_drying`        | —                        | Disarm the drying interlock without changing mode                                       |
 | `set_filter_threshold`         | `value`                  | Filter-fan activation threshold                                                         |
 | `set_heater_threshold`         | `value`                  | Heater activation threshold                                                             |
 | `scan_printers`                | —                        | Trigger a printer scan                                                                  |

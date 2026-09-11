@@ -68,6 +68,47 @@ turns the heater off internally.
 - Never surfaces transport errors: the internal state flips to locked even if
   the wire frame fails to send, so the safety guarantee holds.
 
+## Drying interlock
+
+Dry-mode is for drying filament, not for printing — the chamber's heater
+target during a dry cycle is chosen for the filament, not for a print job,
+and depending on the printer's kinematics the bed/toolhead may need to sit
+in a position that a print would immediately move out of. The drying
+interlock keeps those two uses from clashing in both directions.
+
+**Arming the interlock** requires two steps, both from the Drying tab's
+**Prepare Drying** dialog:
+
+1. Switch to dry-mode and confirm the checklist — the operator manually
+   parks the bed and toolhead(s) in a position safe for the printer's own
+   kinematics (the plugin cannot know that position itself; it varies by
+   printer — e.g. bed lowered and toolheads parked vs. toolhead raised
+   clear of the bed) and confirms the paired printer's bed/hotend are
+   cold.
+2. Confirming arms `drying_locked`. From then on, until the cycle is
+   stopped or the mode is switched away from dry:
+   - **Print starts are refused** via the `octoprint.printer.print.starting`
+     hook, with an explanatory error.
+   - **Heating G-code is blocked**: `M104`/`M109` (hotend), `M140`/`M190`
+     (bed).
+   - **Movement G-code is blocked**: `G28` (homing), `G0`/`G1` (moves).
+
+Stopping the cycle (or cancelling from the dialog before it starts) clears
+`drying_prepared` and disarms the interlock immediately.
+
+!!! warning "The heating/movement block depends on the printer connector"
+    The G-code block above only works for OctoPrint's built-in **serial**
+    connector — it hooks the legacy `octoprint.comm.protocol.gcode.queuing`
+    pipeline, which third-party connectors (Moonraker/Klipper bridges, and
+    others) bypass entirely by talking straight to their own backend. The
+    plugin detects this (`gcode_hook_effective` in the snapshot) and shows
+    a warning in the Prepare Drying dialog and the Drying tab when it
+    can't back the lock with an enforced block. **Print starts stay
+    blocked everywhere** — that hook is connector-agnostic — but on a
+    non-serial connector, treat the heating/movement lock as advisory
+    only and keep the printer's other controls (terminal, macros, jog)
+    away from other operators while drying.
+
 ## Printer-link barrier
 
 The chamber must not heat unless the paired printer is reachable. The device
@@ -144,6 +185,7 @@ rejects out-of-range input before sending a frame:
 | Heater shut off, no recent status        | `timeout`        | Check the device connection; a fresh frame auto-clears it        |
 | Heater shut off after a hot reading      | `over_temp`      | Investigate the cause, then press Unlock                         |
 | Locked after pressing Stop               | `estop` / `user` | Press Unlock when ready to resume                                |
+| Print start / heating / movement refused | drying interlock | Stop drying (or Cancel in the Prepare Drying dialog)             |
 
 See also: [Configuration](configuration.md) ·
 [Troubleshooting](troubleshooting.md)

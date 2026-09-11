@@ -30,6 +30,7 @@
 - 🔥 **Chamber Control** - Target, mode (auto / manual / dry) and power directly from OctoPrint
 - 📊 **Dedicated Tab** - Status / Chamber / Drying / Safety / Network / Debug subtabs with a Flot temperature chart (~30 min history)
 - 🧪 **Filament Drying** - PLA / PETG-ABS / Custom presets, target + timer in one transaction, start/stop and a live countdown
+- 🔒 **Drying Interlock** - Prepare Drying arms a lock that blocks print starts, heating and movement/homing until the cycle stops
 - 🌬️ **Auto Mode** - Independent heater and filter-fan activation thresholds tied to the bound printer's hotbed
 - 📡 **MQTT Control Bridge (V1.0.4+)** - Day-to-day control/status over the Panda's broker path, while WebSocket remains the safety/setup backbone
 - 🔌 **Native Protocol** - Talks the Panda Breath WebSocket protocol — no Bambu emulation required
@@ -165,7 +166,7 @@ Subtabs:
 
 - **Status** — live status table + temperature chart
 - **Chamber** — power, mode, target, auto-mode thresholds
-- **Drying** — filament presets, custom target+timer, start/stop, live countdown
+- **Drying** — filament presets, custom target+timer, start/stop, live countdown. **Prepare Drying** opens a confirmation dialog (manual bed/toolhead-parked checklist + live cold-bed/cold-hotend checks) that arms an interlock blocking print starts, heating and movement until drying stops
 - **Safety** — lock / unlock / E-Stop with safety banner
 - **Network** — paired printer + reachability, Panda Breath LAN/AP, firmware, recent device responses
 - **Debug** — frame ring buffer and persistent log management (visible when the debug panel is enabled)
