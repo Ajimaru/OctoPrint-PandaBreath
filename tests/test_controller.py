@@ -203,6 +203,16 @@ def test_set_custom_dry_transaction(controller, adapter):
     ]
 
 
+def test_set_custom_dry_updates_displayed_values(controller):
+    # The device only echoes new custom values post-reconnect, so the
+    # controller must reflect them optimistically for the Drying-status UI.
+    controller.set_custom_dry(53, 6)
+    snap = controller.snapshot()
+    assert snap["dry_target"] == 53.0
+    assert snap["dry_timer_hours"] == 6
+    assert snap["dry_remaining_s"] == 6 * 3600
+
+
 def test_set_custom_dry_negative_rejected(controller):
     with pytest.raises(ValueError):
         controller.set_custom_dry(-1, 8)
@@ -291,6 +301,58 @@ def test_start_stop_drying(controller, adapter):
     assert adapter.command_names() == ["start_drying", "stop_drying"]
 
 
+# ---- drying interlock (prepare_drying / is_drying_locked) ---------------
+
+
+def test_is_drying_locked_false_by_default(controller):
+    assert controller.is_drying_locked() is False
+
+
+def test_prepare_drying_requires_dry_mode(controller):
+    with pytest.raises(ValueError):
+        controller.prepare_drying()
+    assert controller.is_drying_locked() is False
+
+
+def test_prepare_drying_arms_lock_in_dry_mode(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    assert controller.is_drying_locked() is True
+    assert controller.snapshot()["drying_prepared"] is True
+    assert controller.snapshot()["drying_locked"] is True
+
+
+def test_cancel_prepare_drying_disarms(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    controller.cancel_prepare_drying()
+    assert controller.is_drying_locked() is False
+    assert controller.snapshot()["drying_prepared"] is False
+
+
+def test_switching_mode_away_from_dry_disarms_lock(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    controller.set_mode(MODE_AUTO)
+    assert controller.is_drying_locked() is False
+    assert controller.snapshot()["drying_prepared"] is False
+
+
+def test_stop_drying_disarms_lock(controller):
+    controller.set_mode(MODE_DRY)
+    controller.prepare_drying()
+    controller.stop_drying()
+    assert controller.is_drying_locked() is False
+    assert controller.snapshot()["drying_prepared"] is False
+
+
+def test_prepare_drying_blocked_when_locked(controller):
+    controller.set_mode(MODE_DRY)
+    controller.lock(reason="user")
+    with pytest.raises(PermissionError):
+        controller.prepare_drying()
+
+
 def test_scan_printers(controller, adapter):
     controller.scan_printers()
     assert adapter.last_command() == ("scan_printers", {})
@@ -338,9 +400,27 @@ def test_on_status_updates_snapshot(controller):
     assert snap["fw_version"] == "1.0"
 
 
-def test_on_status_appends_history(controller):
+def test_on_status_throttles_history(controller):
+    # Two back-to-back updates (< HISTORY_SAMPLE_SPACING apart) collapse to a
+    # single sample so the ring spans the intended ~30 min window.
     controller.on_status({"chamber_temp": 25.0})
     controller.on_status({"chamber_temp": 26.0})
+    samples = controller.history_samples()
+    assert len(samples) == 1
+    assert samples[0][1] == 25.0
+
+
+def test_on_status_appends_history_after_spacing(controller, monkeypatch):
+    import octoprint_pandabreath.controller as controller_module
+
+    fake_now = [1000.0]
+    monkeypatch.setattr(controller_module.time, "time", lambda: fake_now[0])
+
+    controller.on_status({"chamber_temp": 25.0})
+    # Advance past the sampling interval, then a second update is recorded.
+    fake_now[0] += controller_module.HISTORY_SAMPLE_SPACING + 0.1
+    controller.on_status({"chamber_temp": 26.0})
+
     samples = controller.history_samples()
     assert len(samples) == 2
     assert samples[0][1] == 25.0
@@ -471,7 +551,9 @@ def test_printer_link_lock_does_not_override_user_lock(controller):
 
 
 def test_dry_remaining_extrapolates_while_running(controller):
-    controller.on_status({"is_running": True, "dry_remaining_s": 3600})
+    # start_drying sets _is_running=True; then a status with remaining triggers anchor.
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 3600})
     # Force the anchor back in time so elapsed > 0.
     with controller._lock:
         anchor_ts, anchor_val = controller._dry_remaining_anchor
@@ -480,11 +562,49 @@ def test_dry_remaining_extrapolates_while_running(controller):
     assert remaining <= 3600 - 9  # roughly 10s elapsed
 
 
+def test_dry_remaining_floored_at_zero(controller):
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 5})
+    with controller._lock:
+        anchor_ts, anchor_val = controller._dry_remaining_anchor
+        controller._dry_remaining_anchor = (anchor_ts - 9999, anchor_val)
+    assert controller.snapshot()["dry_remaining_s"] == 0
+
+
 def test_dry_remaining_not_extrapolated_when_stopped(controller):
-    controller.on_status({"is_running": True, "dry_remaining_s": 3600})
-    controller.on_status({"is_running": False})
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 3600})
+    controller.stop_drying()
     # Anchor dropped when not running -> base value returned unchanged.
     assert controller.snapshot()["dry_remaining_s"] == 3600
+
+
+def test_dry_remaining_anchor_set_on_status_while_running(controller):
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 1800})
+    with controller._lock:
+        assert controller._dry_remaining_anchor is not None
+        _, val = controller._dry_remaining_anchor
+    assert val == 1800
+
+
+def test_dry_remaining_anchor_none_when_not_running(controller):
+    # No start_drying -> _is_running stays falsy -> anchor stays None.
+    controller.on_status({"dry_remaining_s": 3600})
+    with controller._lock:
+        assert controller._dry_remaining_anchor is None
+
+
+def test_dry_remaining_countdown_clears_running_flag(controller):
+    controller.start_drying()
+    controller.on_status({"dry_remaining_s": 1})
+    # Wind anchor back far enough that extrapolated remaining == 0.
+    with controller._lock:
+        anchor_ts, anchor_val = controller._dry_remaining_anchor
+        controller._dry_remaining_anchor = (anchor_ts - 9999, anchor_val)
+    # Trigger another on_status to run the zero-check path.
+    controller.on_status({})
+    assert controller.snapshot()["is_running"] is False
 
 
 # ---- watchdog -----------------------------------------------------------
@@ -589,3 +709,127 @@ def test_clearing_sink_restores_adapter(controller, adapter):
     controller.set_control_sink(None)
     controller.set_target(45)
     assert ("set_target", {"value": 45.0}) in adapter.commands
+
+
+# ---- observe-only permission checks -------------------------------------
+
+
+def _observe_only_controller():
+    adapter = FakeAdapter(observe_only=True)
+    return ChamberController(adapter)
+
+
+def test_set_mode_observe_only_raises(controller):
+    # Patch adapter to observe-only after construction.
+    controller._adapter._observe_only = True
+    with pytest.raises(PermissionError):
+        controller.set_mode(MODE_AUTO)
+
+
+def test_set_heater_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_heater(True)
+
+
+def test_set_heater_off_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_heater(False)
+
+
+def test_set_custom_dry_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.set_custom_dry(60, 4)
+
+
+def test_set_custom_dry_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_custom_dry(60, 4)
+
+
+def test_select_preset_pla_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.select_preset_pla()
+
+
+def test_select_preset_pla_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.select_preset_pla()
+
+
+def test_select_preset_petg_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.select_preset_petg()
+
+
+def test_select_preset_petg_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.select_preset_petg()
+
+
+def test_set_filter_threshold_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.set_filter_threshold(40)
+
+
+def test_set_filter_threshold_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_filter_threshold(40)
+
+
+def test_set_heater_threshold_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.set_heater_threshold(40)
+
+
+def test_set_heater_threshold_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.set_heater_threshold(40)
+
+
+def test_start_drying_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.start_drying()
+
+
+def test_start_drying_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.start_drying()
+
+
+def test_stop_drying_locked_raises(controller):
+    controller.lock()
+    with pytest.raises(PermissionError):
+        controller.stop_drying()
+
+
+def test_stop_drying_observe_only_raises():
+    c = _observe_only_controller()
+    with pytest.raises(PermissionError):
+        c.stop_drying()
+
+
+# ---- on_status bad-type coercion paths ----------------------------------
+
+
+def test_on_status_bad_chamber_temp_ignored(controller):
+    controller.on_status({"chamber_temp": "not-a-float"})
+    assert controller.snapshot()["chamber_temp"] is None
+
+
+def test_on_status_bad_target_temp_ignored(controller):
+    controller.on_status({"target_temp": "bad"})
+    assert controller.snapshot()["target_temp"] == 0.0

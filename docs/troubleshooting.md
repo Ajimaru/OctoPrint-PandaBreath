@@ -62,7 +62,7 @@ Check `last_safety_reason` (shown in the status / diagnostics):
 | `no data for … — locking` (`timeout`)        | Watchdog: no frames for `timeout_seconds` | Restore the connection; a fresh frame auto-clears the lock |
 | `chamber … exceeds hard limit` (`over_temp`) | Chamber exceeded `max_temp`               | Investigate the heat source, then **Unlock**               |
 | `printer link not bound` (`printer_link`)    | Printer binding/unreachable               | Restore the printer link; auto-clears when bound           |
-| `EMERGENCY STOP triggered` (`estop`)         | Emergency stop pressed                    | **Unlock** when ready                                       |
+| `EMERGENCY STOP triggered` (`estop`)         | Emergency stop pressed                    | **Unlock** when ready                                      |
 
 See [Safety → Recovery checklist](safety.md#recovery-checklist) for the full
 table.

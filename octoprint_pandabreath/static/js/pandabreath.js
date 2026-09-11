@@ -29,33 +29,62 @@ $(function () {
         // temperatureViewModel exposes a `temperatures` observable keyed by
         // tool0/bed/... each with `actual`/`target` arrays (latest sample
         // last); fall back to plain numbers defensively.
-        self.octoprintHeating = ko.pureComputed(function () {
+        var _latestTempSample = function (series) {
+            var v = ko.unwrap(series);
+            if (Array.isArray(v)) {
+                var last = v[v.length - 1];
+                // Samples are usually {x: time, y: value} pairs.
+                if (last && typeof last === "object") return last.y;
+                return last;
+            }
+            return v;
+        };
+
+        // True if any entry in a name-filtered subset of the paired
+        // printer's temperatures has a target set or is still hot.
+        // ``match`` receives the entry name (e.g. "bed", "tool0") and
+        // decides whether it counts towards this check.
+        var _anyHot = function (match) {
             var tv = self.octoprintTemps;
             if (!tv || !tv.temperatures) return false;
             var temps = ko.unwrap(tv.temperatures) || {};
-            var latest = function (series) {
-                var v = ko.unwrap(series);
-                if (Array.isArray(v)) {
-                    var last = v[v.length - 1];
-                    // Samples are usually {x: time, y: value} pairs.
-                    if (last && typeof last === "object") return last.y;
-                    return last;
-                }
-                return v;
-            };
             for (var name in temps) {
                 if (!Object.prototype.hasOwnProperty.call(temps, name))
                     continue;
-                if (name === "chamber") continue; // Panda chamber, not printer
+                if (!match(name)) continue;
                 var entry = temps[name];
                 if (!entry) continue;
-                var target = latest(entry.target) || 0;
-                var actual = latest(entry.actual) || 0;
+                var target = _latestTempSample(entry.target) || 0;
+                var actual = _latestTempSample(entry.actual) || 0;
                 if (target > 0 || actual >= PRINTER_HOT_THRESHOLD_C) {
                     return true;
                 }
             }
             return false;
+        };
+
+        // True if the paired printer's bed or any hotend has a target set or
+        // is still hot — mirrors the backend's _printer_is_heating(). The
+        // temperatureViewModel exposes a `temperatures` observable keyed by
+        // tool0/bed/... each with `actual`/`target` arrays (latest sample
+        // last); fall back to plain numbers defensively.
+        self.octoprintHeating = ko.pureComputed(function () {
+            return _anyHot(function (name) {
+                return name !== "chamber"; // Panda chamber, not printer
+            });
+        });
+
+        // Split out for the Prepare-Drying confirmation dialog, which asks
+        // the operator to confirm bed and toolhead(s) are cold separately.
+        self.octoprintBedHot = ko.pureComputed(function () {
+            return _anyHot(function (name) {
+                return name === "bed";
+            });
+        });
+        self.octoprintToolsHot = ko.pureComputed(function () {
+            return _anyHot(function (name) {
+                return name.indexOf("tool") === 0;
+            });
         });
 
         // True while the paired OctoPrint printer is running a job OR
@@ -135,6 +164,18 @@ $(function () {
         self.isRunning = ko.observable(null);
         self.printerType = ko.observable(null);
         self.printerState = ko.observable(null);
+        // Operator-confirmed "bed/toolhead parked" flag (see prepareDrying
+        // below) and the derived interlock state mirrored from the
+        // controller snapshot — surfaced separately so the UI can show
+        // "prepared, not yet locked" vs. "locked" distinctly if needed.
+        self.dryingPrepared = ko.observable(false);
+        self.dryingLocked = ko.observable(false);
+        // False when the active printer connector (e.g. a Moonraker/Klipper
+        // bridge) is known to bypass the backend's GCODE-level heating/
+        // movement block — only the connector-agnostic print-start block
+        // still applies there. Defaults true so the warning doesn't flash
+        // on before the first snapshot arrives.
+        self.gcodeHookEffective = ko.observable(true);
 
         // MQTT bridge state (firmware V1.0.4+). The settings template is
         // bound to the SettingsViewModel (custom_bindings: False), so these
@@ -158,12 +199,14 @@ $(function () {
             if (hintEl) {
                 var b = self.mqttDeviceBroker();
                 if (b && b.ip) {
-                    hintEl.innerHTML =
-                        "Device is bound to broker <code>" +
-                        b.ip +
-                        ":" +
-                        (b.port || 1883) +
-                        "</code>.";
+                    // Build the hint via DOM nodes + textContent so the
+                    // device-reported ip/port are never parsed as HTML
+                    // (avoids XSS from a spoofed/compromised device).
+                    hintEl.textContent = "Device is bound to broker ";
+                    var code = document.createElement("code");
+                    code.textContent = b.ip + ":" + (b.port || 1883);
+                    hintEl.appendChild(code);
+                    hintEl.appendChild(document.createTextNode("."));
                     hintEl.style.display = "inline-block";
                 } else {
                     hintEl.style.display = "none";
@@ -378,6 +421,20 @@ $(function () {
             if (p === "petg") return "PETG / ABS";
             return gettext("Custom");
         });
+        // User-defined custom presets ({name, target, hours}), synced from
+        // the backend snapshot. The dropdown selection fills the Custom
+        // target/timer fields; newPresetName backs the "save preset" input.
+        self.customPresets = ko.observableArray([]);
+        self.selectedPreset = ko.observable(null);
+        self.newPresetName = ko.observable("");
+        // Selecting a saved preset loads its values into the editable
+        // Custom fields (only meaningful while the Custom panel is shown).
+        self.selectedPreset.subscribe(function (p) {
+            if (p && typeof p === "object") {
+                self.dryTargetInput(p.target);
+                self.dryTimerInput(p.hours);
+            }
+        });
 
         // Auto-mode threshold inputs: seeded once from the device's
         // current snapshot, same pattern as targetInput.
@@ -586,6 +643,12 @@ $(function () {
                 }
             }
             if ("observe_only" in state) self.observeOnly(!!state.observe_only);
+            if ("drying_prepared" in state)
+                self.dryingPrepared(!!state.drying_prepared);
+            if ("drying_locked" in state)
+                self.dryingLocked(!!state.drying_locked);
+            if ("gcode_hook_effective" in state)
+                self.gcodeHookEffective(state.gcode_hook_effective !== false);
             if ("fw_version" in state) self.fwVersion(state.fw_version);
             if ("latest_fw_version" in state && state.latest_fw_version)
                 self.latestFwVersion(state.latest_fw_version);
@@ -709,6 +772,12 @@ $(function () {
             if ("frame_log" in state && state.frame_log) {
                 self.applyFrameLogStatus(state.frame_log);
             }
+            if (
+                "custom_presets" in state &&
+                Array.isArray(state.custom_presets)
+            ) {
+                self.customPresets(state.custom_presets);
+            }
         };
 
         // ---- frame log ----
@@ -828,6 +897,13 @@ $(function () {
         // Cap on client-side incremental history. Matches the backend
         // ring size — older samples fall off the front as new ones arrive.
         var MAX_UI_HISTORY = 360;
+        // Minimum spacing between appended samples. Status pushes are NOT
+        // evenly spaced: every state change (not just the 5 s keepalive)
+        // emits one, so during init they can arrive ~2/s. Appending each
+        // would fill the 360-sample ring in ~3 min instead of ~30. Throttle
+        // to one sample per ~5 s to match the backend's sampling cadence.
+        var MIN_SAMPLE_SPACING_MS = 4500;
+        var _lastSampleAt = 0;
 
         self.onDataUpdaterPluginMessage = function (plugin, message) {
             if (plugin !== "pandabreath" || !message) return;
@@ -836,14 +912,18 @@ $(function () {
                 self.applyState(snap);
                 // Push messages don't carry the full history (would be
                 // wasteful per tick). Append a single sample from this
-                // snapshot when we have a fresh chamber reading.
+                // snapshot when we have a fresh chamber reading, but no more
+                // often than MIN_SAMPLE_SPACING_MS so the time window is real.
+                var now = Date.now();
                 if (
                     snap.chamber_temp !== null &&
-                    snap.chamber_temp !== undefined
+                    snap.chamber_temp !== undefined &&
+                    now - _lastSampleAt >= MIN_SAMPLE_SPACING_MS
                 ) {
+                    _lastSampleAt = now;
                     var arr = self.history();
                     arr.push([
-                        Date.now() / 1000,
+                        now / 1000,
                         snap.chamber_temp,
                         snap.target_temp || 0,
                     ]);
@@ -1014,6 +1094,52 @@ $(function () {
             self.dryPreset("petg");
             post("preset_petg", {}, { autoRefresh: true });
         };
+        // Save the current Custom target/timer under a user-supplied name.
+        // Client-side validation mirrors the server (which is authoritative):
+        // a friendly early bail keeps a round-trip out of the common cases.
+        // The backend returns {custom_presets: [...]}, which post()->applyState
+        // feeds straight back into self.customPresets — no device I/O, so no
+        // autoRefresh/reconnect.
+        self.saveCustomPreset = function () {
+            var name = (self.newPresetName() || "").trim();
+            if (!name) {
+                new PNotify({
+                    title: "Panda Breath",
+                    text: gettext("Enter a preset name first."),
+                    type: "error",
+                });
+                return;
+            }
+            // Same whitelist as the server: letters/digits/space/-/_, max 32.
+            if (!/^[\w \-]{1,32}$/.test(name)) {
+                new PNotify({
+                    title: "Panda Breath",
+                    text: gettext(
+                        "Preset name may use letters, digits, spaces, " +
+                            "'-' and '_' (max 32 chars).",
+                    ),
+                    type: "error",
+                });
+                return;
+            }
+            post("save_custom_preset", {
+                name: name,
+                value: parseFloat(self.dryTargetInput()),
+                hours: parseInt(self.dryTimerInput(), 10),
+            });
+            self.newPresetName("");
+        };
+        self.deleteCustomPreset = function () {
+            var p = self.selectedPreset();
+            if (!p || typeof p !== "object") return;
+            if (
+                !window.confirm(gettext("Delete preset") + ' "' + p.name + '"?')
+            ) {
+                return;
+            }
+            post("delete_custom_preset", { name: p.name });
+            self.selectedPreset(null);
+        };
         self.applyFilterThreshold = function () {
             post(
                 "set_filter_threshold",
@@ -1033,6 +1159,92 @@ $(function () {
         };
         self.stopDrying = function () {
             post("stop_drying", {}, { autoRefresh: true });
+        };
+        // ---- Prepare-drying dialog (spans prepare → start → stop) -----
+        //
+        // "Prepare Drying" opens a single modal that stays open for the
+        // whole drying session instead of a one-shot confirmation:
+        //   1. checklist step — operator confirms bed/toolhead(s) are
+        //      parked safely (the plugin cannot know the right position
+        //      for arbitrary printer kinematics — see prepare_drying() in
+        //      controller.py) and the bed/hotend temperatures are cold;
+        //   2. once confirmed, prepare_drying() arms the interlock and the
+        //      modal switches to showing preset/Start/Stop controls (reusing
+        //      the same observables/commands as the tab body) plus the live
+        //      countdown;
+        //   3. Stop Drying stops the cycle, disarms the interlock and
+        //      closes the modal;
+        //   4. the modal's own close (x) never closes it directly — it asks
+        //      "stop drying, or keep going" first. Clicking the backdrop
+        //      does nothing (static backdrop, keyboard disabled).
+        self.prepareDryingParkedConfirmed = ko.observable(false);
+        // True once prepare_drying() has been confirmed for the *current*
+        // modal session — distinct from the server-side dryingPrepared,
+        // which can already be true on open (e.g. a page reload while
+        // prepared) and would otherwise skip straight past the checklist.
+        self.prepareDryingModalArmed = ko.observable(false);
+        // Drives the close-confirmation sub-panel ("stop drying, or keep
+        // going") triggered by the modal's own close (x).
+        self.prepareDryingAskCloseConfirm = ko.observable(false);
+
+        self.prepareDrying = function () {
+            self.prepareDryingParkedConfirmed(false);
+            self.prepareDryingAskCloseConfirm(false);
+            // Skip the checklist if the interlock is already armed from a
+            // prior confirmation this page load didn't see closed (e.g.
+            // navigated away and back) — go straight to the control step.
+            self.prepareDryingModalArmed(!!self.dryingPrepared());
+            // static backdrop + no keyboard: clicking outside or pressing
+            // Escape must not close this modal, only the explicit buttons
+            // (and the close-confirmation flow) may.
+            $("#pandabreath_prepare_drying_modal").modal({
+                backdrop: "static",
+                keyboard: false,
+                show: true,
+            });
+        };
+        self.prepareDryingBedOk = ko.pureComputed(function () {
+            return !self.octoprintBedHot();
+        });
+        self.prepareDryingToolsOk = ko.pureComputed(function () {
+            return !self.octoprintToolsHot();
+        });
+        self.prepareDryingCanConfirm = ko.pureComputed(function () {
+            return (
+                self.prepareDryingParkedConfirmed() &&
+                self.prepareDryingBedOk() &&
+                self.prepareDryingToolsOk()
+            );
+        });
+        self.confirmPrepareDrying = function () {
+            if (!self.prepareDryingCanConfirm()) return;
+            post("prepare_drying", {}, { autoRefresh: true });
+            self.prepareDryingModalArmed(true);
+        };
+        // Reachable only from the close-confirmation sub-panel ("keep
+        // going" — i.e. cancel the close, not the drying session).
+        self.prepareDryingKeepGoing = function () {
+            self.prepareDryingAskCloseConfirm(false);
+        };
+        // "Stop drying" both inside the control step and as the close-
+        // confirmation's "stop drying" choice: stops the cycle, disarms
+        // the interlock server-side and actually closes the modal.
+        self.stopDryingAndClose = function () {
+            post("stop_drying", {}, { autoRefresh: true });
+            post("cancel_prepare_drying", {}, { autoRefresh: true });
+            self.prepareDryingAskCloseConfirm(false);
+            self.prepareDryingModalArmed(false);
+            $("#pandabreath_prepare_drying_modal").modal("hide");
+        };
+        // The modal's own (x) button. Before the checklist is confirmed
+        // there is nothing armed yet, so close outright; once armed, ask
+        // "stop drying, or keep going" instead of closing directly.
+        self.requestClosePrepareDrying = function () {
+            if (!self.prepareDryingModalArmed()) {
+                $("#pandabreath_prepare_drying_modal").modal("hide");
+                return;
+            }
+            self.prepareDryingAskCloseConfirm(true);
         };
         // True when the device is actively drying — surfaces from the
         // isrunning flag in the snapshot.
@@ -1054,6 +1266,17 @@ $(function () {
         });
         self.canStopDrying = ko.pureComputed(function () {
             return self.controlsEnabled() && self.dryingActive();
+        });
+        // "Prepare Drying" opens the modal — offered in dry-mode while the
+        // printer isn't busy. Stays enabled once already prepared/active so
+        // the operator can reopen the modal (e.g. after navigating away) to
+        // reach Start/Stop or the close-confirmation again.
+        self.canPrepareDrying = ko.pureComputed(function () {
+            return (
+                self.controlsEnabled() &&
+                (self.dryingPrepared() ||
+                    (!self.octoprintBusy() && self.mode() === "dry"))
+            );
         });
         // Convenience gate for any dry-mode write: presets, custom inputs
         // and Apply Custom are only meaningful when the device is in dry
@@ -1242,8 +1465,50 @@ $(function () {
                         },
                     ],
                     {
-                        xaxis: { mode: "time", timezone: "browser" },
-                        yaxis: { min: 0 },
+                        xaxis: {
+                            mode: "time",
+                            timezone: "browser",
+                            // Place ticks exactly on whole-minute boundaries
+                            // relative to now and label them as elapsed minutes
+                            // (e.g. "-5 Min."), matching OctoPrint's native
+                            // temperature graph. Generating the ticks ourselves
+                            // (instead of letting Flot pick sub-minute steps)
+                            // avoids duplicate labels after rounding.
+                            ticks: function (axis) {
+                                var now = Date.now();
+                                var spanMin = Math.max(
+                                    1,
+                                    Math.ceil((axis.max - axis.min) / 60000),
+                                );
+                                // Aim for ~6 labels; step up so wide windows
+                                // (up to the 30 min buffer) stay readable.
+                                var stepMin = Math.max(
+                                    1,
+                                    Math.ceil(spanMin / 6),
+                                );
+                                var ticks = [];
+                                for (var m = 0; m >= -spanMin; m -= stepMin) {
+                                    var t = now + m * 60000;
+                                    if (t >= axis.min && t <= axis.max) {
+                                        ticks.push(t);
+                                    }
+                                }
+                                return ticks;
+                            },
+                            tickFormatter: function (val) {
+                                var minutes = Math.round(
+                                    (val - Date.now()) / 60000,
+                                );
+                                return minutes + " " + gettext("min");
+                            },
+                        },
+                        yaxis: {
+                            min: 0,
+                            // Append the temperature unit to each tick.
+                            tickFormatter: function (val) {
+                                return val + " °C";
+                            },
+                        },
                         grid: { borderWidth: 1, hoverable: true },
                         legend: { position: "nw" },
                     },

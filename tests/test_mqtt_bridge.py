@@ -120,6 +120,50 @@ def test_stop_is_safe_and_idempotent():
     assert client.loop_stopped and client.disconnected
 
 
+def test_stop_swallows_client_errors():
+    """loop_stop/disconnect raising must not propagate out of stop()."""
+    bridge, client = make_bridge()
+    bridge.start()
+
+    def boom():
+        raise RuntimeError("transport down")
+
+    client.loop_stop = boom
+    client.disconnect = boom
+    bridge.stop()  # must not raise
+
+
+def test_connect_failure_does_not_subscribe():
+    """A failed on_connect must skip the subscribe step."""
+    bridge, client = make_bridge()
+    bridge.start()
+    client.fire_connect(failure=True)
+    assert client.subscribed == []
+
+
+def test_publish_state_swallows_client_errors():
+    """A publish that raises must be swallowed (best-effort listener)."""
+    bridge, client = make_bridge()
+    bridge.start()
+
+    def boom(*_a, **_k):
+        raise RuntimeError("broker gone")
+
+    client.publish = boom
+    bridge.publish_state({"chamber_temp": 40})  # must not raise
+
+
+def test_send_device_command_swallows_client_errors():
+    """send_device_command returns False when the publish raises."""
+    bridge, client = _bridge_with_device()
+
+    def boom(*_a, **_k):
+        raise RuntimeError("broker gone")
+
+    client.publish = boom
+    assert bridge.send_device_command({"custom_temp": 50}) is False
+
+
 def test_telemetry_only_does_not_subscribe_command():
     """Control command topic is not subscribed when control is disabled."""
     bridge, client = make_bridge(allow_control=False)

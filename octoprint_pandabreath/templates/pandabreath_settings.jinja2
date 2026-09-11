@@ -177,8 +177,11 @@
         <label class="control-label">{{ _("Max temperature") }} (°C)</label>
         <div class="controls">
             <input type="number"
-                   step="0.5"
+                   min="1"
+                   max="120"
+                   step="1"
                    data-bind="value: settings.plugins.pandabreath.max_temp">
+            <span class="help-block">{{ _("Safety ceiling for all temperature setpoints (1–120 °C). Limits the device max of 60 °C to prevent accidental overheating.") }}</span>
         </div>
     </div>
     <div class="control-group">
@@ -224,8 +227,11 @@
         <label class="control-label">{{ _("Print-start target") }} (°C)</label>
         <div class="controls">
             <input type="number"
-                   step="0.5"
+                   min="0"
+                   max="60"
+                   step="1"
                    data-bind="value: settings.plugins.pandabreath.print_start_target">
+            <span class="help-block">{{ _("Chamber target when a print starts (0–60 °C).") }}</span>
         </div>
     </div>
     <hr>

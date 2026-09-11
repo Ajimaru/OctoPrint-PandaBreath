@@ -32,6 +32,8 @@ unmaintained and uses an incompatible callback API.
 import json
 import logging
 import threading
+from types import ModuleType
+from typing import cast
 
 try:
     import paho.mqtt.client as mqtt  # type: ignore[import-not-found]
@@ -116,13 +118,10 @@ class MqttBridge:
             self._client = client_factory()
         else:
             # Reached only when paho_available() is True (enforced in the
-            # guard above), so ``mqtt`` is not None here — bind it to a
-            # local so the static checker stops treating it as Optional.
-            paho = mqtt
-            # Type-narrowing only (mqtt is guaranteed non-None by the
-            # paho_available() guard above); not a runtime safety check.
-            # nosemgrep
-            assert paho is not None
+            # guard above), so ``mqtt`` is not None here. cast() narrows the
+            # Optional module for the static checker without a runtime assert
+            # (which Bandit B101 flags and ``python -O`` would strip anyway).
+            paho = cast(ModuleType, mqtt)
             self._client = paho.Client(
                 callback_api_version=paho.CallbackAPIVersion.VERSION2
             )

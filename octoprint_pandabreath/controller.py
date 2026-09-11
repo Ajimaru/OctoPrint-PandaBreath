@@ -73,9 +73,13 @@ DEVICE_DRY_TARGET_MAX = 60.0
 DEVICE_DRY_TIMER_MIN = 1
 DEVICE_DRY_TIMER_MAX = 99
 
-# Temperature-history ring buffer size. At a 5 s adapter poll cadence this
-# covers ~30 minutes; samples older than that are silently dropped.
+# Temperature-history ring buffer size. At one sample per HISTORY_SAMPLE_SPACING
+# seconds this covers ~30 minutes; samples older than that are silently dropped.
 HISTORY_MAX_SAMPLES = 360
+# Minimum spacing between history samples. update() runs on every state change
+# (often ~2/s), not just the 5 s keepalive, so throttle to keep the 360-sample
+# ring spanning ~30 min rather than ~3 min.
+HISTORY_SAMPLE_SPACING = 5.0
 
 
 class ChamberController:  # pylint: disable=too-many-instance-attributes
@@ -146,12 +150,26 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         self._is_running = None
         self._printer_type = None
         self._printer_state = None
+        # Set by prepare_drying() once the operator has manually parked the
+        # bed/toolhead in a safe position for this printer's kinematics (the
+        # plugin cannot know that position itself — it varies by printer
+        # architecture, e.g. bed lowered and toolheads parked on a
+        # moving-bed design vs. toolhead raised and clear on a bed-slinger).
+        # Cleared on stop_drying() and on any set_mode() away from dry.
+        # While True (and mode == dry) the plugin-level interlock refuses
+        # print starts and blocks heating/movement GCODE.
+        self._drying_prepared = False
         # Catch-all for low-frequency diagnostic fields (network blocks,
         # paired-printer identity, language) — kept loose so adding a new
         # field doesn't require a controller change.
         self._diagnostics = {}
         # Temperature-history ring (entries: (epoch_ts, chamber, target)).
         self._history = collections.deque(maxlen=HISTORY_MAX_SAMPLES)
+        # Wall-clock of the last appended history sample. Updates arrive far
+        # more often than every 5 s (every state change calls update, not just
+        # the keepalive), so we throttle appends to keep ~30 min in the 360-
+        # sample ring instead of compressing it to a few minutes.
+        self._last_history_at = 0.0
         # Recent ``response`` frames — small ring so the UI can show the
         # last handful of command acknowledgements (set_hostname, etc.).
         self._responses = collections.deque(maxlen=20)
@@ -234,6 +252,8 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 "diagnostics": dict(self._diagnostics),
                 "responses": list(self._responses),
                 "is_running": self._is_running,
+                "drying_prepared": self._drying_prepared,
+                "drying_locked": self._mode == MODE_DRY and self._drying_prepared,
             }
 
     def _extrapolated_dry_remaining(self):
@@ -265,6 +285,19 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
     def _is_observe_only(self):
         return bool(getattr(self._adapter, "is_observe_only", lambda: False)())
 
+    def _ensure_unlocked(self):
+        """
+        Raise ``PermissionError`` if the safety lock is engaged.
+
+        Reads ``_locked`` under ``self._lock`` so the check cannot race a
+        concurrent lock()/unlock()/printer-link transition — the same
+        atomicity rule ``_check_printer_link`` documents for its own
+        state changes.
+        """
+        with self._lock:
+            if self._locked:
+                raise PermissionError("system locked")
+
     def set_target(self, value):
         """
         Push a new target temperature to the device.
@@ -282,8 +315,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         upper = min(DEVICE_TARGET_MAX, self._max_temp)
         if value > upper:
             raise ValueError(f"target exceeds max {upper:.1f}")
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_target", value=value)
@@ -295,13 +327,53 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         """Switch the work-mode on the device (auto/manual/dry)."""
         if mode not in VALID_MODES:
             raise ValueError("invalid mode")
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         with self._lock:
             self._mode = mode
+            if mode != MODE_DRY:
+                # Leaving dry-mode always drops the prepared/armed state —
+                # the parked position was only meaningful for the drying
+                # interlock that just ended.
+                self._drying_prepared = False
         self._send("set_mode", mode=mode)
+        self._notify()
+
+    def is_drying_locked(self):
+        """
+        True while the print/heat/movement interlock must be enforced.
+
+        Requires both mode == dry and an operator-confirmed
+        prepare_drying() — merely selecting dry-mode does not park the
+        bed/toolhead by itself, so the interlock only arms once the
+        operator has confirmed the printer is in a safe position.
+        """
+        with self._lock:
+            return self._mode == MODE_DRY and self._drying_prepared
+
+    def prepare_drying(self):
+        """
+        Arm the drying interlock after the operator has parked the printer.
+
+        Purely a plugin-side confirmation flag — sends nothing to the
+        device. The actual parking (bed/toolhead position) is printer-
+        specific and must be done by the operator beforehand; the plugin
+        cannot know the safe position for arbitrary kinematics. Only
+        meaningful in dry-mode; raises if the mode is not dry so the UI
+        cannot arm the interlock in the wrong context.
+        """
+        self._ensure_unlocked()
+        with self._lock:
+            if self._mode != MODE_DRY:
+                raise ValueError("switch to dry-mode before preparing drying")
+            self._drying_prepared = True
+        self._notify()
+
+    def cancel_prepare_drying(self):
+        """Disarm the drying interlock without changing mode."""
+        with self._lock:
+            self._drying_prepared = False
         self._notify()
 
     def _printer_link_ok(self):
@@ -324,13 +396,18 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
 
     def set_heater(self, on):
         """Turn the heater on or off, honouring lock and observe-only."""
-        if on and self._locked:
-            raise PermissionError("system locked")
-        if on and not self._printer_link_ok():
-            # Refuse to power the chamber while the printer link is
-            # binding/unreachable — the same guarantee the status loop
-            # enforces by forcing the heater off.
-            raise PermissionError("printer link not ready")
+        if on:
+            # Check lock + printer link in one lock acquisition so the
+            # decision cannot straddle a concurrent lock()/printer-state
+            # transition.
+            with self._lock:
+                if self._locked:
+                    raise PermissionError("system locked")
+                if not self._printer_link_ok():
+                    # Refuse to power the chamber while the printer link is
+                    # binding/unreachable — the same guarantee the status
+                    # loop enforces by forcing the heater off.
+                    raise PermissionError("printer link not ready")
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._command_heater(bool(on))
@@ -407,26 +484,40 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
             raise ValueError(
                 f"dry timer must be {DEVICE_DRY_TIMER_MIN}-" f"{DEVICE_DRY_TIMER_MAX} h"
             )
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_dry_target", value=value)
         self._send("set_dry_timer", hours=hours)
         self._send("commit_dry")
+        # Optimistically reflect the applied values. The device only echoes
+        # the new custom_temp/custom_timer in a post-reconnect snapshot, not
+        # in its periodic status frames, so without this the Drying-status
+        # readouts would keep showing the device's previous values (e.g. the
+        # 50 °C / 12 h defaults) until the next reconnect. Same approach as
+        # the is_running flag.
+        with self._lock:
+            self._dry_target = value
+            self._dry_timer_hours = hours
+            self._dry_remaining_s = hours * 3600
+            # Reset the extrapolation anchor so the countdown starts from the
+            # freshly applied timer rather than drifting off a stale base.
+            if self._is_running:
+                self._dry_remaining_anchor = (time.monotonic(), hours * 3600)
+            else:
+                self._dry_remaining_anchor = None
+        self._notify()
 
     def select_preset_pla(self):
         """Select the device's built-in PLA dry preset."""
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("preset_pla")
 
     def select_preset_petg(self):
         """Select the device's built-in PETG/ABS dry preset."""
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("preset_petg")
@@ -445,8 +536,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 f"filter threshold must be {DEVICE_FILTER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_FILTER_THRESHOLD_MAX:.0f}"
             )
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_filter_threshold", value=value)
@@ -459,8 +549,7 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 f"heater threshold must be {DEVICE_HEATER_THRESHOLD_MIN:.0f}-"
                 f"{DEVICE_HEATER_THRESHOLD_MAX:.0f}"
             )
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("set_heater_threshold", value=value)
@@ -472,19 +561,31 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         Mirrors the WebUI "Start Drying" button — a bare ``isrunning=1``
         write, no commit frame.
         """
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("start_drying")
+        # The WebSocket does not ACK writes and the device echoes isrunning
+        # only in a post-reconnect snapshot (never in the periodic status
+        # frames — see the captures, isrunning stays 0). Optimistically
+        # reflect the running state so the UI (Stop button, dry status)
+        # updates immediately, same approach as the dry-remaining anchor.
+        with self._lock:
+            self._is_running = True
+        self._notify()
 
     def stop_drying(self):
         """Stop an in-progress dry cycle on the device."""
-        if self._locked:
-            raise PermissionError("system locked")
+        self._ensure_unlocked()
         if self._is_observe_only():
             raise PermissionError("observe-only mode")
         self._send("stop_drying")
+        # Optimistic mirror — see start_drying. Without this the UI would
+        # wait forever for an isrunning=0 echo that already reads 0.
+        with self._lock:
+            self._is_running = False
+            self._drying_prepared = False
+        self._notify()
 
     def scan_printers(self):
         """
@@ -524,11 +625,20 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
         # the data flow recovered, so the safety reason is no longer
         # valid. Manual locks (reason='user') and emergency stops
         # (reason='estop') stay engaged until the operator releases them.
-        if self._locked and self._last_safety_reason == "timeout":
+        # Check-and-clear happens atomically under the lock — a separate
+        # read followed by unlock() could wrongly release a user/estop
+        # lock engaged in the gap.
+        with self._lock:
+            released_watchdog_lock = (
+                self._locked and self._last_safety_reason == "timeout"
+            )
+            if released_watchdog_lock:
+                self._locked = False
+                self._last_safety_reason = None
+        if released_watchdog_lock:
             self._log.info(
                 "ChamberController: data flow recovered, releasing watchdog lock"
             )
-            self.unlock()
         with self._lock:
             if chamber_temp is not None:
                 try:
@@ -551,6 +661,16 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                     pass
             # Pass-through firmware extras — protocol.py has already
             # cast them; store as-is and let the UI decide.
+            #
+            # NB: ``is_running`` is deliberately NOT taken from the device
+            # here. The Panda reports ``isrunning:0`` in every periodic
+            # status frame even while a dry cycle is active (confirmed across
+            # 13k captured frames and live) — it only reflects the true state
+            # in a post-reconnect snapshot the plugin doesn't force on
+            # start/stop. So the plugin owns this flag itself: set
+            # optimistically in start_drying/stop_drying and cleared when the
+            # extrapolated countdown reaches zero (below). Honouring the
+            # device value would clobber that within seconds.
             for key in (
                 "fw_version",
                 "dry_target",
@@ -558,7 +678,6 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                 "dry_remaining_s",
                 "bed_temp_limit",
                 "filter_threshold",
-                "is_running",
                 "printer_type",
                 "printer_state",
             ):
@@ -574,6 +693,13 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                     int(payload["dry_remaining_s"]),
                 )
             elif not self._is_running:
+                self._dry_remaining_anchor = None
+            # Plugin-owned end-of-cycle detection: since the device never
+            # echoes isrunning=0 on its own, clear the running flag once the
+            # extrapolated countdown reaches zero so the UI stops showing an
+            # active cycle after the timer elapses.
+            if self._is_running and self._extrapolated_dry_remaining() == 0:
+                self._is_running = False
                 self._dry_remaining_anchor = None
             # Network / pairing / language diagnostics — merged into the
             # rolling diagnostics dict so the latest known value sticks
@@ -602,9 +728,14 @@ class ChamberController:  # pylint: disable=too-many-instance-attributes
                     self._diagnostics[key] = payload[key]
             if "response" in payload and isinstance(payload["response"], dict):
                 self._responses.append(payload["response"])
-            # Append a history sample whenever we have a chamber reading.
+            # Append a history sample whenever we have a chamber reading, but
+            # no more often than HISTORY_SAMPLE_SPACING so the ring spans the
+            # intended ~30 min window (update() fires far faster than that).
             if self._chamber_temp is not None:
-                self._history.append((time.time(), self._chamber_temp, self._target))
+                now = time.time()
+                if now - self._last_history_at >= HISTORY_SAMPLE_SPACING:
+                    self._last_history_at = now
+                    self._history.append((now, self._chamber_temp, self._target))
         self._check_safety_limits()
         self._notify()
 

@@ -91,8 +91,93 @@
   margin-right: 4px;
 }
 
+/* Prepare-drying modal — the control panel (preset picker + custom
+ * target/timer + status table) can grow past the viewport height,
+ * especially with Custom expanded. Bootstrap 2 positions .modal at
+ * top: 10% with no height cap of its own, so a max-height on .modal-body
+ * alone is not enough — 10% top + a tall body + header/footer can still
+ * add up past 100vh. Pin the modal itself closer to the top and cap its
+ * total height relative to the viewport so it can never grow past the
+ * bottom edge; the body scrolls internally within what's left after the
+ * fixed-height header/footer.
+ *
+ * IMPORTANT: must NOT set display here — Bootstrap toggles the modal
+ * between "hide" (display:none, the closed/default state) and "in"
+ * (display:block, shown via $.fn.modal) by swapping classes on this same
+ * element. An unconditional display:flex on `#id.modal` would outrank
+ * `.hide`'s single-class selector (ID+class beats class-only) and keep
+ * the closed modal painted — invisible-ish but still in the DOM stacking
+ * order, intercepting clicks on whatever sits behind it (this broke the
+ * Safety/Network subtabs). Only apply flex once Bootstrap has already
+ * added `.in`, i.e. genuinely open. */
+#pandabreath_prepare_drying_modal.modal {
+  /* ROOT CAUSE of the modal appearing way above the viewport in earlier
+     attempts: this project's bootstrap-modal.js is the modalmanager fork,
+     whose Modal.layout() (called on every show()) computes its own
+     vertical centering via inline style — margin-top: 0 - height/2 — i.e.
+     a NEGATIVE margin equal to half the modal's own height, set with
+     jQuery .css() (an inline style, which beats any plain CSS rule
+     regardless of selector specificity). With this modal's taller-than-
+     default content that negative margin was large enough to push the
+     whole box, header included, above row 0. Only !important on
+     margin-top here reliably beats that inline style. top/max-height also
+     carry !important since Bootstrap's .modal.fade / .modal.fade.in
+     (top: -25% / 10%) both apply to this element's class list at once and
+     the transition between them must not reintroduce a wrong value
+     mid-animation. */
+  top: 80px !important;
+  max-height: calc(100vh - 110px) !important;
+  margin-top: 0 !important;
+  transition: none !important;
+}
+#pandabreath_prepare_drying_modal.modal.in {
+  display: flex !important;
+  flex-direction: column;
+}
+#pandabreath_prepare_drying_modal .modal-header,
+#pandabreath_prepare_drying_modal .modal-footer {
+  flex: 0 0 auto;
+}
+#pandabreath_prepare_drying_modal .modal-body {
+  overflow-y: auto;
+  max-height: none;
+}
+
+/* E-STOP buttons outside the navbar (sidebar, Safety tab) — match the
+ * navbar button's solid red exactly instead of Bootstrap's lighter
+ * gradient btn-danger, so the emergency stop reads the same everywhere.
+ * !important overrides Bootstrap's .btn-danger gradient/background-image. */
+.pandabreath-estop-btn-solid {
+  background: #b94a48 !important;
+  background-image: none !important;
+  border-color: #953b39 !important;
+  text-shadow: none !important;
+}
+.pandabreath-estop-btn-solid:hover,
+.pandabreath-estop-btn-solid:focus,
+.pandabreath-estop-btn-solid:active {
+  background: #953b39 !important;
+  background-image: none !important;
+}
+
 /* Navbar emergency-stop button — red and obvious. */
+/* OctoPrint's navbar is Bootstrap-2: .navbar-inner is min-height 40px and the
+   regular .nav > li > a links use ~10px vertical padding to fill it. Our pill
+   button is shorter, so it would stick to the top of the li. Pin the li to the
+   full 40px navbar height and absolutely-centre the button inside it with
+   top:50% + translateY(-50%) — deterministic regardless of the li's own
+   content height. The li keeps position:relative as the offset parent, and an
+   explicit min-width stops it collapsing when the button leaves the flow. */
+#navbar_plugin_pandabreath {
+  position: relative;
+  min-height: 40px;
+  min-width: 96px;
+}
 #navbar_plugin_pandabreath .pandabreath-estop-btn {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
   background: #b94a48;
   color: #fff !important;
   padding: 6px 10px;
@@ -101,6 +186,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  line-height: 1;
+  white-space: nowrap;
 }
 #navbar_plugin_pandabreath .pandabreath-estop-btn:hover {
   background: #953b39;

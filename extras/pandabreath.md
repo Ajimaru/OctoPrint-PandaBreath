@@ -8,7 +8,7 @@ authors:
   - ajimaru
 license: MIT
 
-date: 2016-05-03
+date: 2026-07-02
 
 homepage: https://github.com/ajimaru/OctoPrint-PandaBreath
 source: https://github.com/ajimaru/OctoPrint-PandaBreath

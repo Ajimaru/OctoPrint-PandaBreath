@@ -14,7 +14,10 @@
 import logging
 import os
 import re
+import sys
 import threading
+import time
+import urllib.parse
 from typing import TYPE_CHECKING
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -28,7 +31,14 @@ from octoprint.events import Events
 from octoprint.util import RepeatedTimer
 
 from ._version import VERSION as PLUGIN_VERSION
-from .controller import MODE_AUTO, ChamberController
+from .controller import (
+    DEVICE_DRY_TARGET_MAX,
+    DEVICE_DRY_TARGET_MIN,
+    DEVICE_DRY_TIMER_MAX,
+    DEVICE_DRY_TIMER_MIN,
+    MODE_AUTO,
+    ChamberController,
+)
 from .frame_log import FrameLog
 from .mqtt_bridge import MqttBridge, paho_available
 from .protocol import PandaProtocolAdapter
@@ -40,6 +50,52 @@ MQTT_MIN_FW = (1, 0, 4)
 # as "still hot" for the drying interlock, even with no target set — so a
 # dry cycle cannot be armed while the printer is heating up or cooling down.
 PRINTER_HOT_THRESHOLD_C = 50.0
+
+# ---- User-defined custom drying presets --------------------------------
+# These are a pure plugin convenience: a saved {name, target, hours} triple
+# that fills the existing Custom target/timer fields. The device knows
+# nothing about them. Limits guard the settings file against bloat/abuse.
+CUSTOM_PRESET_MAX = 20
+CUSTOM_PRESET_NAME_MAX = 32
+# Whitelist: letters (incl. accented via \w + UNICODE), digits, spaces,
+# hyphen and underscore. 1..32 chars. Rejects anything that could carry
+# markup/control characters even though Knockout escapes on output.
+CUSTOM_PRESET_NAME_RE = re.compile(
+    r"^[\w \-]{1,%d}$" % CUSTOM_PRESET_NAME_MAX, re.UNICODE
+)
+
+
+def validate_custom_preset(name, target, hours):
+    """
+    Validate + normalise a custom-preset triple.
+
+    Returns a clean ``{"name", "target", "hours"}`` dict or raises
+    ``ValueError`` with a user-safe message. Target/timer reuse the device
+    dry-mode bounds so a saved preset can always be applied.
+    """
+    name = "" if name is None else str(name).strip()
+    if not name:
+        raise ValueError("preset name must not be empty")
+    if not CUSTOM_PRESET_NAME_RE.match(name):
+        raise ValueError(
+            "preset name may use letters, digits, spaces, '-' and '_' "
+            f"(max {CUSTOM_PRESET_NAME_MAX} chars)"
+        )
+    try:
+        target = float(target)
+        hours = int(float(hours))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("preset target/timer must be numeric") from exc
+    if not DEVICE_DRY_TARGET_MIN <= target <= DEVICE_DRY_TARGET_MAX:
+        raise ValueError(
+            f"dry target must be {DEVICE_DRY_TARGET_MIN:.0f}-"
+            f"{DEVICE_DRY_TARGET_MAX:.0f}"
+        )
+    if not DEVICE_DRY_TIMER_MIN <= hours <= DEVICE_DRY_TIMER_MAX:
+        raise ValueError(
+            f"dry timer must be {DEVICE_DRY_TIMER_MIN}-{DEVICE_DRY_TIMER_MAX} h"
+        )
+    return {"name": name, "target": target, "hours": hours}
 
 
 def _parse_fw_version(raw):
@@ -119,8 +175,8 @@ class PandabreathPlugin(
     """
     Wire the Panda Breath protocol adapter and chamber controller into OctoPrint.
 
-    Hooks into OctoPrint's lifecycle, settings, API, event bus and
-    GCODE-queuing hook.
+    Hooks into OctoPrint's lifecycle, settings, API, event bus, GCODE-
+    queuing hook and print-starting hook.
     """
 
     # OctoPrint injects these attributes after construction (see
@@ -146,6 +202,12 @@ class PandabreathPlugin(
         self._frame_log = None  # type: FrameLog | None
         self._mqtt_bridge = None  # type: MqttBridge | None
         self._stack_lock = threading.Lock()
+        # Serializes whole stop+start cycles. Two quick settings saves each
+        # spawn a restart thread; without this their _stop_stack/_start_stack
+        # calls can interleave so the second _start_stack overwrites
+        # self._adapter while the first adapter is still running — a leaked
+        # thread that keeps pushing status into a dead controller.
+        self._restart_lock = threading.Lock()
         # Throttle frame broadcasts: an idle Panda emits status frames
         # every few seconds, but a chatty bind sequence can burst. Cap
         # the per-second push rate so a busy plugin-message channel
@@ -176,7 +238,7 @@ class PandabreathPlugin(
             # Observe-only is the safe default. The adapter connects,
             # binds and polls but suppresses every write frame, the
             # controller stops issuing its own heater on/off commands,
-            # and the HTTP API rejects mutating commands with 423.
+            # and the HTTP API rejects mutating commands with 409.
             # Disable this only after verifying real-hardware behaviour
             # from the logs.
             "observe_only": True,
@@ -194,6 +256,11 @@ class PandabreathPlugin(
             "auto_on_print_start": False,
             "auto_off_print_end": True,
             "print_start_target": 40.0,
+            # User-defined drying presets: list of {name, target, hours}.
+            # Pure UI convenience that fills the Custom target/timer fields;
+            # the device does not store these. Managed via the
+            # save_custom_preset / delete_custom_preset API commands.
+            "custom_presets": [],
             # Show the emergency-stop button in the OctoPrint navbar.
             # Enabled by default — the operator can hide it from settings.
             "navbar_estop_enabled": True,
@@ -219,7 +286,9 @@ class PandabreathPlugin(
             "mqtt_host": "",
             "mqtt_port": 1883,
             "mqtt_username": "",
-            "mqtt_password": "",
+            # nosec B105: empty default for a user-supplied settings field,
+            # not a hardcoded secret (the broker password is entered in the UI).
+            "mqtt_password": "",  # nosec B105
             # Plugin-owned topic namespace for the snapshot the plugin
             # publishes and the command topic it listens on. The device's
             # own native topics (panda_breath/<id>/...) are used separately
@@ -270,8 +339,11 @@ class PandabreathPlugin(
 
     def on_after_startup(self):
         """Bring up the protocol stack and the safety watchdog."""
-        self._refresh_frame_log()
-        self._start_stack()
+        # Same serialization as _restart_stack — a settings save that lands
+        # during startup must not interleave its stop/start with ours.
+        with self._restart_lock:
+            self._refresh_frame_log()
+            self._start_stack()
         self._start_watchdog()
         threading.Thread(target=self._fetch_latest_fw, daemon=True).start()
 
@@ -432,10 +504,14 @@ class PandabreathPlugin(
             "set_mode": ["mode"],
             "set_heater": ["on"],
             "set_custom_dry": ["value", "hours"],
+            "save_custom_preset": ["name", "value", "hours"],
+            "delete_custom_preset": ["name"],
             "preset_pla": [],
             "preset_petg": [],
             "start_drying": [],
             "stop_drying": [],
+            "prepare_drying": [],
+            "cancel_prepare_drying": [],
             "set_filter_threshold": ["value"],
             "set_heater_threshold": ["value"],
             "scan_printers": [],
@@ -461,6 +537,11 @@ class PandabreathPlugin(
         # populate the chart on first paint. Push messages send only the
         # incremental sample to keep the channel cheap.
         snapshot["history"] = self._controller.history_samples()
+        # User-defined drying presets live in plugin settings, not the
+        # controller. Attach them so the Drying tab can populate the dropdown
+        # on first paint. Not sent in the 2 Hz push — they only change on an
+        # explicit save/delete, which refreshes the tab anyway.
+        snapshot["custom_presets"] = self._custom_presets()
         # ?debug=1 attaches the frame ring buffer for the debug panel.
         if request.values.get("debug") in ("1", "true", "yes"):
             snapshot["frames"] = (
@@ -483,6 +564,47 @@ class PandabreathPlugin(
             "directory": log.directory(),
             "files": files,
         }
+
+    # ---- Custom drying presets --------------------------------------
+
+    def _custom_presets(self):
+        """Return the stored custom presets as a list (never None)."""
+        presets = self._settings.get(["custom_presets"])
+        return presets if isinstance(presets, list) else []
+
+    def _save_custom_preset(self, name, target, hours):
+        """
+        Validate and persist a custom preset. Same name replaces in place;
+        otherwise it is appended (subject to CUSTOM_PRESET_MAX). Returns the
+        full updated list. Raises ``ValueError`` on bad input or overflow.
+
+        Persists directly via the settings API instead of on_settings_save
+        so saving a preset does not bounce the adapter (no reconnect).
+        """
+        preset = validate_custom_preset(name, target, hours)
+        presets = [dict(p) for p in self._custom_presets()]
+        for i, existing in enumerate(presets):
+            if existing.get("name") == preset["name"]:
+                presets[i] = preset
+                break
+        else:
+            if len(presets) >= CUSTOM_PRESET_MAX:
+                raise ValueError(
+                    f"at most {CUSTOM_PRESET_MAX} custom presets are allowed"
+                )
+            presets.append(preset)
+        self._settings.set(["custom_presets"], presets)
+        self._settings.save()
+        return presets
+
+    def _delete_custom_preset(self, name):
+        """Remove the preset with the given name (no-op if absent). Returns
+        the updated list."""
+        name = "" if name is None else str(name).strip()
+        presets = [dict(p) for p in self._custom_presets() if p.get("name") != name]
+        self._settings.set(["custom_presets"], presets)
+        self._settings.save()
+        return presets
 
     # ---- BlueprintPlugin (frame log download) -----------------------
 
@@ -603,6 +725,23 @@ class PandabreathPlugin(
         if perm is not None and not perm.can():
             return flask.abort(403)
 
+        # Custom presets are pure plugin settings (no device I/O, no
+        # controller needed). Handle them before the controller checks and
+        # return the updated list so the UI can refresh the dropdown.
+        if command in ("save_custom_preset", "delete_custom_preset"):
+            try:
+                if command == "save_custom_preset":
+                    presets = self._save_custom_preset(
+                        data.get("name"), data.get("value"), data.get("hours")
+                    )
+                else:
+                    presets = self._delete_custom_preset(data.get("name"))
+            except (ValueError, TypeError) as exc:
+                return flask.make_response(
+                    flask.jsonify({"error": _safe_error_message(exc)}), 400
+                )
+            return flask.jsonify({"custom_presets": presets})
+
         if self._controller is None:
             return flask.make_response(
                 flask.jsonify({"error": "PandaBreath not initialised"}),
@@ -680,6 +819,10 @@ class PandabreathPlugin(
             c.start_drying()
         elif command == "stop_drying":
             c.stop_drying()
+        elif command == "prepare_drying":
+            c.prepare_drying()
+        elif command == "cancel_prepare_drying":
+            c.cancel_prepare_drying()
         elif command == "set_filter_threshold":
             c.set_filter_threshold(data.get("value"))
         elif command == "set_heater_threshold":
@@ -689,12 +832,15 @@ class PandabreathPlugin(
         elif command == "refresh_settings":
             c.refresh_settings()
         elif command == "lock":
-            c.lock(reason=source)
+            # The reason is the documented ``user`` for every operator-
+            # triggered lock; the transport (api/mqtt) only goes to the log.
+            self._logger.info("PandaBreath: safety lock engaged via %s", source)
+            c.lock(reason="user")
         elif command == "unlock":
             c.unlock()
         elif command == "emergency_stop":
             self._logger.warning("PandaBreath: EMERGENCY STOP triggered via %s", source)
-            c.emergency_stop(reason="navbar_estop")
+            c.emergency_stop(reason="estop")
         else:
             return False
         return True
@@ -761,7 +907,89 @@ class PandabreathPlugin(
                         "PandaBreath: failed to apply auto-off at print end"
                     )
 
-    # ---- GCODE hook (M141 / M191) -----------------------------------
+    # ---- Print-start hook --------------------------------------------
+
+    # Connector ids (OctoPrint's ``connection_state["connector"]``) whose
+    # GCODE actually flows through the serial_connector plugin's
+    # ``octoprint.comm.protocol.gcode.queuing`` hook — the hook
+    # hook_gcode_queuing below relies on. Third-party connectors (Moonraker,
+    # Prusa Connect, ...) send GCODE straight to their own backend and never
+    # invoke it, so the movement/heater block in hook_gcode_queuing is a
+    # no-op there; print-starting stays enforced everywhere since it isn't
+    # connector-specific. See _gcode_hook_effective() and the
+    # ``gcode_hook_effective`` snapshot field the UI warns on.
+    _SERIAL_CONNECTOR_IDS = ("serial",)
+
+    def _gcode_hook_effective(self):
+        """
+        Best-effort check: does hook_gcode_queuing actually see this
+        printer's GCODE?
+
+        OctoPrint 2.0's connector architecture has no connector-agnostic
+        hook for commands()/home()/jog() — only the built-in serial
+        connector still routes through the legacy
+        octoprint.comm.protocol.gcode.queuing hook. Anything else (Moonraker,
+        etc.) bypasses it entirely, so the heating/movement block below
+        cannot be relied on there. Fails open (True) if the connector can't
+        be determined — matches the rest of this module's fail-open stance
+        and avoids a false "unprotected" warning on ordinary serial setups
+        where introspection hiccups.
+        """
+        printer = getattr(self, "_printer", None)
+        if printer is None:
+            return True
+        try:
+            state = printer.connection_state
+            connector = state.get("connector") if isinstance(state, dict) else None
+        except Exception:  # pylint: disable=broad-exception-caught
+            self._logger.debug(
+                "PandaBreath: connector-type probe failed", exc_info=True
+            )
+            return True
+        if connector is None:
+            return True
+        return connector in self._SERIAL_CONNECTOR_IDS
+
+    def hook_print_starting(  # pylint: disable=unused-argument
+        self, comm_instance, filename, user, *args, **kwargs
+    ):
+        """
+        Refuse to start a print job while the drying interlock is armed.
+
+        Signature dictated by OctoPrint's ``octoprint.printer.print.starting``
+        hook contract. Returning a non-empty string aborts the print start
+        and surfaces the string as the error shown to the user; returning
+        ``None`` allows it. Fails open (returns None) if the controller
+        isn't up — the existing drying interlock (heat/movement block) is
+        the backstop in that case. Connector-agnostic: print start always
+        goes through OctoPrint core regardless of which connector plugin is
+        active, unlike hook_gcode_queuing below.
+        """
+        controller = self._controller
+        if controller is None:
+            return None
+        try:
+            if controller.is_drying_locked():
+                return (
+                    "PandaBreath: cannot start a print while drying mode is "
+                    "prepared/active. Stop drying first."
+                )
+        except Exception:  # pylint: disable=broad-exception-caught
+            self._logger.debug(
+                "PandaBreath: drying-lock probe failed in print-starting hook",
+                exc_info=True,
+            )
+        return None
+
+    # ---- GCODE hook (M141 / M191, drying interlock) -------------------
+
+    # GCODE codes that move or home an axis — blocked while the drying
+    # interlock is armed so a parked bed/toolhead cannot be driven back
+    # into the chamber's heating path.
+    _DRYING_BLOCKED_MOVEMENT_GCODES = ("G28", "G0", "G1")
+    # GCODE codes that command a heater — blocked for the same reason
+    # (M104/M109 hotend, M140/M190 bed).
+    _DRYING_BLOCKED_HEATER_GCODES = ("M104", "M109", "M140", "M190")
 
     def hook_gcode_queuing(  # pylint: disable=unused-argument
         self,
@@ -774,7 +1002,8 @@ class PandabreathPlugin(
         **kwargs,
     ):
         """
-        Intercept M141/M191 from the gcode stream and re-target the chamber.
+        Intercept M141/M191 from the gcode stream and re-target the chamber;
+        also enforce the drying interlock against heating/movement GCODE.
 
         The full signature is dictated by OctoPrint's
         ``octoprint.comm.protocol.gcode.queuing`` hook contract; all positional
@@ -784,6 +1013,26 @@ class PandabreathPlugin(
         """
         if self._controller is None:
             return None
+        if gcode in self._DRYING_BLOCKED_MOVEMENT_GCODES or (
+            gcode in self._DRYING_BLOCKED_HEATER_GCODES
+        ):
+            try:
+                locked = self._controller.is_drying_locked()
+            except Exception:  # pylint: disable=broad-exception-caught
+                locked = False
+                self._logger.debug(
+                    "PandaBreath: drying-lock probe failed in gcode hook",
+                    exc_info=True,
+                )
+            if locked:
+                self._logger.info(
+                    "PandaBreath: blocked %s while drying interlock armed",
+                    gcode,
+                )
+                # Swallow the command instead of forwarding it — the bed/
+                # toolhead was parked by the operator via "Prepare Drying"
+                # and must not move or heat until drying is stopped.
+                return (None,)
         if not self._settings.get_boolean(["gcode_integration"]):
             return None
         if gcode not in ("M141", "M191"):
@@ -1000,8 +1249,6 @@ class PandabreathPlugin(
         multiple OctoPrint instances on the same broker stay separate.
         Otherwise uses mqtt_base_topic verbatim.
         """
-        import urllib.parse
-
         base = (s.get(["mqtt_base_topic"]) or self._DEFAULT_BASE_TOPIC).rstrip("/")
         if not s.get_boolean(["mqtt_use_appearance_name"]):
             return base
@@ -1115,9 +1362,10 @@ class PandabreathPlugin(
                 self._logger.exception("PandaBreath: adapter stop failed")
 
     def _restart_stack(self):
-        self._refresh_frame_log()
-        self._stop_stack()
-        self._start_stack()
+        with self._restart_lock:
+            self._refresh_frame_log()
+            self._stop_stack()
+            self._start_stack()
 
     def _refresh_frame_log(self):
         """
@@ -1173,6 +1421,12 @@ class PandabreathPlugin(
         snapshot["mqtt_enabled"] = self._settings.get_boolean(["mqtt_enabled"])
         snapshot["mqtt_active"] = self._mqtt_bridge is not None
         snapshot["mqtt_supported"] = fw_supports_mqtt(snapshot.get("fw_version"))
+        # True unless the active printer connector is known to bypass
+        # hook_gcode_queuing (see _gcode_hook_effective) — the UI uses this
+        # to warn that the drying interlock can't back its heating/movement
+        # block with a server-side GCODE block on this connector, only the
+        # print-starting hook (which is connector-agnostic) still applies.
+        snapshot["gcode_hook_effective"] = self._gcode_hook_effective()
 
     def _push_status(self, snapshot):
         snapshot["latest_fw_version"] = self._latest_fw_version
@@ -1202,9 +1456,7 @@ class PandabreathPlugin(
     def _on_frame(self, direction, frame):
         # Rate-limit to ~5 broadcasts/s. UI catches up via the debug API
         # on next refresh if we drop a burst.
-        import time as _time
-
-        now = _time.monotonic()
+        now = time.monotonic()
         with self._frame_push_lock:
             if now - self._frame_push_last < 0.2:
                 return
@@ -1212,7 +1464,7 @@ class PandabreathPlugin(
         self._send_plugin_message(
             {
                 "kind": "frame",
-                "ts": _time.time(),
+                "ts": time.time(),
                 "dir": direction,
                 "frame": frame,
             }
@@ -1291,8 +1543,6 @@ def __plugin_load__():  # noqa: N807  (mandatory OctoPrint loader hook name)
     # after this function returns. Done via ``setattr`` on the module
     # object so the assignment is explicit and no ``global`` statement is
     # needed.
-    import sys
-
     impl = PandabreathPlugin()
     module = sys.modules[__name__]
     setattr(module, "__plugin_implementation__", impl)
@@ -1304,6 +1554,7 @@ def __plugin_load__():  # noqa: N807  (mandatory OctoPrint loader hook name)
                 impl.get_update_information
             ),
             "octoprint.comm.protocol.gcode.queuing": impl.hook_gcode_queuing,
+            "octoprint.printer.print.starting": impl.hook_print_starting,
             "octoprint.access.permissions": impl.get_additional_permissions,
         },
     )

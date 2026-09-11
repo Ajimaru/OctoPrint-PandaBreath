@@ -23,8 +23,8 @@ repos:
       - id: end-of-file-fixer
         # Skip gettext catalogs in BOTH the top-level translations/ and the
         # copied package translations dir (octoprint_<pkg>/translations/...).
-        # The previous '^translations/...' anchor missed the package copy, so
-        # the hook kept stripping a trailing blank line and aborting commits.
+        # A bare '^translations/...' anchor misses the package copy, so the
+        # hook keeps stripping a trailing blank line and aborting commits.
         exclude: '(^|/)translations/.*\.(po|pot)$' # Ensure files end with a newline (skip translation sources)
       - id: check-executables-have-shebangs # Verify executable scripts have a shebang line
       - id: check-shebang-scripts-are-executable # Ensure scripts with shebangs are executable

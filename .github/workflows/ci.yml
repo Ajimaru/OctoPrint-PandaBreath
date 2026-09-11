@@ -55,7 +55,7 @@ jobs:
     steps:
       - # Checkout repository code
         name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - # Load central tool-version pins, overriding the env: fallbacks above.
         name: Load tool versions
@@ -66,7 +66,7 @@ jobs:
 
       - # Setup Python version and pip cache
         name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -103,7 +103,7 @@ jobs:
       - # Upload coverage.xml to Codecov
         name: Upload coverage to Codecov
         if: ${{ matrix.run-coverage && github.repository == 'Ajimaru/OctoPrint-PandaBreath' }}
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           files: cobertura.xml
           flags: unittests
@@ -124,7 +124,7 @@ jobs:
       - # Setup Node.js for pre-commit hooks (ESLint/Prettier)
         name: Set up Node.js for hooks
         if: ${{ matrix.run-precommit && hashFiles('.pre-commit-config.yaml') != '' && hashFiles('package.json') != '' }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "${{ env.NODE_VERSION }}"
 
@@ -196,10 +196,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip

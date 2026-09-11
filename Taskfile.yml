@@ -3,7 +3,7 @@
 version: "3"
 
 env:
-  LOCALES: [] # list your included locales here, e.g. ["de", "fr"]
+  LOCALES: ["de"] # included locales; empty made babel-update/compile no-ops, blanking the top-level catalog
   TRANSLATIONS: octoprint_pandabreath/translations # translations folder, do not touch
 
 tasks:
@@ -53,14 +53,20 @@ tasks:
   babel-extract:
     desc: Update pot file from source
     cmds:
-      - pybabel extract --mapping-file=babel.cfg --output-file=translations/messages.pot --msgid-bugs-address=i18n@octoprint.org --copyright-holder="The OctoPrint Project" .
+      # Extract only from real source paths (mirrors CI i18n.yml). Scanning the
+      # repo root pulled source refs from build/ and crashed on foreign Jinja
+      # templates under .cache/octoprint-src (unknown {% assets %} tag).
+      - pybabel extract --sort-output --mapping-file=babel.cfg --output-file=translations/messages.pot --msgid-bugs-address=i18n@octoprint.org --copyright-holder="The OctoPrint Project" setup.py octoprint_pandabreath tests
 
   babel-update:
     desc: Update translation files from pot file
     cmds:
+      # --no-fuzzy-matching: never auto-match a new msgid to a similar old
+      # translation. Babel's fuzzy matcher silently pulled stale Argos strings
+      # (e.g. "Saved presets" -> "Filament-Voreinstellung") onto new keys.
       - for:
           var: LOCALES
-        cmd: pybabel update --input-file=translations/messages.pot --output-dir=translations --locale={{ .ITEM }}
+        cmd: pybabel update --no-fuzzy-matching --input-file=translations/messages.pot --output-dir=translations --locale={{ .ITEM }}
 
   babel-refresh:
     desc: Update translation files from source

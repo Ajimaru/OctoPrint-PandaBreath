@@ -153,10 +153,11 @@
                                    min="0"
                                    max="60"
                                    step="1"
-                                   data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled">
+                                   data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled"
+                                   inputmode="numeric">
                             <button class="btn" data-bind="click: applyTarget, enable: controlsEnabled">{{ _("Apply") }}</button>
                         </div>
-                        <span class="help-block">{{ _("Chamber heats to this temperature regardless of the paired printer state.") }}</span>
+                        <span class="help-block">{{ _("Chamber heats to this temperature regardless of the paired printer state (0–60 °C, whole numbers only).") }}</span>
                     </div>
                 </div>
                 <!-- Auto mode: target + two thresholds tracking the printer hotbed -->
@@ -176,7 +177,8 @@
                                                            min="0"
                                                            max="60"
                                                            step="1"
-                                                           data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled">
+                                                           data-bind="value: targetInput, valueUpdate: 'input', hasFocus: targetInputFocused, enable: controlsEnabled"
+                                                           inputmode="numeric">
                                                     <button class="btn" data-bind="click: applyTarget, enable: controlsEnabled">{{ _('Apply') }}</button>
                                                 </div>
                                                 <span class="help-block">{{ _('Setpoint the chamber heats to once activated by the heater threshold below.') }}</span>
@@ -188,14 +190,15 @@
                                                            min="0"
                                                            max="120"
                                                            step="1"
-                                                           data-bind="value: filterThresholdInput, valueUpdate: 'input', hasFocus: filterThresholdInputFocused, enable: controlsEnabled">
+                                                           data-bind="value: filterThresholdInput, valueUpdate: 'input', hasFocus: filterThresholdInputFocused, enable: controlsEnabled"
+                                                           inputmode="numeric">
                                                     <button class="btn"
                                                             data-bind="click: applyFilterThreshold, enable: controlsEnabled">
                                                         {{ _('Apply') }}
                                                     </button>
                                                 </div>
                                                 <span class="help-block">
-                                                    {{ _('Filter fan switches on when the printer hotbed crosses this temperature — useful for filament odour control at lower bed temperatures (e.g. PLA).') }}
+                                                    {{ _('Filter fan switches on when the printer hotbed crosses this temperature — useful for filament odour control at lower bed temperatures (e.g. PLA, 0–120 °C, whole numbers only).') }}
                         </span>
                     </div>
                     <div class="control-group">
@@ -205,14 +208,15 @@
                                    min="40"
                                    max="120"
                                    step="1"
-                                   data-bind="value: heaterThresholdInput, valueUpdate: 'input', hasFocus: heaterThresholdInputFocused, enable: controlsEnabled">
+                                   data-bind="value: heaterThresholdInput, valueUpdate: 'input', hasFocus: heaterThresholdInputFocused, enable: controlsEnabled"
+                                   inputmode="numeric">
                             <button class="btn"
                                     data-bind="click: applyHeaterThreshold, enable: controlsEnabled">
                                 {{ _("Apply") }}
                             </button>
                         </div>
                         <span class="help-block">
-                            {{ _("Chamber heater (and filter fan) switch on when the printer hotbed crosses this temperature — typically set higher than the filter threshold to limit heating to materials that need it (e.g. ABS, PETG).") }}
+                            {{ _("Chamber heater (and filter fan) switch on when the printer hotbed crosses this temperature — typically set higher than the filter threshold to limit heating to materials that need it (e.g. ABS, PETG, 40–120 °C, whole numbers only).") }}
                         </span>
                     </div>
                 </div>
@@ -245,9 +249,9 @@
             <div class="control-group">
                 <label>{{ _("Emergency stop") }}</label>
                 <div>
-                    <button class="btn btn-danger btn-large"
+                    <button class="btn btn-danger btn-large pandabreath-estop-btn-solid"
                             data-bind="click: confirmEmergencyStop">
-                        <i class="fa fa-power-off"></i>
+                        <i class="fa fa-wind"></i>
                         {{ _("E-STOP") }}
                     </button>
                 </div>
@@ -296,13 +300,28 @@
                         </span>
                     </div>
                     <div data-bind="visible: dryPreset() === 'custom'">
+                        <div class="control-group" data-bind="visible: customPresets().length">
+                            <label>{{ _("Saved presets") }}</label>
+                            <div class="input-append">
+                                <select data-bind="options: customPresets, optionsText: 'name', value: selectedPreset, optionsCaption: '{{ _("Select a preset…") }}', enable: dryEditEnabled">
+                                </select>
+                                <button class="btn btn-danger"
+                                        title="{{ _('Delete preset') }}"
+                                        data-bind="click: deleteCustomPreset, enable: dryEditEnabled() && selectedPreset()">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                            <span class="help-block">{{ _("Selecting a preset fills the target and timer below.") }}</span>
+                        </div>
                         <div class="control-group">
                             <label>{{ _("Dry target") }} (°C)</label>
                             <input type="number"
                                    min="40"
                                    max="60"
                                    step="1"
-                                   data-bind="value: dryTargetInput, valueUpdate: 'input', hasFocus: dryTargetInputFocused, enable: dryEditEnabled">
+                                   data-bind="value: dryTargetInput, valueUpdate: 'input', hasFocus: dryTargetInputFocused, enable: dryEditEnabled"
+                                   inputmode="numeric">
+                            <span class="help-block">{{ _("Filament drying temperature (40–60 °C, whole numbers only).") }}</span>
                         </div>
                         <div class="control-group">
                             <label>{{ _("Dry timer") }} ({{ _("hours") }})</label>
@@ -319,6 +338,20 @@
                                 {{ _("Apply Custom") }}
                             </button>
                             <span class="help-block">{{ _("Sends target + timer + commit in one transaction (single reconnect).") }}</span>
+                        </div>
+                        <div class="control-group">
+                            <label>{{ _("Save as preset") }}</label>
+                            <div class="input-append">
+                                <input type="text"
+                                       maxlength="32"
+                                       placeholder="{{ _('Preset name') }}"
+                                       data-bind="value: newPresetName, valueUpdate: 'input', enable: dryEditEnabled">
+                                <button class="btn"
+                                        data-bind="click: saveCustomPreset, enable: dryEditEnabled">
+                                    <i class="fa fa-save"></i> {{ _("Save preset") }}
+                                </button>
+                            </div>
+                            <span class="help-block">{{ _("Saves the current target and timer under a name for quick reuse. Letters, digits, spaces, '-' and '_' (max 32 chars).") }}</span>
                         </div>
                     </div>
                 </div>
@@ -343,12 +376,12 @@
                     <div class="control-group">
                         <label>{{ _("Drying control") }}</label>
                         <div class="btn-group">
-                            <button class="btn btn-success"
-                                    data-bind="click: startDrying, enable: canStartDrying, css: { active: dryingActive }">
-                                <i class="fa fa-play"></i> {{ _("Start drying") }}
+                            <button class="btn"
+                                    data-bind="click: prepareDrying, enable: canPrepareDrying, css: { 'btn-warning': canPrepareDrying, active: dryingPrepared }">
+                                <i class="fa fa-lock"></i> {{ _("Prepare drying") }}
                             </button>
                             <button class="btn btn-danger"
-                                    data-bind="click: stopDrying, enable: canStopDrying, css: { active: !dryingActive() }">
+                                    data-bind="click: stopDryingAndClose, enable: controlsEnabled, visible: dryingLocked">
                                 <i class="fa fa-stop"></i> {{ _("Stop drying") }}
                             </button>
                         </div>
@@ -356,14 +389,170 @@
                             {{ _("Drying is disabled while the printer is running a job or heating — the chamber is needed for printing, not filament drying.") }}
                         </span>
                         <span class="help-block"
-                              data-bind="visible: !octoprintBusy() && !canStartDrying() && !dryingActive()">
-                            {{ _("To start drying: switch to Dry mode and turn Power on in the Chamber tab first.") }}
+                              data-bind="visible: !octoprintBusy() && !canPrepareDrying() && !dryingLocked()">
+                            {{ _("To prepare drying: switch to Dry mode and turn Power on in the Chamber tab first.") }}
                         </span>
-                        <span class="help-block"
-                              data-bind="visible: canStartDrying() || dryingActive()">
-                            {{ _("Mirrors the Start/Stop buttons in the Panda Breath WebUI.") }}
+                        <span class="help-block text-warning" data-bind="visible: dryingLocked">
+                            {{ _("Printing, heating and movement are blocked.") }}
                         </span>
                     </div>
+                </div>
+            </div>
+        </div>
+        <!-- =========================================================
+             PREPARE DRYING — modal spanning the whole drying session
+             Bootstrap 2 modal, static backdrop + keyboard disabled (set in
+             JS on show) so clicking outside / Escape do nothing. Three
+             panels toggled by visible bindings:
+               1. checklist  — shown until confirmPrepareDrying()
+               2. control    — shown after, with preset picker + Start/Stop
+                                + live countdown (reuses the tab's own
+                                observables/commands)
+               3. close-confirm — shown when the modal's own (x) is clicked
+                                   while armed; "keep going" vs "stop drying"
+             The modal's (x) never dismisses directly (data-dismiss removed,
+             wired to requestClosePrepareDrying instead).
+             ========================================================= -->
+        <div id="pandabreath_prepare_drying_modal"
+             class="modal hide fade"
+             tabindex="-1"
+             role="dialog">
+            <div class="modal-header">
+                <button type="button"
+                        class="close"
+                        data-bind="click: requestClosePrepareDrying"
+                        aria-hidden="true">&times;</button>
+                <h3>{{ _("Prepare drying") }}</h3>
+            </div>
+            <div class="modal-body">
+                <!-- Panel 1: checklist -->
+                <div data-bind="visible: !prepareDryingModalArmed() && !prepareDryingAskCloseConfirm()">
+                    <p class="text-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        {{ _("Confirm the following before drying is armed. Once confirmed, printing, heating and all movement/homing are blocked until drying is stopped.") }}
+                    </p>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: prepareDryingParkedConfirmed">
+                        {{ _("I have manually parked the bed and toolhead(s) in a position safe for this printer's own kinematics.") }}
+                    </label>
+                    <label class="checkbox disabled">
+                        <input type="checkbox" disabled data-bind="checked: prepareDryingBedOk">
+                        {{ _("Heated bed is off / cold.") }}
+                    </label>
+                    <label class="checkbox disabled">
+                        <input type="checkbox" disabled data-bind="checked: prepareDryingToolsOk">
+                        {{ _("Toolhead(s) are off / cold.") }}
+                    </label>
+                    <p class="text-error" data-bind="visible: !gcodeHookEffective()">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        {{ _("This connection (e.g. Moonraker/Klipper) can't block heating/movement G-code — advisory only, not enforced.") }}
+                    </p>
+                </div>
+                <!-- Panel 2: preset + start/stop + countdown (post-confirm) -->
+                <div data-bind="visible: prepareDryingModalArmed() && !prepareDryingAskCloseConfirm()">
+                    <p class="text-success">
+                        <i class="fa fa-lock"></i>
+                        {{ _("Drying is prepared — printing, heating and movement are blocked.") }}
+                    </p>
+                    <div class="control-group">
+                        <label>{{ _("Filament preset") }}</label>
+                        <div class="btn-group">
+                            <button class="btn"
+                                    data-bind="click: selectPresetPla, enable: dryEditEnabled, css: { active: dryPreset() === 'pla' }">
+                                PLA
+                            </button>
+                            <button class="btn"
+                                    data-bind="click: selectPresetPetg, enable: dryEditEnabled, css: { active: dryPreset() === 'petg' }">
+                                PETG / ABS
+                            </button>
+                            <button class="btn"
+                                    data-bind="click: function(){ dryPreset('custom'); }, enable: dryEditEnabled, css: { active: dryPreset() === 'custom' }">
+                                {{ _("Custom") }}
+                            </button>
+                        </div>
+                    </div>
+                    <div data-bind="visible: dryPreset() === 'custom'">
+                        <div class="control-group" data-bind="visible: customPresets().length">
+                            <label>{{ _("Saved presets") }}</label>
+                            <select data-bind="options: customPresets, optionsText: 'name', value: selectedPreset, optionsCaption: '{{ _("Select a preset…") }}', enable: dryEditEnabled">
+                            </select>
+                            <span class="help-block">{{ _("Selecting a preset fills the target and timer below.") }}</span>
+                        </div>
+                        <div class="control-group">
+                            <label>{{ _("Dry target") }} (°C)</label>
+                            <input type="number"
+                                   min="40"
+                                   max="60"
+                                   step="1"
+                                   data-bind="value: dryTargetInput, valueUpdate: 'input', hasFocus: dryTargetInputFocused, enable: dryEditEnabled"
+                                   inputmode="numeric">
+                        </div>
+                        <div class="control-group">
+                            <label>{{ _("Dry timer") }} ({{ _("hours") }})</label>
+                            <input type="number"
+                                   min="1"
+                                   max="99"
+                                   step="1"
+                                   data-bind="value: dryTimerInput, valueUpdate: 'input', hasFocus: dryTimerInputFocused, enable: dryEditEnabled">
+                        </div>
+                        <div class="control-group">
+                            <button class="btn btn-primary"
+                                    data-bind="click: applyCustomDry, enable: dryEditEnabled">
+                                {{ _("Apply Custom") }}
+                            </button>
+                        </div>
+                        <span class="help-block">{{ _("Use the Drying tab behind this dialog to save or delete presets.") }}</span>
+                    </div>
+                    <table class="table table-condensed">
+                        <tr>
+                            <th>{{ _("Current dry target") }}</th>
+                            <td data-bind="text: dryTargetDisplay"></td>
+                        </tr>
+                        <tr>
+                            <th>{{ _("Timer remaining") }}</th>
+                            <td data-bind="text: dryRemainingDisplay"></td>
+                        </tr>
+                    </table>
+                    <div class="control-group">
+                        <div class="btn-group">
+                            <button class="btn btn-success"
+                                    data-bind="click: startDrying, enable: canStartDrying, css: { active: dryingActive }">
+                                <i class="fa fa-play"></i> {{ _("Start drying") }}
+                            </button>
+                            <button class="btn btn-danger"
+                                    data-bind="click: stopDryingAndClose, enable: controlsEnabled">
+                                <i class="fa fa-stop"></i>
+                                <span data-bind="text: dryingActive() ? '{{ _("Stop drying") }}' : '{{ _("Cancel") }}'"></span>
+                            </button>
+                        </div>
+                        <span class="help-block"
+                              data-bind="visible: !canStartDrying() && !dryingActive()">
+                            {{ _("Turn Power on in the Chamber tab to start drying.") }}
+                        </span>
+                    </div>
+                </div>
+                <!-- Panel 3: close-confirmation ((x) while armed) -->
+                <div data-bind="visible: prepareDryingAskCloseConfirm">
+                    <p class="text-warning">
+                        <i class="fa fa-question-circle"></i>
+                        {{ _("Drying is still prepared/active. Stop drying now, or keep going?") }}
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- Checklist footer -->
+                <div data-bind="visible: !prepareDryingModalArmed() && !prepareDryingAskCloseConfirm()">
+                    <button class="btn btn-warning"
+                            data-bind="click: confirmPrepareDrying, enable: prepareDryingCanConfirm">
+                        <i class="fa fa-lock"></i> {{ _("Confirm & lock") }}
+                    </button>
+                </div>
+                <!-- Close-confirmation footer -->
+                <div data-bind="visible: prepareDryingAskCloseConfirm">
+                    <button class="btn" data-bind="click: prepareDryingKeepGoing">{{ _("Keep going") }}</button>
+                    <button class="btn btn-danger" data-bind="click: stopDryingAndClose">
+                        <i class="fa fa-stop"></i> {{ _("Stop drying") }}
+                    </button>
                 </div>
             </div>
         </div>

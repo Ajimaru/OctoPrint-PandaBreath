@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "OctoPrint-PandaBreath"
-version = "0.2.1"
+version = "0.3.0"
 description = "PandaBreath plugin for OctoPrint"
 authors = [
     {name = "ajimaru", email = "ajimaru_gdr@pm.me"}
@@ -43,7 +43,7 @@ develop = [
     "go-task-bin",
     # Match OctoPrint's constraint (Babel<2.17) so locally generated message
     # catalogs match the i18n CI and the OctoPrint test venvs.
-    "Babel>=2.16,<2.17",
+    "Babel>=2.16,<2.19",
     "polib",
     "pyyaml"
 ]
