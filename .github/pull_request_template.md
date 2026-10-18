@@ -9,6 +9,7 @@
 - [ ] Docs
 - [ ] Refactor
 - [ ] Security
+- [ ] CI
 
 ## Checklist
 
@@ -16,4 +17,3 @@
 - [ ] Related issue(s)
 - [ ] Tests added / updated
 - [ ] Documentation updated
-- [ ] `CHANGELOG.md` entry added
