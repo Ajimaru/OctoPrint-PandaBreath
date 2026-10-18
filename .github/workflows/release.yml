@@ -2,8 +2,7 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    tags: ["v*", "[0-9]*"]
 
 permissions:
   contents: write
@@ -31,6 +30,35 @@ jobs:
       - name: Build sdist and wheel
         run: |
           python -m build
+
+      - name: Validate paths (prevent directory traversal)
+        run: |
+          for f in dist/*; do
+            rel="$(realpath --relative-to="$(pwd)" "$f")"
+            case "$rel" in
+              .*) echo "Suspicious path: $f ($rel)"; exit 1 ;;
+            esac
+          done
+
+      - name: Determine prerelease
+        id: prerelease
+        run: |
+          TAG="${{ github.ref_name }}"
+          TAG_LOWER="$(printf '%s' "$TAG" | tr '[:upper:]' '[:lower:]')"
+          # Prerelease = a/b/rc/dev segment in the VERSION part of the tag,
+          # in either spelling:
+          #   PEP 440 short form   0.2.2a1, 0.2.2b2, 0.2.2rc1, 0.2.2.dev6
+          #   written-out suffix   1.0.0-alpha.1, 1.0.0-beta, 1.0.0-pre
+          # The marker needs a digit or separator before it and must end at
+          # the tag end or at the local part ("+hash"), so a commit hash that
+          # happens to end in e.g. "b1" can never flip the detection. A bare
+          # `contains(ref, 'a')` cannot do this: it fires on any "a" anywhere
+          # in the tag, and it misses ".dev6" entirely.
+          if echo "$TAG_LOWER" | grep -qE '(^|[-._0-9])(a|b|rc|dev|alpha|beta|pre|preview)([.-]?[0-9]+)?($|\+)'; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create zip assets (versioned + latest)
         shell: bash
@@ -149,8 +177,12 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           name: ${{ steps.release_title.outputs.title }}
-          draft: false
-          prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'a') || contains(github.ref_name, 'b') }}
+          # Always a draft: a release is published by hand once the notes and
+          # the attached artifacts have been eyeballed. Pushing a tag must
+          # never publish on its own — the plugin manager pulls the fixed
+          # "…-latest.zip" URL straight off the published release.
+          draft: true
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
           body_path: release_notes.md
           files: dist/*
 
