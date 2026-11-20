@@ -5,11 +5,11 @@
 <h1 align="center">OctoPrint‑PandaBreath</h1>
 <!-- markdownlint-enable MD041 MD033 -->
 
-[![License](https://img.shields.io/github/license/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/blob/main/LICENSE)
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=flat-square)](https://python.org)
-[![OctoPrint](https://img.shields.io/badge/OctoPrint-1.10.0%2B-blue?style=flat-square)](https://octoprint.org)
-[![Latest Release](https://img.shields.io/github/v/release/Ajimaru/OctoPrint-PandaBreath?sort=semver&style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/Ajimaru/OctoPrint-PandaBreath/total?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
+[![License](https://img.shields.io/github/license/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=opensourceinitiative&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![OctoPrint](https://img.shields.io/badge/OctoPrint-1.10.0%2B-blue?style=flat-square&logo=octoprint&logoColor=white)](https://octoprint.org)
+[![Latest Release](https://img.shields.io/github/v/release/Ajimaru/OctoPrint-PandaBreath?sort=semver&style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Ajimaru/OctoPrint-PandaBreath/total?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
 [![Made with Love](https://img.shields.io/badge/made_with-❤️-ff69b4?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath)
 
 ### Direct control of the BIQU Panda Breath chamber heater from OctoPrint
@@ -229,53 +229,53 @@ Summary: this project exposes many status and quality badges (CI, linting, cover
 
 ### 🧪 2. Code Quality & Formatting
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000?style=flat-square)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat-square&labelColor=ef8336)](https://pycqa.github.io/isort/)
-[![Code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4?style=flat-square)](https://github.com/prettier/prettier)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000?style=flat-square&logo=black&logoColor=white)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat-square&labelColor=ef8336&logo=python&logoColor=white)](https://pycqa.github.io/isort/)
+[![Code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4?style=flat-square&logo=prettier&logoColor=white)](https://github.com/prettier/prettier)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat-square&logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/25bef9ed851a46918f55ed04def67286)](https://app.codacy.com/gh/Ajimaru/OctoPrint-PandaBreath/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Coverage](https://codecov.io/gh/Ajimaru/OctoPrint-PandaBreath/graph/badge.svg?branch=main&style=flat-square)](https://codecov.io/gh/Ajimaru/OctoPrint-PandaBreath)
-[![Pylint Score](https://img.shields.io/badge/pylint-10.0-green?style=flat-square)](https://www.pylint.org/)
-[![Bandit Security](https://img.shields.io/badge/bandit-security-green?style=flat-square)](https://bandit.readthedocs.io/en/latest/)
+[![Pylint Score](https://img.shields.io/badge/pylint-10.0-green?style=flat-square&logo=python&logoColor=white)](https://www.pylint.org/)
+[![Bandit Security](https://img.shields.io/badge/bandit-security-green?style=flat-square&logo=python&logoColor=white)](https://bandit.readthedocs.io/en/latest/)
 [![Depfu](https://badges.depfu.com/badges/4082d9117ad23681e381205c3efa5029/status.svg)](https://depfu.com)
 [![Known Vulnerabilities](https://snyk.io/test/github/Ajimaru/OctoPrint-PandaBreath/badge.svg)](https://snyk.io/test/github/Ajimaru/OctoPrint-PandaBreath)
 
 ### 🔄 3. CI/CD & Release
 
-[![SemVer](https://img.shields.io/badge/semver-2.0.0-blue?style=flat-square)](https://semver.org/)
-[![Release Date](https://img.shields.io/github/release-date/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
-[![Latest Release](https://img.shields.io/github/v/release/Ajimaru/OctoPrint-PandaBreath?sort=semver&style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/Ajimaru/OctoPrint-PandaBreath/total?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
-[![Pre‑Release](https://img.shields.io/github/v/release/Ajimaru/OctoPrint-PandaBreath?include_prereleases&label=pre-release&style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=flat-square)](https://python.org)
-[![OctoPrint](https://img.shields.io/badge/OctoPrint-1.10.0%2B-blue?style=flat-square)](https://octoprint.org)
-[![Maintenance](https://img.shields.io/maintenance/yes/2026?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/graphs/commit-activity)
+[![SemVer](https://img.shields.io/badge/semver-2.0.0-blue?style=flat-square&logo=semver&logoColor=white)](https://semver.org/)
+[![Release Date](https://img.shields.io/github/release-date/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
+[![Latest Release](https://img.shields.io/github/v/release/Ajimaru/OctoPrint-PandaBreath?sort=semver&style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Ajimaru/OctoPrint-PandaBreath/total?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
+[![Pre‑Release](https://img.shields.io/github/v/release/Ajimaru/OctoPrint-PandaBreath?include_prereleases&label=pre-release&style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/releases)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![OctoPrint](https://img.shields.io/badge/OctoPrint-1.10.0%2B-blue?style=flat-square&logo=octoprint&logoColor=white)](https://octoprint.org)
+[![Maintenance](https://img.shields.io/maintenance/yes/2026?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/graphs/commit-activity)
 
 ### 📊 4. Repository Activity
 
-[![Open Issues](https://img.shields.io/github/issues/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/issues?q=is%3Aissue%20state%3Aopen)
-[![Closed Issues](https://img.shields.io/github/issues-closed-raw/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/issues?q=is%3Aissue%20state%3Aclosed)
-[![Open PRs](https://img.shields.io/github/issues-pr/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/pulls?q=is%3Apr+is%3Aopen)
-[![Closed PRs](https://img.shields.io/github/issues-pr-closed/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/pulls?q=is%3Apr+is%3Aclosed)
-[![Last Commit](https://img.shields.io/github/last-commit/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/commits/main)
-[![Commit Activity (year)](https://img.shields.io/github/commit-activity/y/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/graphs/commit-activity)
-[![Contributors](https://img.shields.io/github/contributors/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/graphs/contributors)
+[![Open Issues](https://img.shields.io/github/issues/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/issues?q=is%3Aissue%20state%3Aopen)
+[![Closed Issues](https://img.shields.io/github/issues-closed-raw/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/issues?q=is%3Aissue%20state%3Aclosed)
+[![Open PRs](https://img.shields.io/github/issues-pr/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/pulls?q=is%3Apr+is%3Aopen)
+[![Closed PRs](https://img.shields.io/github/issues-pr-closed/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/pulls?q=is%3Apr+is%3Aclosed)
+[![Last Commit](https://img.shields.io/github/last-commit/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/commits/main)
+[![Commit Activity (year)](https://img.shields.io/github/commit-activity/y/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/graphs/commit-activity)
+[![Contributors](https://img.shields.io/github/contributors/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/graphs/contributors)
 
 ### 🧾 5. Metadata
 
-![Code Size](https://img.shields.io/github/languages/code-size/Ajimaru/OctoPrint-PandaBreath?style=flat-square)
-[![Security](https://img.shields.io/badge/security-policy-blue?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/blob/main/SECURITY.md)
-[![Snyk](https://img.shields.io/badge/security-snyk-blueviolet?style=flat-square)](https://app.snyk.io)
-![Languages Count](https://img.shields.io/github/languages/count/Ajimaru/OctoPrint-PandaBreath?style=flat-square)
-![Top Language](https://img.shields.io/github/languages/top/Ajimaru/OctoPrint-PandaBreath?style=flat-square)
-[![License](https://img.shields.io/github/license/Ajimaru/OctoPrint-PandaBreath?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/blob/main/LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/Ajimaru/OctoPrint-PandaBreath/pulls)
+![Code Size](https://img.shields.io/github/languages/code-size/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)
+[![Security](https://img.shields.io/badge/security-policy-blue?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/blob/main/SECURITY.md)
+[![Snyk](https://img.shields.io/badge/security-snyk-blueviolet?style=flat-square&logo=snyk&logoColor=white)](https://app.snyk.io)
+![Languages Count](https://img.shields.io/github/languages/count/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)
+![Top Language](https://img.shields.io/github/languages/top/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=github&logoColor=white)
+[![License](https://img.shields.io/github/license/Ajimaru/OctoPrint-PandaBreath?style=flat-square&logo=opensourceinitiative&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/blob/main/LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square&logo=github&logoColor=white)](https://github.com/Ajimaru/OctoPrint-PandaBreath/pulls)
 
 </details>
 <!-- markdownlint-enable MD033 -->
 
 ---
 
-![Stars](https://img.shields.io/github/stars/Ajimaru/OctoPrint-PandaBreath?style=social) ![Forks](https://img.shields.io/github/forks/Ajimaru/OctoPrint-PandaBreath?style=social) ![Watchers](https://img.shields.io/github/watchers/Ajimaru/OctoPrint-PandaBreath?style=social)
+![Stars](https://img.shields.io/github/stars/Ajimaru/OctoPrint-PandaBreath?style=social&logo=github) ![Forks](https://img.shields.io/github/forks/Ajimaru/OctoPrint-PandaBreath?style=social&logo=github) ![Watchers](https://img.shields.io/github/watchers/Ajimaru/OctoPrint-PandaBreath?style=social&logo=github)
 
 **Like this plugin?** ⭐ Star the repo and share it with the OctoPrint community!
