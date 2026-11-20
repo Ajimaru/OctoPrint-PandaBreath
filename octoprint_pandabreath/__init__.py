@@ -1464,6 +1464,14 @@ class PandabreathPlugin(
             self._logger.exception("PandaBreath: frame log write failed")
 
     def _on_frame(self, direction, frame):
+        # Live frames only feed the Debug sub-tab, and every client drops
+        # them while the debug panel is off (pandabreath.js) - so with the
+        # panel off, don't broadcast them at all. Same master gate as the
+        # disk capture in _refresh_frame_log. The protocol's frame ring
+        # buffer is unaffected, so the panel still shows recent frames once
+        # it is enabled.
+        if not self._settings.get_boolean(["debug_panel_enabled"]):
+            return
         # Rate-limit to ~5 broadcasts/s. UI catches up via the debug API
         # on next refresh if we drop a burst.
         now = time.monotonic()
