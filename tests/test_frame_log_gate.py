@@ -9,6 +9,7 @@ so it is testable here without a live OctoPrint harness.
 """
 
 import logging
+import threading
 from typing import Any, cast
 
 import pytest
@@ -90,3 +91,39 @@ def test_disabling_debug_closes_open_log(tmp_path):
     )
     getattr(plugin, "_refresh_frame_log")()
     assert getattr(plugin, "_frame_log") is None
+
+
+def _frame_plugin(tmp_path, **bools):
+    """Plugin instance whose live frame broadcasts are recorded."""
+    plugin = _plugin(tmp_path, **bools)
+    setattr(plugin, "_frame_push_lock", threading.Lock())
+    setattr(plugin, "_frame_push_last", 0.0)
+    plugin.pushed = []
+    setattr(plugin, "_send_plugin_message", plugin.pushed.append)
+    return plugin
+
+
+def test_live_frames_not_broadcast_with_debug_panel_off(tmp_path):
+    """With the debug panel off, no client uses live frames - none are sent."""
+    plugin = _frame_plugin(tmp_path, debug_panel_enabled=False)
+    getattr(plugin, "_on_frame")("rx", '{"settings": {}}')
+    assert not plugin.pushed
+
+
+def test_live_frames_broadcast_with_debug_panel_on(tmp_path):
+    """With the debug panel on, a frame reaches the clients."""
+    plugin = _frame_plugin(tmp_path, debug_panel_enabled=True)
+    getattr(plugin, "_on_frame")("rx", '{"settings": {}}')
+    assert len(plugin.pushed) == 1
+    assert plugin.pushed[0]["kind"] == "frame"
+    assert plugin.pushed[0]["dir"] == "rx"
+    assert plugin.pushed[0]["frame"] == '{"settings": {}}'
+
+
+def test_enabling_debug_panel_resumes_live_frames(tmp_path):
+    """The gate reads the setting live: enabling the panel needs no restart."""
+    plugin = _frame_plugin(tmp_path, debug_panel_enabled=False)
+    getattr(plugin, "_on_frame")("rx", "before")
+    setattr(plugin, "_settings", FakeSettings(debug_panel_enabled=True))
+    getattr(plugin, "_on_frame")("rx", "after")
+    assert [message["frame"] for message in plugin.pushed] == ["after"]
