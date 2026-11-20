@@ -448,6 +448,16 @@ class PandabreathPlugin(
             },
         ]
 
+    def is_template_autoescaped(self):
+        """
+        Opt in to template autoescaping.
+
+        Without this OctoPrint wraps the templates in ``autoesc false`` and
+        logs a warning on every start; OctoPrint 2.1 enforces autoescaping
+        anyway. The templates only output ``_()`` strings and KO bindings.
+        """
+        return True
+
     # ---- Permissions hook -------------------------------------------
 
     # pylint: disable-next=unused-argument
